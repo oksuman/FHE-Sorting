@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-project(fherma_array_sorting CXX)
+project(fherma_array_sorting_dev CXX)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_STATIC "Set to ON to include static versions of the library" OFF)
 
 find_package(OpenFHE)
@@ -31,10 +32,19 @@ else ()
     link_libraries(${OpenFHE_SHARED_LIBRARIES} OpenMP::OpenMP_CXX)
 endif ()
 
-### ADD YOUR EXECUTABLE(s) HERE
-add_executable(app main.cpp 
-	           sort.cpp
-		   comparison.cpp)
-###
-### EXAMPLE:
-### add_executable( test demo-simple-example.cpp )
+
+add_subdirectory(app)
+
+# Google Test setup
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+)
+
+FetchContent_MakeAvailable(googletest)
+
+add_subdirectory(tests)
+
+include_directories(${CMAKE_SOURCE_DIR}/app)
