@@ -12,8 +12,8 @@
 // #include <algorithm>
 // #include <numeric>
 // #include <cstdlib>
-#include <omp.h>
 #include <functional>
+#include <omp.h>
 
 using namespace lbcrypto;
 
@@ -29,22 +29,23 @@ class arraySort {
     std::string m_arrayLocation;
     std::string m_OutputLocation;
 
-public:
-    arraySort(std::string ccLocation, 
-              std::string pubKeyLocation, 
-              std::string multKeyLocation,
-              std::string rotKeyLocation,
-              std::string arraytLocation,
-              std::string outputLocation);
+  public:
+    arraySort(std::string ccLocation, std::string pubKeyLocation,
+              std::string multKeyLocation, std::string rotKeyLocation,
+              std::string arraytLocation, std::string outputLocation);
 
     void initCC();
 
     void eval();
-    void deserializeOutput();         
+    void deserializeOutput();
 
-    Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc);
-    Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc);
-    Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc, int dg, int df);
+    Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x,
+                                       CryptoContext<DCRTPoly> cc);
+    Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
+                                       CryptoContext<DCRTPoly> cc);
+    Ciphertext<lbcrypto::DCRTPoly>
+    compositeSign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc,
+                  int dg, int df);
 
     static double scaled_sinc(double x);
     static double scaled_sinc_j(double x, int j);
