@@ -1,0 +1,51 @@
+#include "openfhe.h"
+
+// header files needed for serialization
+#include "ciphertext-ser.h"
+#include "cryptocontext-ser.h"
+#include "key/key-ser.h"
+#include "scheme/ckksrns/ckksrns-ser.h"
+
+// #include <iostream>
+// #include <vector>
+// #include <cmath>
+// #include <algorithm>
+// #include <numeric>
+// #include <cstdlib>
+#include <omp.h>
+#include <functional>
+
+using namespace lbcrypto;
+
+class arraySort {
+    CryptoContext<DCRTPoly> m_cc;
+    PublicKey<DCRTPoly> m_PublicKey;
+    Ciphertext<DCRTPoly> input_array;
+    Ciphertext<DCRTPoly> output_array;
+    std::string m_PubKeyLocation;
+    std::string m_MultKeyLocation;
+    std::string m_RotKeyLocation;
+    std::string m_CCLocation;
+    std::string m_arrayLocation;
+    std::string m_OutputLocation;
+
+public:
+    arraySort(std::string ccLocation, 
+              std::string pubKeyLocation, 
+              std::string multKeyLocation,
+              std::string rotKeyLocation,
+              std::string arraytLocation,
+              std::string outputLocation);
+
+    void initCC();
+
+    void eval();
+    void deserializeOutput();         
+
+    Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc);
+    Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc);
+    Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc, int dg, int df);
+
+    static double scaled_sinc(double x);
+    static double scaled_sinc_j(double x, int j);
+};
