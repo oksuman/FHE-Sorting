@@ -47,6 +47,4 @@ class arraySort {
     compositeSign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc,
                   int dg, int df);
 
-    static double scaled_sinc(double x);
-    static double scaled_sinc_j(double x, int j);
 };

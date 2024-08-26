@@ -32,7 +32,9 @@ else ()
 endif ()
 
 ### ADD YOUR EXECUTABLE(s) HERE
-add_executable(app main.cpp sort.cpp)
+add_executable(app main.cpp 
+	           sort.cpp
+		   comparison.cpp)
 ###
 ### EXAMPLE:
 ### add_executable( test demo-simple-example.cpp )
