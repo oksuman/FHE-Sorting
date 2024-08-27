@@ -4,6 +4,7 @@ project(fherma_array_sorting CXX)
 set(CMAKE_CXX_STANDARD 17)
 option(BUILD_STATIC "Set to ON to include static versions of the library" OFF)
 
+set(CMAKE_BUILD_TYPE Release FORCE)
 find_package(OpenFHE)
 
 set(CMAKE_CXX_FLAGS "${OpenFHE_CXX_FLAGS} ${CMAKE_CXX_FLAGS}")
