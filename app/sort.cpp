@@ -54,8 +54,8 @@ void arraySort::initCC() {
 }
 
 void arraySort::eval() {
-    omp_set_num_threads(16);
-    int N = 2048;
+    omp_set_num_threads(24);
+    int N = 128;
     uint32_t sincPolyDegree = 7721;
 
     std::vector<double> Zero(N, 0.0);

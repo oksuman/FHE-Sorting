@@ -5,6 +5,6 @@
   "mult_depth": 48,
   "ring_dimension": 131072,
   "scale_mod_size": 59,
-  "batch_size": 2048,
+  "batch_size": 128,
   "enable_bootstrapping": false
 }
