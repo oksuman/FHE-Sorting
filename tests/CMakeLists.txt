@@ -25,3 +25,8 @@ add_unit_test(SignTest
 	      SignTest.cpp 
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
 	      ${CMAKE_SOURCE_DIR}/app/sort.cpp)
+
+add_unit_test(SortTest 
+	      SortTest.cpp 
+	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
+	      ${CMAKE_SOURCE_DIR}/app/sort.cpp)
