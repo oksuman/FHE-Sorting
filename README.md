@@ -26,3 +26,14 @@ make SincTest && ./tests/SincTest
 ...
 [  PASSED  ] 3 tests.
 ```
+
+## Verify the submission
+
+To locally verify the submission the FHERMA team has provided a
+verifier docker image. To run the verifier:
+
+```
+docker pull yashalabinc/fherma-validator
+docker run -ti -v "$(pwd)"/app/:/sort yashalabinc/fherma-validator \
+--project-folder=/sort --testcase=/sort/testcase.json
+```
