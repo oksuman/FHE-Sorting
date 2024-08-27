@@ -36,7 +36,7 @@ void arraySort::initCC()
     m_cc->EvalRotateKeyGen(keyPair.secretKey, key_indices);
 
     ptx_array = generateVectorWithMinDifference(N);
-    input_array = m_cc->Encrypt(m_publicKey, m_cc->MakeCKKSPackedPlaintext(ptx_array));
+    input_array = m_cc->Encrypt(m_PublicKey, m_cc->MakeCKKSPackedPlaintext(ptx_array));
 }
 
 void arraySort::eval()
@@ -249,7 +249,7 @@ Ciphertext<DCRTPoly> arraySort::treeComputeOfLagrange(int start, int end, const 
     for (int i = start; i < end - 1; i += 2) {
         auto left = m_cc->EvalSub(Index_minus_Rank, all_xi[i]);
         auto right = m_cc->EvalSub(Index_minus_Rank, all_xi[i + 1]);
-        nodes.push_back(m_cc->EvalMultAndRelinearlize(left, right));
+        nodes.push_back(m_cc->EvalMultAndRelinearize(left, right));
     }
 
     if (length % 2 != 0) {
@@ -260,7 +260,7 @@ Ciphertext<DCRTPoly> arraySort::treeComputeOfLagrange(int start, int end, const 
     for (int level = 1; level < levels; level++) {
         int size = nodes.size() / 2;
         for (int i = 0; i < size; i++) {
-            nodes[i] = m_cc->EvalMultAndRelinearlize(nodes[2*i], nodes[2*i + 1]);
+            nodes[i] = m_cc->EvalMultAndRelinearize(nodes[2*i], nodes[2*i + 1]);
         }
         nodes.resize(size);
     }
@@ -290,7 +290,7 @@ Ciphertext<DCRTPoly> arraySort::computeProductExceptJ(int j, const std::vector<C
     for (int level = 0; level < 4; ++level) {
         int step = 1 << level;
         for (int i = 0; i < num_chunks; i += (step * 2)) {
-            tree[i] = m_cc->EvalMultAndRelinearlize(tree[i], tree[i + step]);
+            tree[i] = m_cc->EvalMultAndRelinearize(tree[i], tree[i + step]);
         }
     }
 
@@ -311,7 +311,7 @@ Ciphertext<DCRTPoly> arraySort::computePartialProductExceptJ(int start, int end,
         } else if (i + 1 < end) {
             auto left = m_cc->EvalSub(Index_minus_Rank, all_xi[i]);
             auto right = m_cc->EvalSub(Index_minus_Rank, all_xi[i + 1]);
-            nodes.push_back(m_cc->EvalMultAndRelinearlize(left, right));
+            nodes.push_back(m_cc->EvalMultAndRelinearize(left, right));
         } else {
             nodes.push_back(m_cc->EvalSub(Index_minus_Rank, all_xi[i]));
         }
@@ -322,7 +322,7 @@ Ciphertext<DCRTPoly> arraySort::computePartialProductExceptJ(int start, int end,
         int new_size = (size + 1) / 2;
         for (int i = 0; i < new_size; ++i) {
             if (2*i + 1 < size) {
-                nodes[i] = m_cc->EvalMultAndRelinearlize(nodes[2*i], nodes[2*i + 1]);
+                nodes[i] = m_cc->EvalMultAndRelinearize(nodes[2*i], nodes[2*i + 1]);
             } else {
                 nodes[i] = std::move(nodes[2*i]);
             }
