@@ -35,16 +35,11 @@ endif ()
 
 add_subdirectory(app)
 
-# Google Test setup
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/releases/download/v1.15.2/googletest-1.15.2.tar.gz
-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
-)
-
-FetchContent_MakeAvailable(googletest)
-
+### Tests
 add_subdirectory(tests)
+
+### Benchmarks
+add_subdirectory(third_party/benchmark)
+add_subdirectory(benchmarks)
 
 include_directories(${CMAKE_SOURCE_DIR}/app)
