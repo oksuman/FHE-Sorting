@@ -17,7 +17,7 @@
 
 using namespace lbcrypto;
 
-class arraySort {
+struct arraySort {
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
     Ciphertext<DCRTPoly> input_array;
@@ -29,14 +29,19 @@ class arraySort {
     std::string m_arrayLocation;
     std::string m_OutputLocation;
 
-  public:
     arraySort(std::string ccLocation, std::string pubKeyLocation,
               std::string multKeyLocation, std::string rotKeyLocation,
               std::string arraytLocation, std::string outputLocation);
 
+    arraySort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey);
+
     void initCC();
 
     void eval();
+
+    void encryptInput(std::vector<double>);
+
+    std::vector<double> getPlaintextOutput(PrivateKey<DCRTPoly> sk);
     void deserializeOutput();
 
     Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x,
@@ -46,5 +51,4 @@ class arraySort {
     Ciphertext<lbcrypto::DCRTPoly>
     compositeSign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc,
                   int dg, int df);
-
 };

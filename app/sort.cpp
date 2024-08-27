@@ -11,6 +11,9 @@ arraySort::arraySort(std::string ccLocation, std::string pubKeyLocation,
     initCC();
 };
 
+arraySort::arraySort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> pk)
+    : m_cc(cc), m_PublicKey(pk){};
+
 void arraySort::initCC() {
     if (!Serial::DeserializeFromFile(m_CCLocation, m_cc, SerType::BINARY)) {
         std::cerr << "Could not deserialize cryptocontext file" << std::endl;
@@ -180,6 +183,17 @@ void arraySort::eval() {
     }
 }
 
+void arraySort::encryptInput(std::vector<double> input) {
+    Plaintext plaintext = m_cc->MakeCKKSPackedPlaintext(input);
+    input_array = m_cc->Encrypt(m_PublicKey, plaintext);
+}
+
+std::vector<double> arraySort::getPlaintextOutput(PrivateKey<DCRTPoly> sk) {
+    Plaintext decryptedResult;
+    m_cc->Decrypt(sk, output_array, &decryptedResult);
+    return decryptedResult->GetRealPackedValue();
+}
+
 void arraySort::deserializeOutput() {
     if (!Serial::SerializeToFile(m_OutputLocation, output_array,
                                  SerType::BINARY)) {
@@ -259,4 +273,3 @@ arraySort::compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
     }
     return y;
 }
-
