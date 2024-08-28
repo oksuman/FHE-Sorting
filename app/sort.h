@@ -43,12 +43,4 @@ struct arraySort {
 
     std::vector<double> getPlaintextOutput(PrivateKey<DCRTPoly> sk);
     void deserializeOutput();
-
-    Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x,
-                                       CryptoContext<DCRTPoly> cc);
-    Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
-                                       CryptoContext<DCRTPoly> cc);
-    Ciphertext<lbcrypto::DCRTPoly>
-    compositeSign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc,
-                  int dg, int df);
 };
