@@ -17,6 +17,8 @@
 
 using namespace lbcrypto;
 
+enum class SortingAlgo { DIRECT, BITONIC };
+
 struct arraySort {
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
@@ -37,7 +39,16 @@ struct arraySort {
 
     void initCC();
 
-    void eval();
+    void eval(SortingAlgo algo);
+    void directSort();
+    void bitonicSort();
+    Ciphertext<DCRTPoly> bitonicCompare(const Ciphertext<DCRTPoly> &x,
+                                        const Ciphertext<DCRTPoly> &y,
+                                        bool ascending);
+    void bitonicMerge(std::vector<Ciphertext<DCRTPoly>> &arr, int low,
+                      int count, bool ascending);
+    void bitonicSortRecursive(std::vector<Ciphertext<DCRTPoly>> &arr, int low,
+                              int count, bool ascending);
 
     void encryptInput(std::vector<double>);
 

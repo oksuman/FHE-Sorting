@@ -53,7 +53,18 @@ void arraySort::initCC() {
     }
 }
 
-void arraySort::eval() {
+void arraySort::eval(SortingAlgo algo) {
+    switch (algo) {
+    case SortingAlgo::DIRECT:
+        directSort();
+        break;
+    case SortingAlgo::BITONIC:
+        bitonicSort();
+        break;
+    }
+}
+
+void arraySort::directSort() {
     omp_set_num_threads(24);
     // Every slot should contain one element, same as batch_size
     int N = input_array->GetSlots();
@@ -91,9 +102,9 @@ void arraySort::eval() {
         } else {
             auto b = m_cc->EvalRotate(input_over_255, -32 * i);
             auto diff = m_cc->EvalSub(input_over_255, b);
+            auto sign = compositeSign(diff, m_cc, 3, 3);
 
-            auto tmp1 = m_cc->EvalMult(
-                m_cc->EvalAdd(compositeSign(diff, m_cc, 3, 3), 1), 0.5);
+            auto tmp1 = m_cc->EvalMult(m_cc->EvalAdd(sign, 1), 0.5);
             auto tmp2 = m_cc->EvalRotate(tmp1, -32);
             m_cc->EvalSubInPlace(1, tmp2);
 
@@ -181,6 +192,62 @@ void arraySort::eval() {
 #pragma omp critical
             { m_cc->EvalAddInPlace(output_array, intermediate); }
         }
+    }
+}
+
+void arraySort::bitonicSort() {
+    int N = 128; // Assuming N is 2048 as in the original implementation
+    std::vector<Ciphertext<DCRTPoly>> array(N);
+
+    // Initialize array with input_array
+    for (int i = 0; i < N; i++) {
+        array[i] = m_cc->EvalRotate(input_array, -i);
+    }
+
+    bitonicSortRecursive(array, 0, N, true);
+
+    // Combine sorted ciphertexts back into a single ciphertext
+    output_array = array[0];
+    for (int i = 1; i < N; i++) {
+        m_cc->EvalAddInPlace(output_array, m_cc->EvalRotate(array[i], i));
+    }
+}
+
+Ciphertext<DCRTPoly> arraySort::bitonicCompare(const Ciphertext<DCRTPoly> &x,
+                                               const Ciphertext<DCRTPoly> &y,
+                                               bool ascending) {
+
+    auto comp = compare(m_cc, x, y);
+    std::cout << "Levels we have after compare " << comp->GetLevel() << "\n";
+
+    if (!ascending) {
+        comp = m_cc->EvalSub(1, comp);
+    }
+
+    return m_cc->EvalAdd(m_cc->EvalMult(x, m_cc->EvalSub(1, comp)),
+                         m_cc->EvalMult(y, comp));
+}
+
+void arraySort::bitonicMerge(std::vector<Ciphertext<DCRTPoly>> &arr, int low,
+                             int count, bool ascending) {
+    if (count > 1) {
+        int k = count / 2;
+#pragma omp parallel for
+        for (int i = low; i < low + k; i++) {
+            arr[i] = bitonicCompare(arr[i], arr[i + k], ascending);
+        }
+        bitonicMerge(arr, low, k, ascending);
+        bitonicMerge(arr, low + k, k, ascending);
+    }
+}
+
+void arraySort::bitonicSortRecursive(std::vector<Ciphertext<DCRTPoly>> &arr,
+                                     int low, int count, bool ascending) {
+    if (count > 1) {
+        int k = count / 2;
+        bitonicSortRecursive(arr, low, k, true);
+        bitonicSortRecursive(arr, low + k, k, false);
+        bitonicMerge(arr, low, count, ascending);
     }
 }
 

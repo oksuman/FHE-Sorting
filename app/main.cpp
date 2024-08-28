@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
     arraySort sort(ccLocation, pubKeyLocation, multKeyLocation, rotKeyLocation,
                    arrayLocation, outputLocation);
-    sort.eval();
+    sort.eval(SortingAlgo::DIRECT);
     sort.deserializeOutput();
     return 0;
 }
