@@ -99,3 +99,22 @@ Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
     }
     return y;
 }
+
+Ciphertext<DCRTPoly> compare(const CryptoContext<DCRTPoly> &cc,
+                             const Ciphertext<DCRTPoly> &a,
+                             const Ciphertext<DCRTPoly> &b) {
+
+    // (sgn(a-b) + 1)/2
+    // Returns 1 if a > b
+    //         0 if a < b
+    // Step 1: Subtraction
+    auto diff = cc->EvalSub(a, b);
+
+    // Step 2: Sign function
+    auto sign = compositeSign(diff, cc, 3, 3);
+
+    // Step 3: Compute comparison result
+    auto comp = cc->EvalMult(cc->EvalAdd(sign, 1), 0.5);
+
+    return comp;
+}
