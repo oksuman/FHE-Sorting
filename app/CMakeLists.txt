@@ -35,6 +35,7 @@ endif ()
 ### ADD YOUR EXECUTABLE(s) HERE
 add_executable(app main.cpp 
 	           sort.cpp
+	           sort_algo.cpp
 		   comparison.cpp)
 ###
 ### EXAMPLE:
