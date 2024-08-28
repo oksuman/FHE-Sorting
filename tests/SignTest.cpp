@@ -1,5 +1,6 @@
+#include "comparison.h"
 #include "openfhe.h"
-#include "sort.h" // Assuming the struct is defined in this header
+#include "sort.h"
 #include <gtest/gtest.h>
 
 using namespace lbcrypto;
@@ -8,7 +9,6 @@ class ArraySortTest : public ::testing::Test {
   protected:
     CryptoContext<DCRTPoly> cc;
     KeyPair<DCRTPoly> keyPair;
-    std::unique_ptr<arraySort> sorter;
 
     void SetUp() override {
         // Set up the crypto context
@@ -27,9 +27,6 @@ class ArraySortTest : public ::testing::Test {
 
         keyPair = cc->KeyGen();
         cc->EvalMultKeyGen(keyPair.secretKey);
-
-        // Initialize arraySort
-        sorter = std::make_unique<arraySort>(cc, keyPair.publicKey);
     }
 };
 
@@ -46,7 +43,7 @@ TEST_F(ArraySortTest, CompositeSignTest) {
     int df = 3;
 
     // Apply compositeSign
-    auto result = sorter->compositeSign(encrypted_input, cc, dg, df);
+    auto result = compositeSign(encrypted_input, cc, dg, df);
 
     // Decrypt the result
     Plaintext decryptedResult;
