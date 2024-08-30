@@ -55,6 +55,7 @@ void arraySort::initCC() {
 
 void arraySort::eval() {
     omp_set_num_threads(24);
+    Comparison comp;
     // Every slot should contain one element, same as batch_size
     int N = input_array->GetSlots();
     uint32_t sincPolyDegree = 7721;
@@ -77,7 +78,7 @@ void arraySort::eval() {
                 auto diff = m_cc->EvalSub(input_over_255, b);
 
                 auto comp1 = m_cc->EvalMult(
-                    m_cc->EvalAdd(compositeSign(diff, m_cc, 3, 3), 1), 0.5);
+                    m_cc->EvalAdd(comp.compositeSign(diff, m_cc, 3, 3), 1), 0.5);
                 m_cc->EvalAddInPlace(tmp1, comp1);
 
                 auto comp2 = m_cc->EvalRotate(comp1, -32 + j);
@@ -93,7 +94,7 @@ void arraySort::eval() {
             auto diff = m_cc->EvalSub(input_over_255, b);
 
             auto tmp1 = m_cc->EvalMult(
-                m_cc->EvalAdd(compositeSign(diff, m_cc, 3, 3), 1), 0.5);
+                m_cc->EvalAdd(comp.compositeSign(diff, m_cc, 3, 3), 1), 0.5);
             auto tmp2 = m_cc->EvalRotate(tmp1, -32);
             m_cc->EvalSubInPlace(1, tmp2);
 
@@ -102,7 +103,7 @@ void arraySort::eval() {
                 auto diff = m_cc->EvalSub(input_over_255, b2);
 
                 auto comp1 = m_cc->EvalMult(
-                    m_cc->EvalAdd(compositeSign(diff, m_cc, 3, 3), 1), 0.5);
+                    m_cc->EvalAdd(comp.compositeSign(diff, m_cc, 3, 3), 1), 0.5);
                 m_cc->EvalAddInPlace(tmp1, comp1);
 
                 auto comp2 = m_cc->EvalRotate(comp1, -32 + j);
@@ -118,9 +119,9 @@ void arraySort::eval() {
 
     auto b = m_cc->EvalRotate(input_over_255, -1024);
     auto diff = m_cc->EvalSub(input_over_255, b);
-    auto comp =
-        m_cc->EvalMult(m_cc->EvalAdd(compositeSign(diff, m_cc, 3, 3), 1), 0.5);
-    m_cc->EvalAddInPlace(ctx_Rank, comp);
+    auto comp1 =
+        m_cc->EvalMult(m_cc->EvalAdd(comp.compositeSign(diff, m_cc, 3, 3), 1), 0.5);
+    m_cc->EvalAddInPlace(ctx_Rank, comp1);
 
     std::vector<double> Index(N);
     std::iota(Index.begin(), Index.end(), 0);

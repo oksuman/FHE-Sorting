@@ -27,7 +27,14 @@ class ArraySortTest : public ::testing::Test {
 
         keyPair = cc->KeyGen();
         cc->EvalMultKeyGen(keyPair.secretKey);
+
+        m_enc = std::make_shared<Encryption>(cc, keyPair);
+
+        comp = std::make_unique<Comparison>(m_enc);
     }
+
+    std::shared_ptr<Encryption> m_enc;
+    std::unique_ptr<Comparison> comp;
 };
 
 TEST_F(ArraySortTest, CompositeSignTest) {
@@ -43,7 +50,7 @@ TEST_F(ArraySortTest, CompositeSignTest) {
     int df = 3;
 
     // Apply compositeSign
-    auto result = compositeSign(encrypted_input, cc, dg, df);
+    auto result = comp->compositeSign(encrypted_input, cc, dg, df);
 
     // Decrypt the result
     Plaintext decryptedResult;
