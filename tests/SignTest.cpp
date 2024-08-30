@@ -75,6 +75,47 @@ TEST_F(ArraySortTest, CompositeSignTest) {
     }
 }
 
+TEST_F(ArraySortTest, VerySmallElementsTest) {
+    // The required accuracy is 0.02
+    std::vector<double> input = {0.02,  -0.02,  0.01, -0.01,
+                                 0.009, -0.009, 1,    -1};
+    ASSERT_EQ(input.size(), cc->GetEncodingParams()->GetBatchSize());
+
+    // Encrypt input
+    Plaintext plaintext = cc->MakeCKKSPackedPlaintext(input);
+    auto encrypted_input = cc->Encrypt(keyPair.publicKey, plaintext);
+
+    // Parameters for compositeSign
+    int dg = 3;
+    int df = 3;
+
+    // Apply compositeSign
+    auto result = comp->compositeSign(encrypted_input, cc, dg, df);
+
+    // Decrypt the result
+    Plaintext decryptedResult;
+    cc->Decrypt(keyPair.secretKey, result, &decryptedResult);
+    std::vector<double> output = decryptedResult->GetRealPackedValue();
+
+    // Expected results (approximate)
+    std::vector<double> expected = {1.0, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0, -1.0};
+
+    ASSERT_EQ(output.size(), expected.size());
+    for (size_t i = 0; i < expected.size(); ++i) {
+        std::cout << "Checking " << input[i] << "\n";
+        EXPECT_NEAR(output[i], expected[i], 0.1);
+
+        // Additional checks
+        if (input[i] > 0) {
+            EXPECT_GT(output[i], 0);
+        } else if (input[i] < 0) {
+            EXPECT_LT(output[i], 0);
+        } else {
+            EXPECT_NEAR(output[i], 0, 0.1);
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
