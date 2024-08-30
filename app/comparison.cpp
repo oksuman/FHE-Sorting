@@ -46,8 +46,8 @@ Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x,
     return cc->EvalChebyshevSeriesPS(x, coeffs, -1, 1);
 }
 
-Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
-                                   CryptoContext<DCRTPoly> cc) {
+Ciphertext<lbcrypto::DCRTPoly> Comparison::f_n(Ciphertext<lbcrypto::DCRTPoly> x,
+                                               CryptoContext<DCRTPoly> cc) {
     const double c1 = 3.14208984375;
     const double c3 = -7.33154296875;
     const double c5 = 13.19677734375;
@@ -84,9 +84,9 @@ Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
     return y;
 }
 
-Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
-                                             CryptoContext<DCRTPoly> cc, int dg,
-                                             int df) {
+Ciphertext<lbcrypto::DCRTPoly>
+Comparison::compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
+                          CryptoContext<DCRTPoly> cc, int dg, int df) {
 
     auto y = g_n(x, cc);
     cc->EvalMultInPlace(y, 1.0 / 1.032466);
@@ -100,9 +100,9 @@ Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
     return y;
 }
 
-Ciphertext<DCRTPoly> compare(const CryptoContext<DCRTPoly> &cc,
-                             const Ciphertext<DCRTPoly> &a,
-                             const Ciphertext<DCRTPoly> &b) {
+Ciphertext<DCRTPoly> Comparison::compare(const CryptoContext<DCRTPoly> &cc,
+                                         const Ciphertext<DCRTPoly> &a,
+                                         const Ciphertext<DCRTPoly> &b) {
 
     // (sgn(a-b) + 1)/2
     // Returns 1 if a > b
