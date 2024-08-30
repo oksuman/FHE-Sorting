@@ -1,14 +1,17 @@
-#include <gtest/gtest.h>
 #include "sort.h"
 #include "comparison.h"
+#include "encryption.h"
 #include <algorithm>
+#include <gtest/gtest.h>
 #include <random>
 
 class ArraySortTest : public ::testing::Test {
-protected:
+  protected:
     CryptoContext<DCRTPoly> cc;
     KeyPair<DCRTPoly> keyPair;
     std::unique_ptr<arraySort> sorter;
+    int array_length;
+    std::shared_ptr<Encryption> m_enc;
 
     void SetUp() override {
         // Set up the crypto context
@@ -29,14 +32,21 @@ protected:
         cc->EvalMultKeyGen(keyPair.secretKey);
 
         std::vector<int> rotations;
-        for (int i = 1; i <= 32; i++) rotations.push_back(i);
-        for (int i = 1; i <= 32; i++) rotations.push_back(-i);
-        for (int i = 1; i <= 63; i++) rotations.push_back(i * 32);
+        for (int i = 1; i <= 32; i++)
+            rotations.push_back(i);
+        for (int i = 1; i <= 32; i++)
+            rotations.push_back(-i);
+        for (int i = 1; i <= 63; i++)
+            rotations.push_back(i * 32);
         cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
 
         // Initialize arraySort
         sorter = std::make_unique<arraySort>(cc, keyPair.publicKey);
+        m_enc = std::make_shared<Encryption>(cc, keyPair);
     }
+
+
+
 
     std::vector<double> generateRandomInput(int size, double min, double max) {
         std::vector<double> input(size);
@@ -49,21 +59,22 @@ protected:
         return input;
     }
 
-    void runSortTest(const std::vector<double>& input) {
+    void runSortTest(const std::vector<double> &input) {
         // Create a copy for comparison
         std::vector<double> expected = input;
         std::sort(expected.begin(), expected.end());
 
         // Encrypt and sort
-        sorter->encryptInput(input);
+        m_enc->encryptInput(input);
         sorter->eval();
 
         // Decrypt the result
-        std::vector<double> result = sorter->getPlaintextOutput(keyPair.secretKey);
+        std::vector<double> result =
+            m_enc->getPlaintext(sorter->output_array);
 
         // Verify the result
         // ASSERT_EQ(result.size(), expected.size());
-        
+
         double maxError = 0.0;
         int largeErrorCount = 0;
         for (size_t i = 0; i < result.size(); ++i) {
@@ -76,16 +87,20 @@ protected:
 
         // Print statistics
         std::cout << "Maximum error: " << maxError << std::endl;
-        std::cout << "Number of errors larger than 0.1: " << largeErrorCount << std::endl;
+        std::cout << "Number of errors larger than 0.1: " << largeErrorCount
+                  << std::endl;
 
         // Assert on the quality of the sort
-        EXPECT_LT(maxError, 1.0);  // Maximum error should be less than 1
-        EXPECT_LT(largeErrorCount, result.size() * 0.05);  // Less than 5% of elements should have large errors
+        EXPECT_LT(maxError, 1.0); // Maximum error should be less than 1
+        EXPECT_LT(
+            largeErrorCount,
+            result.size() *
+                0.05); // Less than 5% of elements should have large errors
     }
 };
 
 TEST_F(ArraySortTest, SortSmallRandomArray) {
-    const int arraySize = 8;  // Smaller size for quicker testing
+    const int arraySize = 8; // Smaller size for quicker testing
     std::vector<double> input = generateRandomInput(arraySize, 0, 255);
     runSortTest(input);
 }
@@ -104,7 +119,7 @@ TEST_F(ArraySortTest, SortReverseSortedArray) {
 }
 
 TEST_F(ArraySortTest, SortArrayWithDuplicates) {
-    std::vector<double> input(16, 42.0);  // All elements are the same
+    std::vector<double> input(16, 42.0); // All elements are the same
     runSortTest(input);
 }
 
