@@ -39,8 +39,5 @@ struct arraySort {
 
     void eval();
 
-    void encryptInput(std::vector<double>);
-
-    std::vector<double> getPlaintextOutput(PrivateKey<DCRTPoly> sk);
     void deserializeOutput();
 };

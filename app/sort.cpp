@@ -184,17 +184,6 @@ void arraySort::eval() {
     }
 }
 
-void arraySort::encryptInput(std::vector<double> input) {
-    Plaintext plaintext = m_cc->MakeCKKSPackedPlaintext(input);
-    input_array = m_cc->Encrypt(m_PublicKey, plaintext);
-}
-
-std::vector<double> arraySort::getPlaintextOutput(PrivateKey<DCRTPoly> sk) {
-    Plaintext decryptedResult;
-    m_cc->Decrypt(sk, output_array, &decryptedResult);
-    return decryptedResult->GetRealPackedValue();
-}
-
 void arraySort::deserializeOutput() {
     if (!Serial::SerializeToFile(m_OutputLocation, output_array,
                                  SerType::BINARY)) {
