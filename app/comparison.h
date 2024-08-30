@@ -1,6 +1,7 @@
 #ifndef COMPARISON_H
 #define COMPARISON_H
 
+#include "encryption.h"
 #include "openfhe.h"
 #include <cmath>
 
