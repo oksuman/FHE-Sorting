@@ -12,7 +12,7 @@ double random_double(double min, double max) {
 }
 
 // Benchmark for scaled_sinc with random inputs
-static void BM_ScaledSinc(benchmark::State& state) {
+static void BM_ScaledSinc(benchmark::State &state) {
     double x = random_double(-10.0, 10.0);
     for (auto _ : state) {
         double result = scaled_sinc(x);
@@ -23,7 +23,7 @@ static void BM_ScaledSinc(benchmark::State& state) {
 BENCHMARK(BM_ScaledSinc);
 
 // Benchmark for scaled_sinc_j with random inputs
-static void BM_ScaledSincJ(benchmark::State& state) {
+static void BM_ScaledSincJ(benchmark::State &state) {
     double x = random_double(-10.0, 10.0);
     int j = static_cast<int>(random_double(-100, 100));
     for (auto _ : state) {
@@ -35,7 +35,7 @@ static void BM_ScaledSincJ(benchmark::State& state) {
 BENCHMARK(BM_ScaledSincJ);
 
 // Benchmark for scaled_sinc evenness
-static void BM_ScaledSincEvenness(benchmark::State& state) {
+static void BM_ScaledSincEvenness(benchmark::State &state) {
     double x = random_double(0.0, 10.0);
     for (auto _ : state) {
         double result1 = scaled_sinc(x);
@@ -48,7 +48,7 @@ static void BM_ScaledSincEvenness(benchmark::State& state) {
 BENCHMARK(BM_ScaledSincEvenness);
 
 // Benchmark for scaled_sinc_j periodicity
-static void BM_ScaledSincJPeriodicity(benchmark::State& state) {
+static void BM_ScaledSincJPeriodicity(benchmark::State &state) {
     double x = random_double(-10.0, 10.0);
     int j = static_cast<int>(random_double(-100, 100));
     for (auto _ : state) {
