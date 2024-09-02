@@ -62,63 +62,9 @@ template <int N> class DirectSort : public SortBase<N> {
         return ctxRank;
     }
 
+
     Ciphertext<DCRTPoly>
     rotationIndexCheck(const Ciphertext<DCRTPoly> &Index_minus_Rank,
-                       const Ciphertext<DCRTPoly> &input_array) {
-        // int N = input_array->GetSlots();
-        constexpr uint32_t sincPolyDegree = 7721;
-        // Create a zero plaintext
-        std::vector<double> Zero(N, 0.0);
-        const Plaintext ptx_Zero = m_cc->MakeCKKSPackedPlaintext(Zero);
-
-        // Initialize output array
-        auto output_array = m_cc->Encrypt(m_PublicKey, ptx_Zero);
-
-        const int block_size = 32;
-        const int num_blocks = N / block_size;
-
-#pragma omp parallel for
-        for (int i = 0; i < num_blocks; i++) {
-            auto intermediate = m_cc->Encrypt(m_PublicKey, ptx_Zero);
-            PRINT_PT(m_enc, intermediate);
-
-            for (int j = 0; j < block_size; j++) {
-                int rotation = i * block_size + j;
-                if (i == 0 && j == 0)
-                    continue; // Skip the first rotation (no rotation needed)
-
-                // Compute the sinc interpolation for this rotation
-                auto rotIndex = m_cc->EvalChebyshevFunction(
-                    [rotation](double x) {
-                        return Sinc<N>::scaled_sinc_j(x, rotation);
-                    },
-                    Index_minus_Rank, -1, 1, sincPolyDegree);
-
-                // Apply the rotation mask to the input array
-                auto masked_input =
-                    m_cc->EvalMultAndRelinearize(rotIndex, input_array);
-
-                // Rotate the masked input and add to intermediate result
-                int effective_rotation = (rotation % N) - block_size;
-                m_cc->EvalAddInPlace(
-                    intermediate,
-                    m_cc->EvalRotate(masked_input, effective_rotation));
-            }
-
-            // Apply final rotation to the intermediate result
-            int block_rotation = ((i - (num_blocks - 1)) * block_size + N) % N;
-            intermediate = m_cc->EvalRotate(intermediate, block_rotation);
-
-// Add the intermediate result to the output array
-#pragma omp critical
-            { m_cc->EvalAddInPlace(output_array, intermediate); }
-        }
-
-        return output_array;
-    }
-
-    Ciphertext<DCRTPoly>
-    rotationIndexCheckv2(const Ciphertext<DCRTPoly> &Index_minus_Rank,
                          const Ciphertext<DCRTPoly> &input_array) {
         // int N = input_array->GetSlots();
         constexpr int sincPolyDegree = 7701;
@@ -189,7 +135,7 @@ template <int N> class DirectSort : public SortBase<N> {
         m_cc->EvalMultInPlace(Index_minus_Rank, 1.0 / N);
         PRINT_PT(m_enc, Index_minus_Rank);
 
-        auto output_array = rotationIndexCheckv2(Index_minus_Rank, input_array);
+        auto output_array = rotationIndexCheck(Index_minus_Rank, input_array);
         return output_array;
     }
 };
