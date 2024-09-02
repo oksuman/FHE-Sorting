@@ -34,7 +34,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
   public:
     std::shared_ptr<Encryption> m_enc;
-    // Constructor
+
     DirectSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
                std::shared_ptr<Encryption> enc)
         : m_cc(cc), m_PublicKey(publicKey), comp(enc), m_enc(enc) {}
@@ -47,11 +47,9 @@ template <int N> class DirectSort : public SortBase<N> {
         auto ctxRank = m_cc->Encrypt(m_PublicKey, ptxZero);
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
-        PRINT_PT(m_enc, inputOver255);
 
 #pragma omp parallel for
         for (int i = 1; i < N; i++) {
-            std::cout << "Rotation index " << -i << "\n";
             auto rotated = m_cc->EvalRotate(inputOver255, -i);
             auto compResult = comp.compare(m_cc, inputOver255, rotated);
 // TODO remove critical section for performance and instead add results later
@@ -62,10 +60,9 @@ template <int N> class DirectSort : public SortBase<N> {
         return ctxRank;
     }
 
-
     Ciphertext<DCRTPoly>
     rotationIndexCheck(const Ciphertext<DCRTPoly> &Index_minus_Rank,
-                         const Ciphertext<DCRTPoly> &input_array) {
+                       const Ciphertext<DCRTPoly> &input_array) {
         // int N = input_array->GetSlots();
         constexpr int sincPolyDegree = 7701;
 
@@ -76,21 +73,19 @@ template <int N> class DirectSort : public SortBase<N> {
         //  parallelisation.
         auto rotIndex = m_cc->EvalChebyshevFunction(
             Sinc<N>::scaled_sinc, Index_minus_Rank, -1, 1, sincPolyDegree);
-        PRINT_PT(m_enc, rotIndex);
         auto output_array = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
-        PRINT_PT(m_enc, output_array);
 
         // TODO share precompute values with rank construction.
         //  Create a zero plaintext
         std::vector<double> Zero(N, 0.0);
         Plaintext ptx_Zero = m_cc->MakeCKKSPackedPlaintext(Zero);
 
+#pragma omp parallel for
         for (int i = 1; i < N; i++) {
             // Compute the sinc interpolation for this rotation
             auto rotIndex = m_cc->EvalChebyshevFunction(
                 [i](double x) { return Sinc<N>::scaled_sinc_j(x, i); },
                 Index_minus_Rank, -1, 1, 7701);
-            PRINT_PT(m_enc, rotIndex);
 
             // Apply the rotation mask to the input array
             auto masked_input =
@@ -99,12 +94,9 @@ template <int N> class DirectSort : public SortBase<N> {
             // Rotate the masked input
             auto rotated = m_cc->EvalRotate(masked_input, i);
 
+#pragma omp critical
             // Add to the output array
-            m_cc->EvalAddInPlace(output_array, rotated);
-
-            // Debug: print intermediate results
-            std::cout << "Rotation " << i << ": \n";
-            PRINT_PT(m_enc, rotated);
+            { m_cc->EvalAddInPlace(output_array, rotated); }
         }
 
         return output_array;
@@ -113,29 +105,27 @@ template <int N> class DirectSort : public SortBase<N> {
     Ciphertext<DCRTPoly>
     sort(const Ciphertext<DCRTPoly> &input_array) override {
 
+        std::cout << "\n===== Direct Sort Input Array: \n";
+        PRINT_PT(m_enc, input_array);
         auto ctx_Rank = constructRank(input_array);
+        std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
-
-        // auto input_over_255 = m_cc->EvalMult(input_array, (double)1.0 / 255);
-        // auto b = m_cc->EvalRotate(input_over_255, -N/2);
-        // auto comp1 = comp.compare(m_cc, input_over_255, b);
-        // m_cc->EvalAddInPlace(ctx_Rank, comp1);
-        // PRINT_PT(m_enc, ctx_Rank);
 
         // Make a plaintext index array [1, 2, 3, ...]
         std::vector<double> Index(N);
         std::iota(Index.begin(), Index.end(), 0);
         Plaintext ptx_Index = m_cc->MakeCKKSPackedPlaintext(Index);
-        std::cout << ptx_Index << "\n";
 
         // Evaluate index - rank, which denotes the rotation index to be sorted
         auto Index_minus_Rank = m_cc->EvalSub(ptx_Index, ctx_Rank);
+        std::cout << "\n===== Index - Rank: \n";
         PRINT_PT(m_enc, Index_minus_Rank);
 
         m_cc->EvalMultInPlace(Index_minus_Rank, 1.0 / N);
-        PRINT_PT(m_enc, Index_minus_Rank);
 
         auto output_array = rotationIndexCheck(Index_minus_Rank, input_array);
+        std::cout << "\n===== Final Output: \n";
+        PRINT_PT(m_enc, output_array);
         return output_array;
     }
 };
