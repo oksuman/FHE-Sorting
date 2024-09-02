@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 
+#include "ciphertext-fwd.h"
 #include "comparison.h"
 #include "constants.h"
 #include "encryption.h"
@@ -15,10 +16,9 @@ using namespace lbcrypto;
 class DirectSortTest : public ::testing::Test {
   protected:
     void SetUp() override {
-        array_length = 32;
         // Set up the CryptoContext
         CCParams<CryptoContextCKKSRNS> parameters;
-        parameters.SetMultiplicativeDepth(40);
+        parameters.SetMultiplicativeDepth(50);
         parameters.SetScalingModSize(50);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
@@ -52,17 +52,35 @@ class DirectSortTest : public ::testing::Test {
         // Create DirectSort object
 
         m_enc = std::make_shared<Encryption>(m_cc, keyPair);
-
-        m_directSort = std::make_unique<DirectSort>(m_cc, m_publicKey, m_enc);
     }
 
-    int array_length;
+    static constexpr int array_length = 128;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
-    std::unique_ptr<DirectSort> m_directSort;
     std::shared_ptr<Encryption> m_enc;
 };
+
+std::vector<double> getVectorWithMinDiff(int N) {
+    assert(N < 255 * 100 &&
+           "N should be less than or equal to 25500 to ensure all values are "
+           "unique and have a minimum difference of 0.01.");
+
+    std::vector<double> result(N);
+    std::vector<int> integers(25500); // 25500 = 255 * 100
+    std::iota(integers.begin(), integers.end(),
+              0); // Fill with values from 0 to 25499
+    std::shuffle(integers.begin(), integers.end(),
+                 std::mt19937{std::random_device{}()}); // Shuffle the integers
+
+    for (int i = 0; i < N; ++i) {
+        result[i] =
+            integers[i] * 0.01; // Scale to have minimum difference of 0.01
+    }
+
+    return result;
+}
+
 TEST_F(DirectSortTest, ConstructRank) {
     // Create a random array of 32 elements
     std::vector<double> inputArray(array_length);
@@ -73,9 +91,11 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     // Encrypt the input array
     auto ctxt = m_enc->encryptInput(inputArray);
+    auto directSort =
+        std::make_unique<DirectSort<array_length>>(m_cc, m_publicKey, m_enc);
 
     // Construct rank using DirectSort
-    auto ctxtRank = m_directSort->constructRankv3(ctxt);
+    auto ctxtRank = directSort->constructRank(ctxt);
 
     // Decrypt the result
     Plaintext result;
@@ -84,7 +104,7 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     // Calculate the expected ranks
     std::vector<double> expectedRanks(array_length);
-    for (int i = 0; i < 32; ++i) {
+    for (int i = 0; i < array_length; ++i) {
         expectedRanks[i] =
             std::count_if(inputArray.begin(), inputArray.end(),
                           [&](double val) { return val < inputArray[i]; });
@@ -106,6 +126,60 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     std::cout << "Calculated ranks: ";
     for (const auto &rank : decryptedRanks) {
+        std::cout << rank << " ";
+    }
+    std::cout << std::endl;
+}
+
+TEST_F(DirectSortTest, DirectSort) {
+    // Create a random array of 32 elements
+    // std::vector<double> inputArray(array_length);
+    // std::iota(inputArray.begin(), inputArray.end(), 0.0);
+    // std::shuffle(inputArray.begin(), inputArray.end(),
+    //              std::mt19937{std::random_device{}()});
+    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
+    std::cout << inputArray << "\n";
+
+    // Encrypt the input array
+    auto ctxt = m_enc->encryptInput(inputArray);
+    auto directSort =
+        std::make_unique<DirectSort<array_length>>(m_cc, m_publicKey, m_enc);
+
+    Ciphertext<DCRTPoly> ctxt_out = directSort->sort(ctxt);
+    // Decrypt the result
+    Plaintext result;
+    m_cc->Decrypt(m_privateKey, ctxt_out, &result);
+    std::vector<double> output_array = result->GetRealPackedValue();
+
+    auto expected = inputArray;
+    std::sort(expected.begin(), expected.end());
+    double maxError = 0.0;
+    int largeErrorCount = 0;
+    for (size_t i = 0; i < output_array.size(); ++i) {
+        double error = std::abs(output_array[i] - expected[i]);
+        maxError = std::max(maxError, error);
+        if (error > 0.1) {
+            largeErrorCount++;
+        }
+    }
+
+    // Print statistics
+    std::cout << "Maximum error: " << maxError << std::endl;
+    std::cout << "Number of errors larger than 0.1: " << largeErrorCount
+              << std::endl;
+
+    // Assert on the quality of the sort
+    EXPECT_LT(maxError, 1.0); // Maximum error should be less than 1
+
+    // Print the input array and the calculated ranks
+    std::cout << "Input array: ";
+    for (const auto &val : inputArray) {
+        std::cout << val << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Output: ";
+    for (const auto &rank : output_array) {
         std::cout << rank << " ";
     }
     std::cout << std::endl;
