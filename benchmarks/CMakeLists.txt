@@ -18,3 +18,8 @@ endfunction()
 add_benchmark(SincBenchmark 
               SincBenchmark.cpp 
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
+
+add_benchmark(DirectSortBenchmark 
+	      DirectSortBenchmark.cpp 
+              ${CMAKE_SOURCE_DIR}/app/comparison.cpp
+              ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
