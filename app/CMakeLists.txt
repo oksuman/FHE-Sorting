@@ -34,9 +34,11 @@ endif ()
 
 ### ADD YOUR EXECUTABLE(s) HERE
 add_executable(app main.cpp 
+		   comparison.cpp
+	           encryption.cpp
 	           sort.cpp
 	           sort_algo.cpp
-		   comparison.cpp)
+		   )
 ###
 ### EXAMPLE:
 ### add_executable( test demo-simple-example.cpp )
