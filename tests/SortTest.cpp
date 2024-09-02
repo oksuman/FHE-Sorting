@@ -45,9 +45,6 @@ class ArraySortTest : public ::testing::Test {
         m_enc = std::make_shared<Encryption>(cc, keyPair);
     }
 
-
-
-
     std::vector<double> generateRandomInput(int size, double min, double max) {
         std::vector<double> input(size);
         std::random_device rd;
@@ -69,8 +66,7 @@ class ArraySortTest : public ::testing::Test {
         sorter->eval();
 
         // Decrypt the result
-        std::vector<double> result =
-            m_enc->getPlaintext(sorter->output_array);
+        std::vector<double> result = m_enc->getPlaintext(sorter->output_array);
 
         // Verify the result
         // ASSERT_EQ(result.size(), expected.size());
