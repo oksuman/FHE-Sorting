@@ -33,7 +33,8 @@ inline std::string getContextLines(const char *filename, int lineNum,
 
 #define PRINT_PT(enc, ct)                                                      \
     do {                                                                       \
-        std::cout << (enc)->getPlaintext((ct)) << ": " << #ct << "\n";         \
+        std::cout << (enc)->getPlaintext((ct)) << ": " << #ct                  \
+                  << " Level: " << (ct)->GetLevel() << "\n";                   \
     } while (0)
 
 #define PRINT_PT_CONTEXT(enc, ct)                                              \
