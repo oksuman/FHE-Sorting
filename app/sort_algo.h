@@ -10,18 +10,28 @@
 
 using namespace lbcrypto;
 
-// Abstract base class for sorting algorithms
+// Base class for sorting algorithms
 template <int N> // Array size
 class SortBase {
+  protected:
+    std::shared_ptr<Encryption> m_enc;
+    const Ciphertext<DCRTPoly> m_zeroCache;
+
+    virtual Ciphertext<DCRTPoly> createZeroCache() {
+        std::vector<double> zeroVec(N, 0.0);
+        return m_enc->encryptInput(zeroVec);
+    }
 
   public:
-    SortBase() {}
+    SortBase(std::shared_ptr<Encryption> enc)
+        : m_enc(enc), m_zeroCache(createZeroCache()) {}
 
     virtual ~SortBase() = default;
 
     virtual Ciphertext<DCRTPoly>
     sort(const Ciphertext<DCRTPoly> &input_array) = 0;
 
+    virtual const Ciphertext<DCRTPoly> &getZero() const { return m_zeroCache; }
     // Common methods that can be used by all sorting algorithms
     constexpr size_t getArraySize() const { return N; }
 };
@@ -37,14 +47,13 @@ template <int N> class DirectSort : public SortBase<N> {
 
     DirectSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
                std::shared_ptr<Encryption> enc)
-        : m_cc(cc), m_PublicKey(publicKey), comp(enc), m_enc(enc) {}
+        : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
+          m_enc(enc) {}
 
     Ciphertext<DCRTPoly>
     constructRank(const Ciphertext<DCRTPoly> &input_array) {
 
-        std::vector<double> Zero(N, 0.0);
-        Plaintext ptxZero = m_cc->MakeCKKSPackedPlaintext(Zero);
-        auto ctxRank = m_cc->Encrypt(m_PublicKey, ptxZero);
+        auto ctxRank = this->getZero()->Clone();
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
 
@@ -74,11 +83,6 @@ template <int N> class DirectSort : public SortBase<N> {
         auto rotIndex = m_cc->EvalChebyshevFunction(
             Sinc<N>::scaled_sinc, Index_minus_Rank, -1, 1, sincPolyDegree);
         auto output_array = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
-
-        // TODO share precompute values with rank construction.
-        //  Create a zero plaintext
-        std::vector<double> Zero(N, 0.0);
-        Plaintext ptx_Zero = m_cc->MakeCKKSPackedPlaintext(Zero);
 
 #pragma omp parallel for
         for (int i = 1; i < N; i++) {
