@@ -130,8 +130,8 @@ void arraySort::eval() {
     auto Index_minus_Rank = m_cc->EvalSub(ptx_Index, ctx_Rank);
     m_cc->EvalMultInPlace(Index_minus_Rank, 1.0 / N);
 
-    auto rotIndex = m_cc->EvalChebyshevFunction(scaled_sinc, Index_minus_Rank,
-                                                -1, 1, sincPolyDegree);
+    auto rotIndex = m_cc->EvalChebyshevFunction(
+        Sinc<2048>::scaled_sinc, Index_minus_Rank, -1, 1, sincPolyDegree);
     output_array = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
 
 #pragma omp parallel for
@@ -142,7 +142,7 @@ void arraySort::eval() {
             for (int j = 1; j < 32; j++) {
 
                 auto rotIndex = m_cc->EvalChebyshevFunction(
-                    [j](double x) { return scaled_sinc_j(x, j); },
+                    [j](double x) { return Sinc<2048>::scaled_sinc_j(x, j); },
                     Index_minus_Rank, -1, 1, 7701);
                 auto tmp = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
 
@@ -157,7 +157,9 @@ void arraySort::eval() {
             for (int j = 0; j < 32; j++) {
 
                 auto rotIndex = m_cc->EvalChebyshevFunction(
-                    [i, j](double x) { return scaled_sinc_j(x, i * 32 + j); },
+                    [i, j](double x) {
+                        return Sinc<2048>::scaled_sinc_j(x, i * 32 + j);
+                    },
                     Index_minus_Rank, -1, 1, 7701);
                 auto tmp = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
 
@@ -170,7 +172,9 @@ void arraySort::eval() {
             for (int j = 0; j < 32; j++) {
 
                 auto rotIndex = m_cc->EvalChebyshevFunction(
-                    [i, j](double x) { return scaled_sinc_j(x, i * 32 + j); },
+                    [i, j](double x) {
+                        return Sinc<2048>::scaled_sinc_j(x, i * 32 + j);
+                    },
                     Index_minus_Rank, -1, 1, 7701);
                 auto tmp = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
 
