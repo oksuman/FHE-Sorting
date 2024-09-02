@@ -37,11 +37,11 @@ class DirectSortTest : public ::testing::Test {
 
         std::vector<int> rotations;
 
-        for (int i = 1; i <= 32; i++) {
+        for (int i = 1; i <= array_length; i++) {
             rotations.push_back(i);
             rotations.push_back(-i);
         }
-        for (int i = 1; i <= 32; i++) {
+        for (int i = 1; i <= array_length; i++) {
             rotations.push_back(-i * 64);
         }
 
