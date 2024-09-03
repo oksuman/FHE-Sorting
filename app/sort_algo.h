@@ -75,21 +75,14 @@ template <int N> class DirectSort : public SortBase<N> {
         // int N = input_array->GetSlots();
         constexpr int sincPolyDegree = 7701;
 
-        // TODO This is done to prevent rotation in the loop. However this means
-        // more sequential execution.
-        //  OpenFHE EvalRotate -> EvalAtIndex actually checks for 0 rotation and
-        //  clones the ct back. Check if it is better to keep it in the loop for
-        //  parallelisation.
-        auto rotIndex = m_cc->EvalChebyshevFunction(
-            Sinc<N>::scaled_sinc, Index_minus_Rank, -1, 1, sincPolyDegree);
-        auto output_array = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
+        auto output_array = this->getZero()->Clone();
 
 #pragma omp parallel for
-        for (int i = 1; i < N; i++) {
+        for (int i = 0; i < N; i++) {
             // Compute the sinc interpolation for this rotation
             auto rotIndex = m_cc->EvalChebyshevFunction(
                 [i](double x) { return Sinc<N>::scaled_sinc_j(x, i); },
-                Index_minus_Rank, -1, 1, 7701);
+                Index_minus_Rank, -1, 1, sincPolyDegree);
 
             // Apply the rotation mask to the input array
             auto masked_input =
