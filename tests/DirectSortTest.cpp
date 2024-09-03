@@ -35,7 +35,7 @@ class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        std::vector<int> rotations;
+        std::vector<int> rotations = {0};
 
         for (int i = 1; i <= array_length; i++) {
             rotations.push_back(i);
