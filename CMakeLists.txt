@@ -42,4 +42,7 @@ add_subdirectory(tests)
 add_subdirectory(third_party/benchmark)
 add_subdirectory(benchmarks)
 
+### Utils
+add_subdirectory(utils)
+
 include_directories(${CMAKE_SOURCE_DIR}/app)
