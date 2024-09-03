@@ -15,29 +15,83 @@
 #include <functional>
 #include <omp.h>
 
+#include "comparison.h"
+#include "sort_algo.h"
+
 using namespace lbcrypto;
 
-struct arraySort {
+template <int N> struct SortContext {
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
     Ciphertext<DCRTPoly> input_array;
     Ciphertext<DCRTPoly> output_array;
-    std::string m_PubKeyLocation;
-    std::string m_MultKeyLocation;
-    std::string m_RotKeyLocation;
-    std::string m_CCLocation;
-    std::string m_arrayLocation;
-    std::string m_OutputLocation;
+    std::string m_outputLocation;
 
-    arraySort(std::string ccLocation, std::string pubKeyLocation,
-              std::string multKeyLocation, std::string rotKeyLocation,
-              std::string arraytLocation, std::string outputLocation);
+    SortContext(std::string ccLocation, std::string pubKeyLocation,
+                std::string multKeyLocation, std::string rotKeyLocation,
+                std::string arrayLocation, std::string outputLocation)
+        : m_outputLocation(outputLocation) {
 
-    arraySort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey);
+        initCC(ccLocation, pubKeyLocation, multKeyLocation, rotKeyLocation,
+               arrayLocation, outputLocation);
+    };
 
-    void initCC();
+    void initCC(std::string ccLocation, std::string pubKeyLocation,
+                std::string multKeyLocation, std::string rotKeyLocation,
+                std::string arrayLocation, std::string outputLocation) {
+        if (!Serial::DeserializeFromFile(ccLocation, m_cc, SerType::BINARY)) {
+            std::cerr << "Could not deserialize cryptocontext file"
+                      << std::endl;
+            std::exit(1);
+        }
 
-    void eval();
+        if (!Serial::DeserializeFromFile(pubKeyLocation, m_PublicKey,
+                                         SerType::BINARY)) {
+            std::cerr << "Could not deserialize public key file" << std::endl;
+            std::exit(1);
+        }
 
-    void deserializeOutput();
+        std::ifstream multKeyIStream(multKeyLocation,
+                                     std::ios::in | std::ios::binary);
+        if (!multKeyIStream.is_open()) {
+            std::exit(1);
+        }
+        if (!m_cc->DeserializeEvalMultKey(multKeyIStream, SerType::BINARY)) {
+            std::cerr << "Could not deserialize mult key file" << std::endl;
+            std::exit(1);
+        }
+
+        std::ifstream rotKeyIStream(rotKeyLocation,
+                                    std::ios::in | std::ios::binary);
+        if (!rotKeyIStream.is_open()) {
+            std::exit(1);
+        }
+        if (!m_cc->DeserializeEvalAutomorphismKey(rotKeyIStream,
+                                                  SerType::BINARY)) {
+            std::cerr << "Could not deserialize eval rot key file" << std::endl;
+            std::exit(1);
+        }
+
+        if (!Serial::DeserializeFromFile(arrayLocation, input_array,
+                                         SerType::BINARY)) {
+            std::cerr << "Could not deserialize array cipher" << std::endl;
+            std::exit(1);
+        }
+    }
+
+    void eval() {
+        omp_set_num_threads(24);
+        Comparison comp;
+
+        DirectSort<N> ds(m_cc, m_PublicKey, nullptr);
+
+        output_array = ds.sort(input_array);
+    }
+
+    void deserializeOutput() {
+        if (!Serial::SerializeToFile(m_outputLocation, output_array,
+                                     SerType::BINARY)) {
+            std::cerr << " Error writing ciphertext 1" << std::endl;
+        }
+    }
 };

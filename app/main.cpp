@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    arraySort sort(ccLocation, pubKeyLocation, multKeyLocation, rotKeyLocation,
-                   arrayLocation, outputLocation);
+    SortContext<128> sort(ccLocation, pubKeyLocation, multKeyLocation,
+                          rotKeyLocation, arrayLocation, outputLocation);
     sort.eval();
     sort.deserializeOutput();
     return 0;
