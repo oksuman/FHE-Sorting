@@ -37,9 +37,8 @@ endif ()
 add_executable(app main.cpp 
 		   comparison.cpp
 	           encryption.cpp
-	           sort.cpp
-	           sort_algo.cpp
 		   )
+
 ###
 ### EXAMPLE:
 ### add_executable( test demo-simple-example.cpp )
