@@ -1,36 +1,40 @@
-#include <benchmark/benchmark.h>
-#include <openfhe.h>
-#include <vector>
 #include <algorithm>
-#include <random>
+#include <benchmark/benchmark.h>
 #include <memory>
+#include <openfhe.h>
+#include <random>
+#include <vector>
 
-#include "sort_algo.h"
 #include "encryption.h"
+#include "sort_algo.h"
+
+using namespace lbcrypto;
+#include "encryption.h"
+#include "sort_algo.h"
+#include <benchmark/benchmark.h>
 
 using namespace lbcrypto;
 
-// Utility function to generate a vector with minimum difference (as in your original code)
+// Utility function to generate a vector with minimum difference (as in your
+// original code)
 std::vector<double> getVectorWithMinDiff(int N) {
     std::vector<double> result(N);
     std::vector<int> integers(25500);
     std::iota(integers.begin(), integers.end(), 0);
-    std::shuffle(integers.begin(), integers.end(), std::mt19937{std::random_device{}()});
+    std::shuffle(integers.begin(), integers.end(),
+                 std::mt19937{std::random_device{}()});
     for (int i = 0; i < N; ++i) {
         result[i] = integers[i] * 0.01;
     }
     return result;
 }
 
-// Benchmark function
-static void BM_DirectSort(benchmark::State& state) {
-    // Setup (this will be done once for all iterations)
-    constexpr int array_length = 128;
-    
+// Setup function to create the necessary objects
+template <int N> auto setupBenchmark() {
     CCParams<CryptoContextCKKSRNS> parameters;
     parameters.SetMultiplicativeDepth(50);
     parameters.SetScalingModSize(50);
-    parameters.SetBatchSize(array_length);
+    parameters.SetBatchSize(N);
     parameters.SetSecurityLevel(HEStd_NotSet);
     parameters.SetRingDim(1 << 12);
 
@@ -42,39 +46,64 @@ static void BM_DirectSort(benchmark::State& state) {
 
     auto keyPair = cc->KeyGen();
 
-    std::vector<int> rotations;
-    for (int i = 1; i <= array_length; i++) {
+    std::vector<int> rotations = {0};
+    for (int i = 1; i <= N; i++) {
         rotations.push_back(i);
         rotations.push_back(-i);
     }
-    for (int i = 1; i <= array_length; i++) {
+    for (int i = 1; i <= N; i++) {
         rotations.push_back(-i * 64);
     }
-
     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
     cc->EvalMultKeyGen(keyPair.secretKey);
 
     auto enc = std::make_shared<Encryption>(cc, keyPair);
-    auto directSort = std::make_unique<DirectSort<array_length>>(cc, keyPair.publicKey, enc);
+    auto directSort =
+        std::make_unique<DirectSort<N>>(cc, keyPair.publicKey, enc);
 
-    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
+    std::vector<double> inputArray = getVectorWithMinDiff(N);
     auto ctxt = enc->encryptInput(inputArray);
 
-    // Benchmark loop
+    return std::make_tuple(std::move(cc), std::move(directSort),
+                           std::move(ctxt));
+}
+
+// Benchmark function for sort
+template <int N> static void BM_DirectSort(benchmark::State &state) {
+    auto [cc, directSort, ctxt] = setupBenchmark<N>();
+
     for (auto _ : state) {
-        // This code will be measured repeatedly
         auto ctxt_out = directSort->sort(ctxt);
-        benchmark::DoNotOptimize(ctxt_out); // Ensure the result is not optimized away
-        benchmark::ClobberMemory(); // Ensure the entire computation is done
+        benchmark::DoNotOptimize(ctxt_out);
+        benchmark::ClobberMemory();
     }
 
-    // You can report custom metrics
-    state.counters["ArraySize"] = array_length;
+    state.counters["ArraySize"] = N;
     state.counters["RingDimension"] = cc->GetRingDimension();
 }
 
-// Register the benchmark
-BENCHMARK(BM_DirectSort)
+// Benchmark function for constructRank
+template <int N> static void BM_ConstructRank(benchmark::State &state) {
+    auto [cc, directSort, ctxt] = setupBenchmark<N>();
+
+    for (auto _ : state) {
+        auto rank = directSort->constructRank(ctxt);
+        benchmark::DoNotOptimize(rank);
+        benchmark::ClobberMemory();
+    }
+
+    state.counters["ArraySize"] = N;
+    state.counters["RingDimension"] = cc->GetRingDimension();
+}
+
+// Register the benchmarks
+BENCHMARK(BM_DirectSort<4>)
+    ->Unit(benchmark::kMillisecond)
+    ->Iterations(5)
+    ->Repetitions(3)
+    ->ReportAggregatesOnly(true)
+    ->UseRealTime();
+BENCHMARK(BM_ConstructRank<4>)
     ->Unit(benchmark::kMillisecond)
     ->Iterations(5)
     ->Repetitions(3)
