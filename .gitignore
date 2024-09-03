@@ -33,3 +33,6 @@ app/build/*
 *.exe
 *.out
 *.app
+
+
+/build/

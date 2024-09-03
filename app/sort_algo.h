@@ -58,14 +58,29 @@ template <int N> class DirectSort : public SortBase<N> {
             m_cc->EvalMult(input_array, (double)1.0 / 255);
 
 #pragma omp parallel for
-        for (int i = 1; i < N; i++) {
-            auto rotated = m_cc->EvalRotate(inputOver255, -i);
-            auto compResult = comp.compare(m_cc, inputOver255, rotated);
+    /*
+        Now, we have all indices for rotation, so i think there's no reason to use negative index
+        Revision : -i -> i 
+    */
+        for (int i = 1; i < N/2; i++) {
+            auto rotated = m_cc->EvalRotate(inputOver255, i);
+            auto compResult1 = comp.compare(m_cc, inputOver255, rotated);
+            auto compResult2 = m_cc->EvalRotate(compResult1, -i);
+            m_cc->EvalSubInPlace(1, compResult2);
+            m_cc->EvalAddInPlace(compResult1,compResult2);
+
 // TODO remove critical section for performance and instead add results later
 #pragma omp critical
-            { m_cc->EvalAddInPlace(ctxRank, compResult); }
+            { m_cc->EvalAddInPlace(ctxRank, compResult1); }
         }
 
+        /*
+            We need comparison of (inputOver255, Rot(inputOver255, N/2)   
+        */
+        auto rotated = m_cc->EvalRotate(inputOver255, N/2);
+        auto compResult = comp.compare(m_cc, inputOver255, rotated);
+        m_cc->EvalAddInPlace(ctxRank, compResult);
+    
         return ctxRank;
     }
 
@@ -73,7 +88,7 @@ template <int N> class DirectSort : public SortBase<N> {
     rotationIndexCheck(const Ciphertext<DCRTPoly> &Index_minus_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
         // int N = input_array->GetSlots();
-        constexpr int sincPolyDegree = 7701;
+        constexpr int sincPolyDegree = 611; // for array size of 128 
 
         auto output_array = this->getZero()->Clone();
 
