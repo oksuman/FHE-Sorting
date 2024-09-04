@@ -92,8 +92,8 @@ template <int N> class DirectSort : public SortBase<N> {
             const auto &coefficients = allCoefficients[i];
             std::vector<double> coeffVector(coefficients.begin(),
                                             coefficients.end());
-            auto rotIndex =
-                m_cc->EvalChebyshevSeries(Index_minus_Rank, coeffVector, -1, 1);
+            auto rotIndex = m_cc->EvalChebyshevSeriesPS(Index_minus_Rank,
+                                                        coeffVector, -1, 1);
 
             // Apply the rotation mask to the input array
             auto masked_input =
