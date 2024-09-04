@@ -18,8 +18,9 @@ class DirectSortTest : public ::testing::Test {
     void SetUp() override {
         // Set up the CryptoContext
         CCParams<CryptoContextCKKSRNS> parameters;
-        parameters.SetMultiplicativeDepth(50);
-        parameters.SetScalingModSize(50);
+        // TODO: check optimal level
+        parameters.SetMultiplicativeDepth(45);
+        parameters.SetScalingModSize(59);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
         parameters.SetRingDim(1 << 12);
@@ -40,9 +41,6 @@ class DirectSortTest : public ::testing::Test {
         for (int i = 1; i <= array_length; i++) {
             rotations.push_back(i);
             rotations.push_back(-i);
-        }
-        for (int i = 1; i <= array_length; i++) {
-            rotations.push_back(-i * 64);
         }
 
         // Generate the rotation keys
