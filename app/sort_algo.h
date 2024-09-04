@@ -10,6 +10,8 @@
 
 using namespace lbcrypto;
 
+#include "generated_coeffs.h"
+
 // Base class for sorting algorithms
 template <int N> // Array size
 class SortBase {
@@ -41,6 +43,8 @@ template <int N> class DirectSort : public SortBase<N> {
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
     Comparison comp;
+
+    static constexpr int sincPolyDegree = 611;
 
   public:
     std::shared_ptr<Encryption> m_enc;
@@ -85,16 +89,25 @@ template <int N> class DirectSort : public SortBase<N> {
     rotationIndexCheck(const Ciphertext<DCRTPoly> &Index_minus_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
         // int N = input_array->GetSlots();
+
         constexpr int sincPolyDegree = 611; // for array size of 128
 
         auto output_array = this->getZero()->Clone();
+        static constexpr auto allCoefficients = selectCoefficients<N>();
+        assert(allCoefficients.size() == N &&
+               "The size of precomputed coefficient matrix is different than "
+               "the array size.");
+        assert(allCoefficients[0].size() == sincPolyDegree + 1 &&
+               "The degree of sinc is different than coefficient vector size.");
 
 #pragma omp parallel for
         for (int i = 0; i < N; i++) {
             // Compute the sinc interpolation for this rotation
-            auto rotIndex = m_cc->EvalChebyshevFunction(
-                [i](double x) { return Sinc<N>::scaled_sinc_j(x, i); },
-                Index_minus_Rank, -1, 1, sincPolyDegree);
+            const auto &coefficients = allCoefficients[i];
+            std::vector<double> coeffVector(coefficients.begin(),
+                                            coefficients.end());
+            auto rotIndex = m_cc->EvalChebyshevSeriesPS(Index_minus_Rank,
+                                                        coeffVector, -1, 1);
 
             // Apply the rotation mask to the input array
             auto masked_input =
