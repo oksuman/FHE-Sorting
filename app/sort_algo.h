@@ -44,8 +44,6 @@ template <int N> class DirectSort : public SortBase<N> {
     PublicKey<DCRTPoly> m_PublicKey;
     Comparison comp;
 
-    static constexpr int sincPolyDegree = 611;
-
   public:
     std::shared_ptr<Encryption> m_enc;
 
@@ -90,7 +88,8 @@ template <int N> class DirectSort : public SortBase<N> {
                        const Ciphertext<DCRTPoly> &input_array) {
         // int N = input_array->GetSlots();
 
-        constexpr int sincPolyDegree = 611; // for array size of 128
+// Asserts are not run in Release mode
+#define sincPolyDegree 611 // for array size of 128
 
         auto output_array = this->getZero()->Clone();
         static constexpr auto allCoefficients = selectCoefficients<N>();

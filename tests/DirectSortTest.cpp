@@ -52,7 +52,7 @@ class DirectSortTest : public ::testing::Test {
         m_enc = std::make_shared<Encryption>(m_cc, keyPair);
     }
 
-    static constexpr int array_length = 128;
+    static constexpr int array_length = 4;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;

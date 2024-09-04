@@ -97,16 +97,16 @@ template <int N> static void BM_ConstructRank(benchmark::State &state) {
 }
 
 // Register the benchmarks
-BENCHMARK(BM_DirectSort<4>)
+BENCHMARK(BM_DirectSort<128>)
     ->Unit(benchmark::kMillisecond)
     ->Iterations(5)
     ->Repetitions(3)
     ->ReportAggregatesOnly(true)
     ->UseRealTime();
-BENCHMARK(BM_ConstructRank<4>)
+BENCHMARK(BM_ConstructRank<128>)
     ->Unit(benchmark::kMillisecond)
     ->Iterations(5)
-    ->Repetitions(3)
+    ->Repetitions(5)
     ->ReportAggregatesOnly(true)
     ->UseRealTime();
 
