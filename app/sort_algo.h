@@ -55,31 +55,32 @@ template <int N> class DirectSort : public SortBase<N> {
     Ciphertext<DCRTPoly>
     constructRank(const Ciphertext<DCRTPoly> &input_array) {
 
-        auto ctxRank = this->getZero()->Clone();
+        // Store ranks calculated from each thread and accumulate them later
+        std::vector<Ciphertext<DCRTPoly>> compResults(N / 2);
+        // TODO check if moving inputOver255 inside the loop improves perf with
+        // cache locality etc.
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
 
 #pragma omp parallel for
-
         for (int i = 1; i < N / 2; i++) {
             auto rotated = m_cc->EvalRotate(inputOver255, i);
             auto compResult1 = comp.compare(m_cc, inputOver255, rotated);
             auto compResult2 = m_cc->EvalRotate(compResult1, -i);
             m_cc->EvalSubInPlace(compResult1, compResult2);
-
-// TODO remove critical section for performance and instead add results later
-#pragma omp critical
-            { m_cc->EvalAddInPlace(ctxRank, compResult1); }
+            compResults[i - 1] = compResult1;
         }
-        m_cc->EvalAddInPlace(ctxRank, N / 2 - 1);
 
         /*
             We need comparison of (inputOver255, Rot(inputOver255, N/2)
         */
         auto rotated = m_cc->EvalRotate(inputOver255, N / 2);
-        auto compResult = comp.compare(m_cc, inputOver255, rotated);
-        m_cc->EvalAddInPlace(ctxRank, compResult);
+        compResults[N / 2 - 1] = comp.compare(m_cc, inputOver255, rotated);
 
+        // Binary tree reduction addition
+        auto ctxRank = m_cc->EvalAddManyInPlace(compResults);
+
+        m_cc->EvalAddInPlace(ctxRank, (double)N / 2 - 1);
         return ctxRank;
     }
 
@@ -91,13 +92,14 @@ template <int N> class DirectSort : public SortBase<N> {
 // Asserts are not run in Release mode
 #define sincPolyDegree 611 // for array size of 128
 
-        auto output_array = this->getZero()->Clone();
         static constexpr auto allCoefficients = selectCoefficients<N>();
         assert(allCoefficients.size() == N &&
                "The size of precomputed coefficient matrix is different than "
                "the array size.");
         assert(allCoefficients[0].size() == sincPolyDegree + 1 &&
                "The degree of sinc is different than coefficient vector size.");
+
+        std::vector<Ciphertext<DCRTPoly>> rotatedResults(N);
 
 #pragma omp parallel for
         for (int i = 0; i < N; i++) {
@@ -113,12 +115,10 @@ template <int N> class DirectSort : public SortBase<N> {
                 m_cc->EvalMultAndRelinearize(rotIndex, input_array);
 
             // Rotate the masked input
-            auto rotated = m_cc->EvalRotate(masked_input, i);
-
-#pragma omp critical
-            // Add to the output array
-            { m_cc->EvalAddInPlace(output_array, rotated); }
+            rotatedResults[i] = m_cc->EvalRotate(masked_input, i);
         }
+
+        auto output_array = m_cc->EvalAddManyInPlace(rotatedResults);
 
         return output_array;
     }
