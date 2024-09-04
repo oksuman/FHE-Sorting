@@ -33,11 +33,4 @@ add_unit_test(CompareTest
 add_unit_test(DirectSortTest 
 	      DirectSortTest.cpp 
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
-	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	      ${CMAKE_SOURCE_DIR}/app/sort_algo.cpp)
-
-add_unit_test(SortTest 
-	      SortTest.cpp 
-	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
-	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	      ${CMAKE_SOURCE_DIR}/app/sort.cpp)
+	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp)

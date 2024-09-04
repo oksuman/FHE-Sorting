@@ -1,5 +1,4 @@
-#ifndef COMPARISON_H
-#define COMPARISON_H
+#pragma once
 
 #include "encryption.h"
 #include "openfhe.h"
@@ -56,4 +55,3 @@ class Comparison {
                                  const Ciphertext<DCRTPoly> &a,
                                  const Ciphertext<DCRTPoly> &b);
 };
-#endif // COMPARISON_H
