@@ -59,10 +59,15 @@ template <int N> class DirectSort : public SortBase<N> {
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
 
+        uint32_t ringDim = m_cc->GetRingDimension();
+        uint32_t cyclotomicOrder = 2 * ringDim;
+        auto cPrecomp = m_cc->EvalFastRotationPrecompute(inputOver255);
+
 #pragma omp parallel for
 
         for (int i = 1; i < N / 2; i++) {
-            auto rotated = m_cc->EvalRotate(inputOver255, i);
+            auto rotated = m_cc->EvalFastRotation(inputOver255, i,
+                                                  cyclotomicOrder, cPrecomp);
             auto compResult1 = comp.compare(m_cc, inputOver255, rotated);
             auto compResult2 = m_cc->EvalRotate(compResult1, -i);
             m_cc->EvalSubInPlace(compResult1, compResult2);
@@ -76,7 +81,8 @@ template <int N> class DirectSort : public SortBase<N> {
         /*
             We need comparison of (inputOver255, Rot(inputOver255, N/2)
         */
-        auto rotated = m_cc->EvalRotate(inputOver255, N / 2);
+        auto rotated = m_cc->EvalFastRotation(inputOver255, N / 2,
+                                              cyclotomicOrder, cPrecomp);
         auto compResult = comp.compare(m_cc, inputOver255, rotated);
         m_cc->EvalAddInPlace(ctxRank, compResult);
 
