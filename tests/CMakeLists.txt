@@ -30,6 +30,13 @@ add_unit_test(CompareTest
 	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
 
+add_unit_test(NAFTest
+	      NAFTest.cpp)
+
+add_unit_test(RotateTest
+	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
+	      RotationTest.cpp)
+
 add_unit_test(DirectSortTest 
 	      DirectSortTest.cpp 
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
