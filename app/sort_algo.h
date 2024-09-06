@@ -36,6 +36,10 @@ class SortBase {
     virtual const Ciphertext<DCRTPoly> &getZero() const { return m_zeroCache; }
     // Common methods that can be used by all sorting algorithms
     constexpr size_t getArraySize() const { return N; }
+
+    // Wrap any index to positive values 0-N so we can eliminate negative
+    // rotation keys
+    static constexpr int wrapRotation(int i) { return ((i % N) + N) % N; }
 };
 
 template <int N> class DirectSort : public SortBase<N> {
@@ -69,7 +73,9 @@ template <int N> class DirectSort : public SortBase<N> {
             auto rotated = m_cc->EvalFastRotation(inputOver255, i,
                                                   cyclotomicOrder, cPrecomp);
             auto compResult1 = comp.compare(m_cc, inputOver255, rotated);
-            auto compResult2 = m_cc->EvalRotate(compResult1, -i);
+            std::cout << "Rotating by" << N - i << "\n";
+            auto compResult2 =
+                m_cc->EvalRotate(compResult1, this->wrapRotation(-i));
             m_cc->EvalSubInPlace(compResult1, compResult2);
 
 // TODO remove critical section for performance and instead add results later

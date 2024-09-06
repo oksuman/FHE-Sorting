@@ -40,7 +40,6 @@ class DirectSortTest : public ::testing::Test {
 
         for (int i = 1; i <= array_length; i++) {
             rotations.push_back(i);
-            rotations.push_back(-i);
         }
 
         // Generate the rotation keys
@@ -52,7 +51,7 @@ class DirectSortTest : public ::testing::Test {
         m_enc = std::make_shared<Encryption>(m_cc, keyPair);
     }
 
-    static constexpr int array_length = 4;
+    static constexpr int array_length = 128;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
@@ -81,10 +80,7 @@ std::vector<double> getVectorWithMinDiff(int N) {
 
 TEST_F(DirectSortTest, ConstructRank) {
     // Create a random array of 32 elements
-    std::vector<double> inputArray(array_length);
-    std::iota(inputArray.begin(), inputArray.end(), 0.0);
-    std::shuffle(inputArray.begin(), inputArray.end(),
-                 std::mt19937{std::random_device{}()});
+    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
     std::cout << inputArray << "\n";
 
     // Encrypt the input array
@@ -95,6 +91,7 @@ TEST_F(DirectSortTest, ConstructRank) {
     // Construct rank using DirectSort
     auto ctxtRank = directSort->constructRank(ctxt);
 
+    PRINT_PT(m_enc, ctxtRank);
     // Decrypt the result
     Plaintext result;
     m_cc->Decrypt(m_privateKey, ctxtRank, &result);
@@ -131,10 +128,6 @@ TEST_F(DirectSortTest, ConstructRank) {
 
 TEST_F(DirectSortTest, DirectSort) {
     // Create a random array of 32 elements
-    // std::vector<double> inputArray(array_length);
-    // std::iota(inputArray.begin(), inputArray.end(), 0.0);
-    // std::shuffle(inputArray.begin(), inputArray.end(),
-    //              std::mt19937{std::random_device{}()});
     std::vector<double> inputArray = getVectorWithMinDiff(array_length);
     std::cout << inputArray << "\n";
 
