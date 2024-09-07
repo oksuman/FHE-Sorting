@@ -33,6 +33,12 @@ else ()
 endif ()
 
 
+set(ENABLE_PRINT_PT ON CACHE BOOL "Enable PRINT_PT macro")
+if(ENABLE_PRINT_PT)
+  add_definitions(-DENABLE_PRINT_PT)
+endif()
+
+
 add_subdirectory(app)
 
 ### Tests

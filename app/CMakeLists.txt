@@ -39,6 +39,14 @@ add_executable(app main.cpp
 	           encryption.cpp
 		   )
 
+if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+  # Disable printing for submission
+  set(ENABLE_PRINT_PT OFF CACHE BOOL "Enable PRINT_PT macro")
+endif()
+
+if(ENABLE_PRINT_PT)
+  add_definitions(-DENABLE_PRINT_PT)
+endif()
 ###
 ### EXAMPLE:
 ### add_executable( test demo-simple-example.cpp )
