@@ -36,8 +36,8 @@ class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        std::vector<int> rotations = {0, -1, -2, -4, -8, -16, -32, -64,
-                                      1, 2,  4,  8,  16, 32,  64};
+        std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, -64,
+                                      1,  2,  4,  8,  16,  32,  64};
 
         // Generate the rotation keys
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
@@ -48,7 +48,7 @@ class DirectSortTest : public ::testing::Test {
         m_enc = std::make_shared<Encryption>(m_cc, keyPair);
     }
 
-    static constexpr int array_length = 4;
+    static constexpr int array_length = 128;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
