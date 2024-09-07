@@ -57,7 +57,7 @@ template <int N> auto setupBenchmark() {
     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
     cc->EvalMultKeyGen(keyPair.secretKey);
 
-    auto enc = std::make_shared<Encryption>(cc, keyPair);
+    auto enc = std::make_shared<Encryption>(cc, keyPair.publicKey);
     auto directSort =
         std::make_unique<DirectSort<N>>(cc, keyPair.publicKey, enc);
 

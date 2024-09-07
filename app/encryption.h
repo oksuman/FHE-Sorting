@@ -52,15 +52,33 @@ inline std::string getContextLines(const char *filename, int lineNum,
 class Encryption {
   public:
     Ciphertext<DCRTPoly> encryptInput(std::vector<double> input);
-    // std::vector<double> getPlaintext(Ciphertext<DCRTPoly> ct);
+    Encryption(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> pk)
+        : m_cc(cc), m_PublicKey(pk) {}
+
+    virtual std::vector<double> getPlaintext(const Ciphertext<DCRTPoly> &ct,
+                                             double threshold = 1e-10) const {
+        // Default implementation throws an exception
+        throw std::runtime_error(
+            "Decryption not available in base Encryption class");
+    }
+    virtual ~Encryption() = default;
+
+  protected:
+    CryptoContext<DCRTPoly> m_cc;
+    PublicKey<DCRTPoly> m_PublicKey;
+};
+
+class DebugEncryption : public Encryption {
+  public:
     [[nodiscard]] std::vector<double>
     getPlaintext(const Ciphertext<DCRTPoly> &ct,
-                 double threshold = 1e-10) const;
-    // std::vector<double> getPlaintextOutput(PrivateKey<DCRTPoly> sk);
-    Encryption(CryptoContext<DCRTPoly> cc, KeyPair<DCRTPoly> kp)
-        : m_cc(cc), m_KeyPair(kp) {}
+                 double threshold = 1e-10) const override;
+
+    DebugEncryption(CryptoContext<DCRTPoly> cc, KeyPair<DCRTPoly> keyPair)
+        : Encryption(cc, keyPair.publicKey), m_PrivateKey(keyPair.secretKey) {}
+
+    ~DebugEncryption() override = default;
 
   private:
-    CryptoContext<DCRTPoly> m_cc;
-    KeyPair<DCRTPoly> m_KeyPair;
+    PrivateKey<DCRTPoly> m_PrivateKey;
 };

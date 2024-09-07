@@ -30,7 +30,7 @@ class CompareTest : public ::testing::Test {
         keys = cc->KeyGen();
         cc->EvalMultKeyGen(keys.secretKey);
 
-        enc = std::make_shared<Encryption>(cc, keys);
+        enc = std::make_shared<Encryption>(cc, keys.publicKey);
         comp = std::make_unique<Comparison>(enc);
     }
 

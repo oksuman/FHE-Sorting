@@ -82,8 +82,9 @@ template <int N> struct SortContext {
     void eval() {
         omp_set_num_threads(24);
         Comparison comp;
+        auto enc = std::make_shared<Encryption>(m_cc, m_PublicKey);
 
-        DirectSort<N> ds(m_cc, m_PublicKey, nullptr);
+        DirectSort<N> ds(m_cc, m_PublicKey, enc);
 
         output_array = ds.sort(input_array);
     }

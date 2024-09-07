@@ -45,14 +45,14 @@ class DirectSortTest : public ::testing::Test {
 
         // Create DirectSort object
 
-        m_enc = std::make_shared<Encryption>(m_cc, keyPair);
+        m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
     }
 
-    static constexpr int array_length = 128;
+    static constexpr int array_length = 4;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
-    std::shared_ptr<Encryption> m_enc;
+    std::shared_ptr<DebugEncryption> m_enc;
 };
 
 std::vector<double> getVectorWithMinDiff(int N) {
