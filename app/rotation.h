@@ -55,9 +55,8 @@ template <int N> class OptimizedRotator {
         for (int i = 31; i >= 0; --i) {
             if (naf[i] != 0) {
                 int step = (1 << i) * naf[i];
-                std::cout << (int)naf[i] << "\n";
-                result = m_cc->EvalRotate(result, step);
-                std::cout << "Rotating by " << step << "\n";
+                if (step != N)
+                    result = m_cc->EvalRotate(result, step);
             }
         }
 
