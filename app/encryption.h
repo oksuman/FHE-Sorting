@@ -31,11 +31,15 @@ inline std::string getContextLines(const char *filename, int lineNum,
     return oss.str();
 }
 
+#ifdef ENABLE_PRINT_PT
 #define PRINT_PT(enc, ct)                                                      \
     do {                                                                       \
         std::cout << (enc)->getPlaintext((ct)) << ": " << #ct                  \
                   << " Level: " << (ct)->GetLevel() << "\n";                   \
     } while (0)
+#else
+#define PRINT_PT(enc, ct)
+#endif
 
 #define PRINT_PT_CONTEXT(enc, ct)                                              \
     do {                                                                       \
