@@ -1,4 +1,5 @@
 #include "comparison.h"
+#include "encryption.h"
 #include "openfhe.h"
 #include "sort.h"
 #include <gtest/gtest.h>
@@ -28,7 +29,7 @@ class ArraySortTest : public ::testing::Test {
         keyPair = cc->KeyGen();
         cc->EvalMultKeyGen(keyPair.secretKey);
 
-        m_enc = std::make_shared<Encryption>(cc, keyPair);
+        m_enc = std::make_shared<DebugEncryption>(cc, keyPair);
 
         comp = std::make_unique<Comparison>(m_enc);
     }

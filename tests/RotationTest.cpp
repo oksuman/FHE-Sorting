@@ -51,14 +51,14 @@ class OptimizedRotatorTest : public ::testing::Test {
         m_cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
         m_cc->EvalMultKeyGen(keyPair.secretKey);
 
-        m_enc = std::make_shared<Encryption>(m_cc, keyPair);
+        m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
         m_rotator =
             std::make_unique<OptimizedRotator<array_length>>(m_cc, m_enc);
     }
 
     static constexpr int array_length = 128;
     CryptoContext<DCRTPoly> m_cc;
-    std::shared_ptr<Encryption> m_enc;
+    std::shared_ptr<DebugEncryption> m_enc;
     std::unique_ptr<OptimizedRotator<array_length>> m_rotator;
 };
 
