@@ -54,6 +54,7 @@ template <int N> struct SortContext {
         std::ifstream multKeyIStream(multKeyLocation,
                                      std::ios::in | std::ios::binary);
         if (!multKeyIStream.is_open()) {
+            std::cerr << "Mult key stream not open" << std::endl;
             std::exit(1);
         }
         if (!m_cc->DeserializeEvalMultKey(multKeyIStream, SerType::BINARY)) {
@@ -64,6 +65,7 @@ template <int N> struct SortContext {
         std::ifstream rotKeyIStream(rotKeyLocation,
                                     std::ios::in | std::ios::binary);
         if (!rotKeyIStream.is_open()) {
+            std::cerr << "Rot key stream not open" << std::endl;
             std::exit(1);
         }
         if (!m_cc->DeserializeEvalAutomorphismKey(rotKeyIStream,
@@ -80,7 +82,6 @@ template <int N> struct SortContext {
     }
 
     void eval() {
-        omp_set_num_threads(24);
         Comparison comp;
         auto enc = std::make_shared<Encryption>(m_cc, m_PublicKey);
 
