@@ -32,6 +32,12 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    // https://github.com/openfheorg/openfhe-development/blob/main/docs/static_docs/Best_Performance.md#multithreading-configuration-using-openmp
+    // nproc/2 is suggested for better performance with OpenMP
+
+    auto procs = omp_get_num_procs();
+    omp_set_num_threads(procs / 2);
+
     SortContext<128> sort(ccLocation, pubKeyLocation, multKeyLocation,
                           rotKeyLocation, arrayLocation, outputLocation);
     sort.eval();
