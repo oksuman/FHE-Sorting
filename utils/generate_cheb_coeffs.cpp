@@ -34,6 +34,8 @@ template <int N> void generateCoefficients(std::ofstream &outFile) {
             << "> generatedCoefficients_" << N << " = {{\n";
     for (int i = 0; i < N; ++i) {
         auto coeffs = generateTruncatedCoefficients<N>(i);
+        std::cout << "New depth "
+                  << GetMultiplicativeDepthByCoeffVector(coeffs);
         outFile << "    {";
         for (size_t j = 0; j < coeffs.size(); ++j) {
             outFile << coeffs[j];

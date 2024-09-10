@@ -19,7 +19,7 @@ class DirectSortTest : public ::testing::Test {
         // Set up the CryptoContext
         CCParams<CryptoContextCKKSRNS> parameters;
         // TODO: check optimal level
-        parameters.SetMultiplicativeDepth(45);
+        parameters.SetMultiplicativeDepth(MultDepth);
         parameters.SetScalingModSize(59);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
@@ -49,6 +49,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 4;
+    static constexpr int MultDepth = 44;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
@@ -140,6 +141,10 @@ TEST_F(DirectSortTest, DirectSort) {
         std::make_unique<DirectSort<array_length>>(m_cc, m_publicKey, m_enc);
 
     Ciphertext<DCRTPoly> ctxt_out = directSort->sort(ctxt);
+
+    ASSERT_EQ(ctxt_out->GetLevel() + 1, MultDepth)
+        << "Use the level + 1 returned by the result for best performance";
+
     // Decrypt the result
     Plaintext result;
     m_cc->Decrypt(m_privateKey, ctxt_out, &result);
