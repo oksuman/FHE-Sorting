@@ -31,3 +31,6 @@ add_benchmark(DirectSortBenchmark
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp
               ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
+
+      add_benchmark(RotationBenchmark 
+	      RotationBenchmark.cpp)
