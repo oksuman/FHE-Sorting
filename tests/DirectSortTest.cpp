@@ -77,11 +77,9 @@ std::vector<double> getVectorWithMinDiff(int N) {
 }
 
 TEST_F(DirectSortTest, ConstructRank) {
-    // Create a random array of 32 elements
-    std::vector<double> inputArray(array_length);
-    std::iota(inputArray.begin(), inputArray.end(), 0.0);
-    std::shuffle(inputArray.begin(), inputArray.end(),
-                 std::mt19937{std::random_device{}()});
+
+    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
+
     std::cout << inputArray << "\n";
 
     // Encrypt the input array
@@ -127,11 +125,7 @@ TEST_F(DirectSortTest, ConstructRank) {
 }
 
 TEST_F(DirectSortTest, DirectSort) {
-    // Create a random array of 32 elements
-    // std::vector<double> inputArray(array_length);
-    // std::iota(inputArray.begin(), inputArray.end(), 0.0);
-    // std::shuffle(inputArray.begin(), inputArray.end(),
-    //              std::mt19937{std::random_device{}()});
+
     std::vector<double> inputArray = getVectorWithMinDiff(array_length);
     std::cout << inputArray << "\n";
 

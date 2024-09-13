@@ -1,13 +1,14 @@
 #include "comparison.h"
 #include "math/chebyshev.h"
 #include "openfhe.h"
+#include "scheme/ckksrns/ckksrns-utils.h"
 #include <array>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <vector>
 
-constexpr double COEFFICIENT_THRESHOLD = 1e-5;
+constexpr double COEFFICIENT_THRESHOLD = 1e-4;
 constexpr int sincPolyDegree = 611;
 
 template <int N> std::vector<double> generateTruncatedCoefficients(int i) {
@@ -21,8 +22,6 @@ template <int N> std::vector<double> generateTruncatedCoefficients(int i) {
            std::abs(coeffs[lastSignificantIndex]) < COEFFICIENT_THRESHOLD) {
         lastSignificantIndex--;
     }
-    std::cout << "New coeff size for " << i << " was " << lastSignificantIndex
-              << "\n";
 
     // Create a new vector with only significant coefficients
     return std::vector<double>(coeffs.begin(),
@@ -34,8 +33,6 @@ template <int N> void generateCoefficients(std::ofstream &outFile) {
             << "> generatedCoefficients_" << N << " = {{\n";
     for (int i = 0; i < N; ++i) {
         auto coeffs = generateTruncatedCoefficients<N>(i);
-        std::cout << "New depth "
-                  << GetMultiplicativeDepthByCoeffVector(coeffs);
         outFile << "    {";
         for (size_t j = 0; j < coeffs.size(); ++j) {
             outFile << coeffs[j];
