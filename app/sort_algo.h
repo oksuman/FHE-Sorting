@@ -91,26 +91,18 @@ template <int N> class DirectSort : public SortBase<N> {
                        const Ciphertext<DCRTPoly> &input_array) {
         // int N = input_array->GetSlots();
 
-// Asserts are not run in Release mode
-#define sincPolyDegree 611 // for array size of 128
-
         auto output_array = this->getZero()->Clone();
-        static constexpr auto allCoefficients = selectCoefficients<N>();
+        static const auto allCoefficients = selectCoefficients<N>();
         assert(allCoefficients.size() == N &&
                "The size of precomputed coefficient matrix is different than "
                "the array size.");
-        assert(allCoefficients[0].size() == sincPolyDegree + 1 &&
-               "The degree of sinc is different than coefficient vector size.");
 
 #pragma omp parallel for
         for (int i = 0; i < N; i++) {
             // Compute the sinc interpolation for this rotation
             const auto &coefficients = allCoefficients[i];
-            std::vector<double> coeffVector(coefficients.begin(),
-                                            coefficients.end());
             auto rotIndex = m_cc->EvalChebyshevSeriesPS(Index_minus_Rank,
-                                                        coeffVector, -1, 1);
-
+                                                        coefficients, -1, 1);
             // Apply the rotation mask to the input array
             auto masked_input =
                 m_cc->EvalMultAndRelinearize(rotIndex, input_array);

@@ -38,6 +38,8 @@ if(ENABLE_PRINT_PT)
   add_definitions(-DENABLE_PRINT_PT)
 endif()
 
+include_directories(${CMAKE_SOURCE_DIR}/app)
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/utils)
 
 add_subdirectory(app)
 
@@ -51,4 +53,3 @@ add_subdirectory(benchmarks)
 ### Utils
 add_subdirectory(utils)
 
-include_directories(${CMAKE_SOURCE_DIR}/app)
