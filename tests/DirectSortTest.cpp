@@ -38,8 +38,8 @@ class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, -64,
-                                      1,  2,  4,  8,  16,  32,  64};
+        std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, 1,
+                                      2,  4,  8,  16, 32,  64};
 
         // Generate the rotation keys
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);

@@ -46,8 +46,8 @@ template <int N> auto setupBenchmark() {
 
     auto keyPair = cc->KeyGen();
 
-    std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, -64,
-                                  1,  2,  4,  8,  16,  32,  64};
+    std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, 1,
+                                  2,  4,  8,  16, 32,  64};
 
     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
     cc->EvalMultKeyGen(keyPair.secretKey);
