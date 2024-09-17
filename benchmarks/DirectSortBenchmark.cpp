@@ -32,11 +32,11 @@ std::vector<double> getVectorWithMinDiff(int N) {
 // Setup function to create the necessary objects
 template <int N> auto setupBenchmark() {
     CCParams<CryptoContextCKKSRNS> parameters;
-    parameters.SetMultiplicativeDepth(50);
-    parameters.SetScalingModSize(50);
+    parameters.SetMultiplicativeDepth(44);
+    parameters.SetScalingModSize(59);
     parameters.SetBatchSize(N);
-    parameters.SetSecurityLevel(HEStd_NotSet);
-    parameters.SetRingDim(1 << 12);
+    parameters.SetSecurityLevel(HEStd_128_classic);
+    // parameters.SetRingDim(1 << 12);
 
     auto cc = GenCryptoContext(parameters);
     cc->Enable(PKE);
@@ -46,11 +46,8 @@ template <int N> auto setupBenchmark() {
 
     auto keyPair = cc->KeyGen();
 
-    std::vector<int> rotations = {0};
-    for (int i = 1; i < N; i = i * 2) {
-        rotations.push_back(i);
-        rotations.push_back(-i);
-    }
+    std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, -64,
+                                  1,  2,  4,  8,  16,  32,  64};
 
     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
     cc->EvalMultKeyGen(keyPair.secretKey);
