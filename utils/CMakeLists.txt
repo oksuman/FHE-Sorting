@@ -33,3 +33,35 @@ target_include_directories(app PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(DirectSortTest PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(SincTest PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 target_include_directories(DirectSortBenchmark PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+file(GLOB CPP_FILES "*.cpp")
+
+foreach(CPP_FILE ${CPP_FILES})
+    # Get the file name without extension
+    get_filename_component(FILE_NAME ${CPP_FILE} NAME_WE)
+    
+    # Create executable
+    add_executable(${FILE_NAME} ${CPP_FILE})
+    
+    # Include directories
+    target_include_directories(${FILE_NAME} 
+        PRIVATE 
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/app
+        ${OpenFHE_INCLUDE_DIRS}
+    )
+    
+    # Link libraries
+    target_link_libraries(${FILE_NAME}
+        PRIVATE
+        ${OpenFHE_SHARED_LIBRARIES}
+        OpenMP::OpenMP_CXX
+        gtest
+        gtest_main
+    )
+
+endforeach()
+
+target_sources(sign_characterizer PRIVATE
+	${CMAKE_SOURCE_DIR}/app/encryption.cpp
+	${CMAKE_SOURCE_DIR}/app/sign.cpp)
