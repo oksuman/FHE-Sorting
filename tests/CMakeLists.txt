@@ -19,16 +19,18 @@ endfunction()
 
 add_unit_test(SincTest 
 	      SincTest.cpp 
+              ${CMAKE_SOURCE_DIR}/app/sign.cpp
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
 
 add_unit_test(SignTest 
 	      SignTest.cpp 
 	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
+	      ${CMAKE_SOURCE_DIR}/app/sign.cpp)
 
 add_unit_test(CompareTest 
 	      CompareTest.cpp 
 	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
+              ${CMAKE_SOURCE_DIR}/app/sign.cpp
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
 
 add_unit_test(NAFTest
@@ -40,5 +42,6 @@ add_unit_test(RotateTest
 
 add_unit_test(DirectSortTest 
 	      DirectSortTest.cpp 
+              ${CMAKE_SOURCE_DIR}/app/sign.cpp
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
 	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp)

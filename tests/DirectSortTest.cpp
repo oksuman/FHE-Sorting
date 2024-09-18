@@ -9,6 +9,7 @@
 #include "encryption.h"
 #include "key/privatekey-fwd.h"
 #include "lattice/hal/lat-backend.h"
+#include "sign.h"
 #include "sort_algo.h"
 
 using namespace lbcrypto;

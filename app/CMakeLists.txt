@@ -37,6 +37,7 @@ endif ()
 add_executable(app main.cpp 
 		   comparison.cpp
 	           encryption.cpp
+	           sign.cpp
 		   )
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
