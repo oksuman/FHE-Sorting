@@ -1,4 +1,5 @@
 #include "sort.h"
+#include "sort_algo.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -40,7 +41,7 @@ int main(int argc, char *argv[]) {
 
     SortContext<128> sort(ccLocation, pubKeyLocation, multKeyLocation,
                           rotKeyLocation, arrayLocation, outputLocation);
-    sort.eval();
+    sort.eval(SortAlgo::DirectSort);
     sort.deserializeOutput();
     return 0;
 }

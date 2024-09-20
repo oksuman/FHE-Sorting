@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 
+#include "utils.h"
 #include "ciphertext-fwd.h"
 #include "comparison.h"
 #include "constants.h"
@@ -55,26 +56,6 @@ class DirectSortTest : public ::testing::Test {
     PrivateKey<DCRTPoly> m_privateKey;
     std::shared_ptr<DebugEncryption> m_enc;
 };
-
-std::vector<double> getVectorWithMinDiff(int N) {
-    assert(N < 255 * 100 &&
-           "N should be less than or equal to 25500 to ensure all values are "
-           "unique and have a minimum difference of 0.01.");
-
-    std::vector<double> result(N);
-    std::vector<int> integers(25500); // 25500 = 255 * 100
-    std::iota(integers.begin(), integers.end(),
-              0); // Fill with values from 0 to 25499
-    std::shuffle(integers.begin(), integers.end(),
-                 std::mt19937{std::random_device{}()}); // Shuffle the integers
-
-    for (int i = 0; i < N; ++i) {
-        result[i] =
-            integers[i] * 0.01; // Scale to have minimum difference of 0.01
-    }
-
-    return result;
-}
 
 TEST_F(DirectSortTest, ConstructRank) {
 
