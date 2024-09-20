@@ -81,13 +81,23 @@ template <int N> struct SortContext {
         }
     }
 
-    void eval() {
-        Comparison comp;
+    void eval(SortAlgo algo) {
         auto enc = std::make_shared<Encryption>(m_cc, m_PublicKey);
 
-        DirectSort<N> ds(m_cc, m_PublicKey, enc);
+        std::unique_ptr<SortBase<N>> sorter;
 
-        output_array = ds.sort(input_array);
+        switch (algo) {
+        case SortAlgo::DirectSort:
+            sorter = std::make_unique<DirectSort<N>>(m_cc, m_PublicKey, enc);
+            break;
+        case SortAlgo::BitonicSort:
+            sorter = std::make_unique<BitonicSort<N>>(m_cc, m_PublicKey, enc);
+            break;
+        default:
+            sorter = std::make_unique<DirectSort<N>>(m_cc, m_PublicKey, enc);
+        }
+
+        output_array = sorter->sort(input_array);
     }
 
     void deserializeOutput() {
