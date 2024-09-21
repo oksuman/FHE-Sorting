@@ -150,16 +150,17 @@ template <int N> class DirectSort : public SortBase<N> {
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
 
+        // The repeated rotation is optimized with treeRotate structure by
+        // reusing intermediate rotations
+        rot.buildRotationTree(1, N);
 #pragma omp parallel for
         for (int i = 1; i < N; i++) {
-            auto rotated = rot.rotate(inputOver255, i);
+            auto rotated = rot.treeRotate(inputOver255, i);
             rotated->SetSlots(N * N);
             rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
                                                   generateMaskVector1(N, i - 1),
                                                   1, 0, nullptr, N * N));
 
-            // TODO remove critical section for performance and instead add
-            // results later
 #pragma omp critical
             { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
         }
@@ -179,6 +180,7 @@ template <int N> class DirectSort : public SortBase<N> {
                                  rot.rotate(ctxRank, (N * N) / (1 << i)));
         }
         ctxRank->SetSlots(N);
+        // rot.getStats().print();
 
         return ctxRank;
     }
