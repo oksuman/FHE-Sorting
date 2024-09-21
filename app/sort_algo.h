@@ -170,6 +170,11 @@ template <int N> class DirectSort : public SortBase<N> {
         PRINT_PT(m_enc, Index_minus_Rank);
 
         m_cc->EvalMultInPlace(Index_minus_Rank, 1.0 / N);
+        // TODO tune the initial precision for higher accuracy, it is an
+        // experimental parameter
+        Index_minus_Rank = m_cc->EvalBootstrap(Index_minus_Rank);
+        std::cout << "\n===== Bootstrapping Complete: \n";
+        PRINT_PT(m_enc, Index_minus_Rank);
 
         auto output_array = rotationIndexCheck(Index_minus_Rank, input_array);
         std::cout << "\n===== Final Output: \n";

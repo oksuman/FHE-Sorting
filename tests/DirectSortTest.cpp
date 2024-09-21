@@ -48,14 +48,45 @@ class DirectSortTest : public ::testing::Test {
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
         m_cc->EvalMultKeyGen(m_privateKey);
 
-        // Create DirectSort object
+        // Bootstrapping
+        m_cc->Enable(FHE);
+        // Budget for bootstrap to consume
+        // 4,4 is good for high ring dimension
+        std::vector<uint32_t> levelBudget;
+        if (array_length == 4)
+            levelBudget = {2, 2};
+        else
+            levelBudget = {4, 4};
+        // Baby step giant step parameter, 0 for auto
+        // TODO tune this to be a power of 2 and exact divisor of slot number
+        std::vector<uint32_t> bsgsDim = {0, 0};
+        m_cc->EvalBootstrapSetup(levelBudget, bsgsDim, array_length);
+        m_cc->EvalBootstrapKeyGen(keyPair.secretKey, array_length);
+        m_bootstrapDepth =
+            FHECKKSRNS::GetBootstrapDepth(levelBudget, UNIFORM_TERNARY);
+
+        switch (array_length) {
+        case 4:
+            m_sincDepth = 6;
+            break;
+        case 32:
+            m_sincDepth = 8;
+            break;
+        case 128:
+            m_sincDepth = 10;
+            break;
+        default:
+            FAIL() << "Array size can be either 4, 32 or 128 currently";
+        }
 
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
     }
 
     static constexpr int array_length = 4;
-    static constexpr int MultDepth = 40;
+    static constexpr int MultDepth = 34;
     std::vector<int> rotations;
+    int m_bootstrapDepth;
+    int m_sincDepth;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
@@ -75,6 +106,10 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     // Construct rank using DirectSort
     auto ctxtRank = directSort->constructRank(ctxt);
+
+    ASSERT_EQ(ctxtRank->GetLevel() + 2, MultDepth)
+        << "Use the level + 2 returned by the result for the least depth for "
+           "direct sort";
 
     // Decrypt the result
     Plaintext result;
@@ -121,9 +156,6 @@ TEST_F(DirectSortTest, DirectSort) {
         m_cc, m_publicKey, rotations, m_enc);
 
     Ciphertext<DCRTPoly> ctxt_out = directSort->sort(ctxt);
-
-    EXPECT_EQ(ctxt_out->GetLevel() + 1, MultDepth)
-        << "Use the level + 1 returned by the result for best performance";
 
     // Decrypt the result
     Plaintext result;

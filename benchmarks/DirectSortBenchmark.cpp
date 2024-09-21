@@ -32,7 +32,7 @@ std::vector<double> getVectorWithMinDiff(int N) {
 // Setup function to create the necessary objects
 template <int N> auto setupBenchmark() {
     CCParams<CryptoContextCKKSRNS> parameters;
-    parameters.SetMultiplicativeDepth(44);
+    parameters.SetMultiplicativeDepth(34);
     parameters.SetScalingModSize(59);
     parameters.SetBatchSize(N);
     parameters.SetSecurityLevel(HEStd_128_classic);
@@ -51,6 +51,17 @@ template <int N> auto setupBenchmark() {
 
     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
     cc->EvalMultKeyGen(keyPair.secretKey);
+
+    // Bootstrapping
+    cc->Enable(FHE);
+    // Budget for bootstrap to consume
+    // 4,4 is good for high ring dimension
+    std::vector<uint32_t> levelBudget = {4, 4};
+    // Baby step giant step parameter, 0 for auto
+    // TODO tune this to be a power of 2 and exact divisor of slot number
+    std::vector<uint32_t> bsgsDim = {0, 0};
+    cc->EvalBootstrapSetup(levelBudget, bsgsDim, N);
+    cc->EvalBootstrapKeyGen(keyPair.secretKey, N);
 
     auto enc = std::make_shared<Encryption>(cc, keyPair.publicKey);
     auto directSort =

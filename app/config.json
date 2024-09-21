@@ -5,5 +5,7 @@
   "ring_dimension": 131072,
   "scale_mod_size": 59,
   "batch_size": 128,
-  "enable_bootstrapping": false
+  "enable_bootstrapping": true,
+  "levels_available_after_bootstrap": 10,
+  "level_budget": [4,4]
 }
