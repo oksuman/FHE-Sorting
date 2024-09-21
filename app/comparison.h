@@ -40,18 +40,16 @@ template <int N> struct Sinc {
 class Comparison {
   private:
     std::shared_ptr<Encryption> m_enc;
-    Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
-                                       CryptoContext<DCRTPoly> cc);
 
   public:
     Comparison(std::shared_ptr<Encryption> enc) : m_enc(enc) {}
     Comparison() : m_enc(nullptr) {}
 
-    Ciphertext<lbcrypto::DCRTPoly>
-    compositeSign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc,
-                  int dg, int df);
-
     Ciphertext<DCRTPoly> compare(const CryptoContext<DCRTPoly> &cc,
                                  const Ciphertext<DCRTPoly> &a,
                                  const Ciphertext<DCRTPoly> &b);
+
+    Ciphertext<DCRTPoly> max(const CryptoContext<DCRTPoly> &cc,
+                             const Ciphertext<DCRTPoly> &a,
+                             const Ciphertext<DCRTPoly> &b);
 };
