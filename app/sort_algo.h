@@ -54,34 +54,65 @@ template <int N> class DirectSort : public SortBase<N> {
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
           rot(m_cc, enc), m_enc(enc) {}
 
+    /*
+        masking vector generation for SIMD optimization
+    */
+    std::vector<double> generateMaskVector1(int array_size, int k) {
+        std::vector<double> result(array_size * array_size, 0.0);
+
+        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            result[i] = 1.0;
+        }
+
+        return result;
+    }
+
+    std::vector<double> generateMaskVector2(int array_size, int k) {
+        std::vector<double> result(array_size * array_size, 1.0);
+
+        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            result[i] = 0.0;
+        }
+
+        return result;
+    }
+
     Ciphertext<DCRTPoly>
     constructRank(const Ciphertext<DCRTPoly> &input_array) {
 
-        auto ctxRank = this->getZero()->Clone();
+        auto shifted_input_array = this->getZero()->Clone();
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
 
 #pragma omp parallel for
-
-        for (int i = 1; i < N / 2; i++) {
+        for (int i = 1; i < N; i++) {
             auto rotated = rot.rotate(inputOver255, i);
-            auto compResult1 = comp.compare(m_cc, inputOver255, rotated);
-            auto compResult2 = rot.rotate(compResult1, -i);
-            m_cc->EvalSubInPlace(compResult1, compResult2);
+            rotated->SetSlots(N * N);
+            rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
+                                                  generateMaskVector1(N, i - 1),
+                                                  1, 0, nullptr, N * N));
 
             // TODO remove critical section for performance and instead add
             // results later
 #pragma omp critical
-            { m_cc->EvalAddInPlace(ctxRank, compResult1); }
+            { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
         }
-        m_cc->EvalAddInPlace(ctxRank, N / 2 - 1);
 
-        /*
-            We need comparison of (inputOver255, Rot(inputOver255, N/2)
-        */
-        auto rotated = m_cc->EvalRotate(inputOver255, N / 2);
-        auto compResult = comp.compare(m_cc, inputOver255, rotated);
-        m_cc->EvalAddInPlace(ctxRank, compResult);
+        auto duplicated_input_array = inputOver255;
+        duplicated_input_array->SetSlots(N * N);
+        auto ctxRank =
+            comp.compare(m_cc, duplicated_input_array, shifted_input_array);
+
+        // This cannot be parallelized
+        for (int i = 1; i < log2(N) + 1; i++) {
+            m_cc->EvalAddInPlace(ctxRank,
+                                 rot.rotate(ctxRank, (N * N) / (1 << i)));
+        }
+        ctxRank->SetSlots(N);
+
+        // This operation is necessary because the result of comp(input_array,
+        // 0) is added to ctxRank
+        m_cc->EvalSubInPlace(ctxRank, 1);
 
         return ctxRank;
     }
