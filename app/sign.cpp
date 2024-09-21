@@ -533,6 +533,7 @@ Ciphertext<lbcrypto::DCRTPoly> sign(Ciphertext<lbcrypto::DCRTPoly> x,
                                     const SignConfig &Cfg) {
     switch (func) {
     case SignFunc::CompositeSign:
+    default:
         return compositeSign(x, cc, Cfg.compos.dg, Cfg.compos.df);
     case SignFunc::SignumPolycircuit:
         return signum_polycircuit(x, cc);
