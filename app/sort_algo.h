@@ -130,7 +130,8 @@ template <int N> class DirectSort : public SortBase<N> {
         // Make a plaintext index array [1, 2, 3, ...]
         std::vector<double> Index(N);
         std::iota(Index.begin(), Index.end(), 0);
-        Plaintext ptx_Index = m_cc->MakeCKKSPackedPlaintext(Index);
+        Plaintext ptx_Index = m_cc->MakeCKKSPackedPlaintext(
+            Index, 1 /*scaleDeg=*/, ctx_Rank->GetLevel());
 
         // Evaluate index - rank, which denotes the rotation index to be sorted
         auto Index_minus_Rank = m_cc->EvalSub(ptx_Index, ctx_Rank);
