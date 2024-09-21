@@ -6,60 +6,90 @@
 
 using namespace lbcrypto;
 
-template <int N> class NAFComputer {
-  public:
-    static constexpr int MAX_NAF_SIZE =
-        32; // log2(128) + 1, adjust if N changes
+struct Step {
+    int8_t value; // -1, 0, or 1 for NAF; 0 or 1 for binary
+    int stepSize; // The actual rotation amount (e.g., 32, 16, 8, etc.)
 
-    static constexpr std::array<int8_t, MAX_NAF_SIZE> computeNAF(int rotation) {
-        std::array<int8_t, MAX_NAF_SIZE> naf = {};
-        for (int i = 0; i < MAX_NAF_SIZE && rotation != 0; ++i) {
+    Step(int8_t v, int s) : value(v), stepSize(s) {}
+};
+
+inline void dump(std::vector<Step> steps) {
+    std::cout << "Decomposed steps: [";
+    for (const auto &step : steps) {
+        std::cout << "(" << (int32_t)step.value << ", " << step.stepSize
+                  << "), ";
+    }
+    std::cout << " ]" << std::endl;
+}
+enum class DecomposeAlgo { NAF, BINARY };
+
+template <int N> class Decomposer {
+  public:
+    std::vector<Step> decompose(int rotation, DecomposeAlgo algo) {
+        switch (algo) {
+        case DecomposeAlgo::NAF:
+            return decomposeNAF(rotation);
+        case DecomposeAlgo::BINARY:
+            return decomposeBinary(rotation);
+        default:
+            return decomposeNAF(rotation);
+        }
+    };
+
+  private:
+    std::vector<Step> decomposeBinary(int rotation) const {
+        std::vector<Step> steps;
+        for (int i = 31; i >= 0; --i) {
+            auto stepSize = (1 << i);
+            if (stepSize < N && rotation & stepSize) {
+                steps.emplace_back(1, stepSize);
+            }
+        }
+        return steps;
+    }
+
+    std::vector<Step> decomposeNAF(int rotation) const {
+        std::vector<Step> steps;
+        int i = 0;
+        while (rotation != 0) {
             if (rotation & 1) {
-                int8_t z = (rotation & 2) ? -1 : 1;
-                naf[i] = z;
+                int z = ((rotation & 2) ? -1 : 1);
+                auto stepSize = z * (1 << i);
+                // -N/2 rotation is equal to N/2 rotation
+                if (stepSize == -N / 2) {
+                    steps.emplace_back(-z, -stepSize);
+                } else if (std::abs(stepSize) < N)
+                    steps.emplace_back(z, stepSize);
+
                 rotation -= z;
             }
-            rotation /= 2;
+            rotation >>= 1;
+            i++;
         }
-        return naf;
+        std::reverse(steps.begin(), steps.end());
+        return steps;
     }
 };
 
-template <int N> class OptimizedRotator {
+template <int N> class RotationComposer {
   private:
     CryptoContext<DCRTPoly> m_cc;
     std::shared_ptr<Encryption> m_enc;
-
-    // Compile-time computation of all NAFs
-    static constexpr auto computeAllNAFs() {
-        std::array<std::array<int8_t, 32>, N> nafs = {};
-        for (int i = 0; i < N; ++i) {
-            nafs[i] = NAFComputer<N>::computeNAF(i);
-        }
-        return nafs;
-    }
-
-    static constexpr auto rotationNAFs = computeAllNAFs();
+    Decomposer<N> m_decomposer;
+    DecomposeAlgo m_algo;
 
   public:
-    OptimizedRotator(CryptoContext<DCRTPoly> cc,
-                     std::shared_ptr<Encryption> enc)
-        : m_cc(cc), m_enc(enc) {}
+    RotationComposer(CryptoContext<DCRTPoly> cc,
+                     std::shared_ptr<Encryption> enc,
+                     DecomposeAlgo algo = DecomposeAlgo::NAF)
+        : m_cc(cc), m_enc(enc), m_algo(algo) {}
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
-        rotation = ((rotation % N) + N) % N;
-        auto result = input->Clone();
-        const auto &naf = rotationNAFs[rotation % N];
-
-        for (int i = 31; i >= 0; --i) {
-            if (naf[i] != 0) {
-                int step = (1 << i) * naf[i];
-                if (step != N)
-                    result = m_cc->EvalRotate(result, step);
-            }
-        }
-
+        auto steps = m_decomposer.decompose(rotation, m_algo);
+        Ciphertext<DCRTPoly> result = input->Clone();
+        for (auto step : steps)
+            result = m_cc->EvalRotate(result, step.stepSize);
         return result;
     }
 };

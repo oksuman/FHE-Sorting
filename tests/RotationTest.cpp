@@ -26,7 +26,7 @@ std::vector<double> getVectorWithMinDiff(int N) {
     return result;
 }
 
-class OptimizedRotatorTest : public ::testing::Test {
+class RotationComposerTest : public ::testing::Test {
   protected:
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
@@ -52,17 +52,31 @@ class OptimizedRotatorTest : public ::testing::Test {
         m_cc->EvalMultKeyGen(keyPair.secretKey);
 
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
-        m_rotator =
-            std::make_unique<OptimizedRotator<array_length>>(m_cc, m_enc);
+        m_rotator = std::make_unique<RotationComposer<array_length>>(
+            m_cc, m_enc, DecomposeAlgo::NAF);
     }
 
     static constexpr int array_length = 128;
     CryptoContext<DCRTPoly> m_cc;
     std::shared_ptr<DebugEncryption> m_enc;
-    std::unique_ptr<OptimizedRotator<array_length>> m_rotator;
+    std::unique_ptr<RotationComposer<array_length>> m_rotator;
 };
 
-TEST_F(OptimizedRotatorTest, RotateForwardAndBackward) {
+TEST_F(RotationComposerTest, RotateVector) {
+
+    std::vector<double> input = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+    auto ctxt = m_enc->encryptInput(input);
+
+    auto rotated = m_rotator->rotate(ctxt, -3);
+    auto result = m_enc->getPlaintext(rotated);
+
+    auto expected = m_enc->getPlaintext(m_cc->EvalRotate(ctxt, -3));
+    for (size_t i = 0; i < 8; ++i) {
+        EXPECT_NEAR(result[i], expected[i], 1e-6);
+    }
+}
+
+TEST_F(RotationComposerTest, RotateForwardAndBackward) {
     auto input_vector = getVectorWithMinDiff(array_length);
     auto ciphertext = m_enc->encryptInput(input_vector);
 

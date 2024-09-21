@@ -33,8 +33,8 @@ add_unit_test(CompareTest
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
 
-add_unit_test(NAFTest
-	      NAFTest.cpp)
+add_unit_test(DecomposeTest
+	      DecomposeTest.cpp)
 
 add_unit_test(RotateTest
 	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
