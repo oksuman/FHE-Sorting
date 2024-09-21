@@ -44,7 +44,7 @@ template <int N> class DirectSort : public SortBase<N> {
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
     Comparison comp;
-    OptimizedRotator<N> rot;
+    RotationComposer<N> rot;
 
   public:
     std::shared_ptr<Encryption> m_enc;
@@ -152,7 +152,7 @@ template <int N> class BitonicSort : public SortBase<N> {
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
     Comparison comp;
-    OptimizedRotator<N> rot;
+    RotationComposer<N> rot;
 
     Ciphertext<DCRTPoly> compare_and_swap(const Ciphertext<DCRTPoly> &a1,
                                           const Ciphertext<DCRTPoly> &a2,

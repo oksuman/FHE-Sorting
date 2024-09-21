@@ -3,7 +3,6 @@
 #include <random>
 #include <vector>
 
-#include "utils.h"
 #include "ciphertext-fwd.h"
 #include "comparison.h"
 #include "constants.h"
@@ -12,6 +11,7 @@
 #include "lattice/hal/lat-backend.h"
 #include "sign.h"
 #include "sort_algo.h"
+#include "utils.h"
 
 using namespace lbcrypto;
 
