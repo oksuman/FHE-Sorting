@@ -1,4 +1,6 @@
+#include "lattice/stdlatticeparms.h"
 #include "openfhe.h"
+#include "sort_algo.h"
 #include <benchmark/benchmark.h>
 
 using namespace lbcrypto;
@@ -51,11 +53,14 @@ BM_FastRotations/14       49.6 ms         49.5 ms           12
 
 // Helper function to setup the crypto context and generate keys
 std::tuple<CryptoContext<DCRTPoly>, KeyPair<DCRTPoly>>
-SetupContext(uint32_t batchSize) {
+SetupContext(uint32_t batchSize, enum SecurityLevel sec = HEStd_NotSet) {
     CCParams<CryptoContextCKKSRNS> parameters;
     parameters.SetMultiplicativeDepth(1);
     parameters.SetScalingModSize(50);
     parameters.SetBatchSize(batchSize);
+    parameters.SetSecurityLevel(sec);
+    if (sec == HEStd_NotSet)
+        parameters.SetRingDim(1 << 12);
 
     CryptoContext<DCRTPoly> cc = GenCryptoContext(parameters);
     cc->Enable(PKE);
@@ -119,7 +124,58 @@ static void BM_FastRotations(benchmark::State &state) {
     }
 }
 
+static void BM_BatchRotations(benchmark::State &state) {
+    const uint32_t batchSize = 128;
+    auto [cc, keys] = SetupContext(batchSize, HEStd_128_classic);
+
+    std::vector<double> x(batchSize, 0.0);
+    x[batchSize - 1] = 1.0;
+    Plaintext ptxt = cc->MakeCKKSPackedPlaintext(x);
+    auto c = cc->Encrypt(keys.publicKey, ptxt);
+
+    int numRotations = batchSize;
+    std::vector<int32_t> rotations = {-32, -16, -8, -4, -2, -1, 1,
+                                      2,   4,   8,  16, 32, 64};
+    RotationComposer<batchSize> rot(cc, nullptr, rotations);
+
+    for (auto _ : state) {
+        std::vector<Ciphertext<DCRTPoly>> rotated(numRotations);
+        for (int i = 0; i < numRotations; ++i) {
+            rotated[i] = rot.rotate(c, i);
+        }
+        benchmark::DoNotOptimize(rotated);
+        benchmark::ClobberMemory();
+    }
+}
+
+static void BM_BatchTreeRotations(benchmark::State &state) {
+    const uint32_t batchSize = 128;
+    const uint32_t N = batchSize;
+    auto [cc, keys] = SetupContext(batchSize, HEStd_128_classic);
+
+    std::vector<double> x(batchSize, 0.0);
+    x[batchSize - 1] = 1.0;
+    Plaintext ptxt = cc->MakeCKKSPackedPlaintext(x);
+    auto c = cc->Encrypt(keys.publicKey, ptxt);
+
+    int numRotations = batchSize;
+    std::vector<int32_t> rotations = {-32, -16, -8, -4, -2, -1, 1,
+                                      2,   4,   8,  16, 32, 64};
+    RotationComposer<batchSize> rot(cc, nullptr, rotations);
+
+    for (auto _ : state) {
+        std::vector<Ciphertext<DCRTPoly>> rotated(numRotations);
+        rot.buildRotationTree(1, N);
+        for (int i = 0; i < numRotations; ++i) {
+            rotated[i] = rot.treeRotate(c, i);
+        }
+        benchmark::DoNotOptimize(rotated);
+        benchmark::ClobberMemory();
+    }
+}
 BENCHMARK(BM_Rotations)->DenseRange(1, 14)->Unit(benchmark::kMillisecond);
 BENCHMARK(BM_FastRotations)->DenseRange(1, 14)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_BatchRotations)->Unit(benchmark::kMillisecond);
+BENCHMARK(BM_BatchTreeRotations)->Unit(benchmark::kMillisecond);
 
 BENCHMARK_MAIN();

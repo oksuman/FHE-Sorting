@@ -65,3 +65,4 @@ endforeach()
 target_sources(sign_characterizer PRIVATE
 	${CMAKE_SOURCE_DIR}/app/encryption.cpp
 	${CMAKE_SOURCE_DIR}/app/sign.cpp)
+

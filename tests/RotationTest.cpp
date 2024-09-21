@@ -74,6 +74,38 @@ TEST_F(RotationComposerTest, RotateVector) {
     }
 }
 
+TEST_F(RotationComposerTest, RotateTreeVector) {
+    std::vector<double> input = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+    auto ctxt = m_enc->encryptInput(input);
+    m_rotator->buildRotationTree(-4, 4);
+
+    std::vector<std::vector<double>> expectedResults = {
+        {5.0, 6.0, 7.0, 8.0, 1.0, 2.0, 3.0, 4.0}, // -4
+        {6.0, 7.0, 8.0, 1.0, 2.0, 3.0, 4.0, 5.0}, // -3
+        {7.0, 8.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0}, // -2
+        {8.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0}, // -1
+        {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0}, //  0
+        {2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 1.0}, //  1
+        {3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 1.0, 2.0}, //  2
+        {4.0, 5.0, 6.0, 7.0, 8.0, 1.0, 2.0, 3.0}, //  3
+        {5.0, 6.0, 7.0, 8.0, 1.0, 2.0, 3.0, 4.0}  //  4
+    };
+
+    for (int rotation = -4; rotation <= 4; ++rotation) {
+        SCOPED_TRACE("Rotation: " + std::to_string(rotation));
+
+        auto rotated = m_rotator->treeRotate(ctxt, rotation);
+        auto result = m_enc->getPlaintext(rotated);
+
+        const auto &expected = expectedResults[rotation + 4];
+
+        for (size_t i = 0; i < 8; ++i) {
+            EXPECT_NEAR(result[i], expected[i], 1e-6)
+                << "Mismatch at index " << i << " for rotation " << rotation;
+        }
+    }
+}
+
 TEST_F(RotationComposerTest, RotateForwardAndBackward) {
     auto input_vector = getVectorWithMinDiff(array_length);
     auto ciphertext = m_enc->encryptInput(input_vector);
