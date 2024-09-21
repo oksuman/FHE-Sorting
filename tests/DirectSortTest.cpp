@@ -51,7 +51,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 4;
-    static constexpr int MultDepth = 44;
+    static constexpr int MultDepth = 40;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
