@@ -42,6 +42,7 @@ add_unit_test(RotateTest
 
 add_unit_test(BitonicSortTest 
               BitonicSortTest.cpp 
+              ${CMAKE_SOURCE_DIR}/app/sign.cpp
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp
               ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
 

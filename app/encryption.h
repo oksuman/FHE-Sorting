@@ -34,7 +34,7 @@ inline std::string getContextLines(const char *filename, int lineNum,
 #ifdef ENABLE_PRINT_PT
 #define PRINT_PT(enc, ct)                                                      \
     do {                                                                       \
-        if (dynamic_cast<const DebugEncryption*>((enc).get()) != nullptr) {    \
+        if (dynamic_cast<const DebugEncryption *>((enc).get()) != nullptr) {   \
             std::cout << (enc)->getPlaintext((ct)) << ": " << #ct              \
                       << " Level: " << (ct)->GetLevel() << "\n";               \
         }                                                                      \

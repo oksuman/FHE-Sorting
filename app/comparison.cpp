@@ -20,7 +20,7 @@ Ciphertext<DCRTPoly> Comparison::compare(const CryptoContext<DCRTPoly> &cc,
     return comp;
 }
 
-//TODO add unittest if used
+// TODO add unittest if used
 Ciphertext<DCRTPoly> Comparison::max(const CryptoContext<DCRTPoly> &cc,
                                      const Ciphertext<DCRTPoly> &a,
                                      const Ciphertext<DCRTPoly> &b) {
