@@ -1,5 +1,3 @@
-// DirectSort.h
-
 #pragma once
 
 #include "comparison.h"
@@ -12,6 +10,8 @@
 using namespace lbcrypto;
 
 #include "generated_coeffs.h"
+
+enum class SortAlgo { DirectSort, BitonicSort };
 
 // Base class for sorting algorithms
 template <int N> // Array size
@@ -143,5 +143,100 @@ template <int N> class DirectSort : public SortBase<N> {
         std::cout << "\n===== Final Output: \n";
         PRINT_PT(m_enc, output_array);
         return output_array;
+    }
+};
+
+template <int N> class BitonicSort : public SortBase<N> {
+  private:
+    CryptoContext<DCRTPoly> m_cc;
+    PublicKey<DCRTPoly> m_PublicKey;
+    Comparison comp;
+    OptimizedRotator<N> rot;
+
+    Ciphertext<DCRTPoly> compare_and_swap(const Ciphertext<DCRTPoly> &a1,
+                                          const Ciphertext<DCRTPoly> &a2,
+                                          const Ciphertext<DCRTPoly> &a3,
+                                          const Ciphertext<DCRTPoly> &a4) {
+        auto comparison_result = comp.compare(m_cc, a1, a2);
+        auto temp1 = m_cc->EvalMult(comparison_result, a3);
+        auto one = m_cc->EvalSub(1, comparison_result);
+        auto temp2 = m_cc->EvalMult(one, a4);
+        return m_cc->EvalAdd(temp1, temp2);
+    }
+
+  public:
+    std::shared_ptr<Encryption> m_enc;
+
+    BitonicSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
+                std::shared_ptr<Encryption> enc)
+        : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
+          rot(cc, enc), m_enc(enc) {}
+
+    Ciphertext<DCRTPoly>
+    sort(const Ciphertext<DCRTPoly> &input_array) override {
+
+        // Normalize the input
+        auto inputOver255 = m_cc->EvalMult(input_array, (double)1.0 / 255);
+
+        auto result = inputOver255;
+
+        // k being the size of the bitonic sequences
+        for (size_t k = 2; k <= N; k *= 2) {
+            // j being the distance of the elements to compare
+            for (size_t j = k / 2; j > 0; j /= 2) {
+                std::cout << "Loop k: " << k << " j: " << j << "\n";
+                std::vector<double> mask1(N, 0), mask2(N, 0), mask3(N, 0),
+                    mask4(N, 0);
+
+                // TODO add a class constructor parameter for bootstrap
+                // threshold
+                if (result->GetLevel() > 32) {
+                    // We use double iteration bootstrapping for better
+                    // precision
+                    result = m_cc->EvalBootstrap(result, 2, 20);
+                }
+
+                for (size_t i = 0; i < N; i++) {
+                    size_t l = i ^ j;
+                    if (i < l) {
+                        if ((i & k) == 0) {
+                            mask1[i] = 1;
+                            mask2[l] = 1;
+                        } else {
+                            mask3[i] = 1;
+                            mask4[l] = 1;
+                        }
+                    }
+                }
+
+                auto arr1 = m_cc->EvalMult(
+                    result, m_cc->MakeCKKSPackedPlaintext(mask1));
+                auto arr2 = m_cc->EvalMult(
+                    result, m_cc->MakeCKKSPackedPlaintext(mask2));
+                auto arr3 = m_cc->EvalMult(
+                    result, m_cc->MakeCKKSPackedPlaintext(mask3));
+                auto arr4 = m_cc->EvalMult(
+                    result, m_cc->MakeCKKSPackedPlaintext(mask4));
+
+                auto arr5_1 = rot.rotate(arr1, -j);
+                auto arr5_2 = rot.rotate(arr3, -j);
+                auto arr6_1 = rot.rotate(arr2, j);
+                auto arr6_2 = rot.rotate(arr4, j);
+
+                auto arr7 = m_cc->EvalAdd(m_cc->EvalAdd(arr5_1, arr5_2),
+                                          m_cc->EvalAdd(arr6_1, arr6_2));
+                auto arr8 = result;
+                auto arr9 = m_cc->EvalAdd(m_cc->EvalAdd(arr5_1, arr1),
+                                          m_cc->EvalAdd(arr6_2, arr4));
+                auto arr10 = m_cc->EvalAdd(m_cc->EvalAdd(arr5_2, arr3),
+                                           m_cc->EvalAdd(arr6_1, arr2));
+
+                result = compare_and_swap(arr7, arr8, arr9, arr10);
+            }
+        }
+
+        // Denormalize to recover the data
+        result = m_cc->EvalMult(result, (double)255);
+        return result;
     }
 };
