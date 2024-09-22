@@ -52,7 +52,7 @@ template <int N> class DirectSort : public SortBase<N> {
     DirectSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
                std::vector<int> rotIndices, std::shared_ptr<Encryption> enc)
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
-          rot(m_cc, enc, rotIndices), m_enc(enc) {}
+          rot(m_cc, enc, rotIndices, DecomposeAlgo::BINARY), m_enc(enc) {}
 
     /*
         masking vector generation for SIMD optimization

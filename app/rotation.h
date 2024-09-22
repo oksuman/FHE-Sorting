@@ -88,6 +88,8 @@ template <int N> class Decomposer {
 
   private:
     std::vector<Step> decomposeBinary(int rotation) const {
+        if (rotation < 0)
+            rotation += N;
         std::vector<Step> steps;
         for (int i = 31; i >= 0; --i) {
             auto stepSize = (1 << i);
