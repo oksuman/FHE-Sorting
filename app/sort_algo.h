@@ -50,9 +50,9 @@ template <int N> class DirectSort : public SortBase<N> {
     std::shared_ptr<Encryption> m_enc;
 
     DirectSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
-               std::shared_ptr<Encryption> enc)
+               std::vector<int> rotIndices, std::shared_ptr<Encryption> enc)
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
-          rot(m_cc, enc), m_enc(enc) {}
+          rot(m_cc, enc, rotIndices), m_enc(enc) {}
 
     /*
         masking vector generation for SIMD optimization
@@ -200,9 +200,9 @@ template <int N> class BitonicSort : public SortBase<N> {
     std::shared_ptr<Encryption> m_enc;
 
     BitonicSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
-                std::shared_ptr<Encryption> enc)
+                std::vector<int> rotIndices, std::shared_ptr<Encryption> enc)
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
-          rot(cc, enc), m_enc(enc) {}
+          rot(cc, enc, rotIndices), m_enc(enc) {}
 
     Ciphertext<DCRTPoly>
     sort(const Ciphertext<DCRTPoly> &input_array) override {

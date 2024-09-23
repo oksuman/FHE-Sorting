@@ -41,7 +41,8 @@ int main(int argc, char *argv[]) {
 
     SortContext<128> sort(ccLocation, pubKeyLocation, multKeyLocation,
                           rotKeyLocation, arrayLocation, outputLocation);
-    sort.eval(SortAlgo::DirectSort);
+    sort.eval(SortAlgo::DirectSort,
+              {-32, -16, -8, -4, -2, -1, 1, 2, 4, 8, 16, 32, 64, 512});
     sort.deserializeOutput();
     return 0;
 }

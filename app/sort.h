@@ -81,20 +81,21 @@ template <int N> struct SortContext {
         }
     }
 
-    void eval(SortAlgo algo) {
+    void eval(SortAlgo algo, std::vector<int> rotIndices) {
         auto enc = std::make_shared<Encryption>(m_cc, m_PublicKey);
 
         std::unique_ptr<SortBase<N>> sorter;
 
         switch (algo) {
         case SortAlgo::DirectSort:
-            sorter = std::make_unique<DirectSort<N>>(m_cc, m_PublicKey, enc);
+        default:
+            sorter = std::make_unique<DirectSort<N>>(m_cc, m_PublicKey,
+                                                     rotIndices, enc);
             break;
         case SortAlgo::BitonicSort:
-            sorter = std::make_unique<BitonicSort<N>>(m_cc, m_PublicKey, enc);
+            sorter = std::make_unique<BitonicSort<N>>(m_cc, m_PublicKey,
+                                                      rotIndices, enc);
             break;
-        default:
-            sorter = std::make_unique<DirectSort<N>>(m_cc, m_PublicKey, enc);
         }
 
         output_array = sorter->sort(input_array);

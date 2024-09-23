@@ -65,7 +65,6 @@ class Encryption {
     }
     virtual ~Encryption() = default;
 
-  protected:
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
 };
