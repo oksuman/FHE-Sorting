@@ -25,7 +25,11 @@ class DirectSortTest : public ::testing::Test {
         parameters.SetScalingModSize(59);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
-        parameters.SetRingDim(1 << 12);
+        constexpr usint ringDim = 1 << 17;
+        parameters.SetRingDim(ringDim);
+        assert(ringDim / 2 > array_length * array_length &&
+               "Ring dimension should be higher than the square of array "
+               "length due to SIMD batching.");
 
         m_cc = GenCryptoContext(parameters);
         m_cc->Enable(PKE);
@@ -38,8 +42,7 @@ class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, 1,
-                                      2,  4,  8,  16, 32,  64};
+        rotations = {-1, -2, -4, -8, -16, -32, 1, 2, 4, 8, 16, 32, 64, 512};
 
         // Generate the rotation keys
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
@@ -52,6 +55,7 @@ class DirectSortTest : public ::testing::Test {
 
     static constexpr int array_length = 4;
     static constexpr int MultDepth = 40;
+    std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
@@ -66,8 +70,8 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     // Encrypt the input array
     auto ctxt = m_enc->encryptInput(inputArray);
-    auto directSort =
-        std::make_unique<DirectSort<array_length>>(m_cc, m_publicKey, m_enc);
+    auto directSort = std::make_unique<DirectSort<array_length>>(
+        m_cc, m_publicKey, rotations, m_enc);
 
     // Construct rank using DirectSort
     auto ctxtRank = directSort->constructRank(ctxt);
@@ -113,12 +117,12 @@ TEST_F(DirectSortTest, DirectSort) {
 
     // Encrypt the input array
     auto ctxt = m_enc->encryptInput(inputArray);
-    auto directSort =
-        std::make_unique<DirectSort<array_length>>(m_cc, m_publicKey, m_enc);
+    auto directSort = std::make_unique<DirectSort<array_length>>(
+        m_cc, m_publicKey, rotations, m_enc);
 
     Ciphertext<DCRTPoly> ctxt_out = directSort->sort(ctxt);
 
-    ASSERT_EQ(ctxt_out->GetLevel() + 1, MultDepth)
+    EXPECT_EQ(ctxt_out->GetLevel() + 1, MultDepth)
         << "Use the level + 1 returned by the result for best performance";
 
     // Decrypt the result

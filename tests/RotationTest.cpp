@@ -34,7 +34,7 @@ class RotationComposerTest : public ::testing::Test {
         parameters.SetScalingModSize(59);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
-        parameters.SetRingDim(1 << 12);
+        parameters.SetRingDim(1 << 17);
         m_cc = GenCryptoContext(parameters);
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
@@ -43,20 +43,18 @@ class RotationComposerTest : public ::testing::Test {
 
         auto keyPair = m_cc->KeyGen();
 
-        std::vector<int> rotations;
-        for (int i = -array_length; i <= array_length; i++) {
-            rotations.push_back(i);
-        }
+        rotations = {-1, -2, -4, -8, -16, -32, 1, 2, 4, 8, 16, 32, 64, 512};
 
         m_cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
         m_cc->EvalMultKeyGen(keyPair.secretKey);
 
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
         m_rotator = std::make_unique<RotationComposer<array_length>>(
-            m_cc, m_enc, DecomposeAlgo::NAF);
+            m_cc, m_enc, rotations, DecomposeAlgo::NAF);
     }
 
     static constexpr int array_length = 128;
+    std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     std::shared_ptr<DebugEncryption> m_enc;
     std::unique_ptr<RotationComposer<array_length>> m_rotator;
@@ -67,10 +65,10 @@ TEST_F(RotationComposerTest, RotateVector) {
     std::vector<double> input = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
     auto ctxt = m_enc->encryptInput(input);
 
-    auto rotated = m_rotator->rotate(ctxt, -3);
+    auto rotated = m_rotator->rotate(ctxt, -4);
     auto result = m_enc->getPlaintext(rotated);
 
-    auto expected = m_enc->getPlaintext(m_cc->EvalRotate(ctxt, -3));
+    auto expected = m_enc->getPlaintext(m_cc->EvalRotate(ctxt, -4));
     for (size_t i = 0; i < 8; ++i) {
         EXPECT_NEAR(result[i], expected[i], 1e-6);
     }
@@ -93,6 +91,50 @@ TEST_F(RotationComposerTest, RotateForwardAndBackward) {
         for (size_t i = 0; i < array_length; i++) {
             EXPECT_NEAR(input_vector[i], decrypted_result[i], epsilon)
                 << "Mismatch at index " << i << " for rotation " << rotation;
+        }
+    }
+}
+
+TEST_F(RotationComposerTest, RotateLargerThanNWithMask) {
+    const int N = array_length;
+    const int squareArrayLength = N * N;
+    auto input_vector = getVectorWithMinDiff(N);
+    auto ciphertext = m_enc->encryptInput(input_vector);
+    const double epsilon = 1e-5;
+    auto rotator = std::make_unique<RotationComposer<N>>(m_cc, m_enc, rotations,
+                                                         DecomposeAlgo::NAF);
+
+    // Expand the input to N*N
+    std::vector<double> expanded_input(squareArrayLength);
+    for (int i = 0; i < squareArrayLength; i++) {
+        expanded_input[i] = input_vector[i % N];
+    }
+
+    auto expanded_plaintext =
+        m_cc->MakeCKKSPackedPlaintext(expanded_input, 1, 0, nullptr, N * N);
+    auto expanded_ciphertext =
+        m_cc->Encrypt(m_enc->m_PublicKey, expanded_plaintext);
+    expanded_ciphertext->SetSlots(squareArrayLength);
+
+    // Test for both i=1 (rotation 8192) and i=6 (rotation 256)
+    for (int i : {1, 6}) {
+        auto summed = expanded_ciphertext->Clone();
+        int rotation = squareArrayLength / (1 << i);
+
+        auto rotated = rotator->rotate(summed, rotation);
+        m_cc->EvalAddInPlace(summed, rotated);
+
+        auto decrypted = m_enc->getPlaintext(summed);
+        std::vector<double> expected(squareArrayLength);
+        for (int j = 0; j < squareArrayLength; j++) {
+            expected[j] = expanded_input[j]; // Original value
+            int rotated_index = (j + rotation) % squareArrayLength;
+            expected[j] += expanded_input[rotated_index]; // Rotated value
+        }
+
+        for (int j = 0; j < squareArrayLength; j++) {
+            ASSERT_NEAR(expected[j], decrypted[j], epsilon * (i + 1))
+                << "Mismatch at index " << j << " for log rotation " << i;
         }
     }
 }

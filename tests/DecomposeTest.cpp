@@ -7,7 +7,11 @@ class DecomposerTest : public ::testing::Test {
   protected:
     std::unique_ptr<Decomposer<128>> decomposer;
 
-    void SetUp() override { decomposer = std::make_unique<Decomposer<128>>(); }
+    void SetUp() override {
+
+        decomposer = std::make_unique<Decomposer<128>>(std::vector<int>{
+            -1, -2, -4, -8, -16, -32, 1, 2, 4, 8, 16, 32, 64, 512});
+    }
 
     int compose(const std::vector<Step> &steps) {
         int result = 0;

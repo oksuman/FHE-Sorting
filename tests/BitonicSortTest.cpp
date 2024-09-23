@@ -30,7 +30,6 @@ class BitonicSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        std::vector<int> rotations;
         for (int i = 1; i < array_length; i *= 2) {
             rotations.push_back(i);
             rotations.push_back(-i);
@@ -52,6 +51,7 @@ class BitonicSortTest : public ::testing::Test {
 
     static constexpr int array_length = 4;
     static constexpr int MultDepth = 58;
+    std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
@@ -65,8 +65,8 @@ TEST_F(BitonicSortTest, SortCorrectness) {
 
     // Encrypt the input array
     auto ctxt = m_enc->encryptInput(inputArray);
-    auto bitonicSort =
-        std::make_unique<BitonicSort<array_length>>(m_cc, m_publicKey, m_enc);
+    auto bitonicSort = std::make_unique<BitonicSort<array_length>>(
+        m_cc, m_publicKey, rotations, m_enc);
 
     // Sort the array
     Ciphertext<DCRTPoly> ctxt_out = bitonicSort->sort(ctxt);

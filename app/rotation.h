@@ -11,6 +11,7 @@ struct Step {
     int stepSize; // The actual rotation amount (e.g., 32, 16, 8, etc.)
 
     Step(int8_t v, int s) : value(v), stepSize(s) {}
+    Step(int s) : value(1), stepSize(s) {}
 };
 
 inline void dump(std::vector<Step> steps) {
@@ -24,17 +25,66 @@ inline void dump(std::vector<Step> steps) {
 enum class DecomposeAlgo { NAF, BINARY };
 
 template <int N> class Decomposer {
+
+    std::vector<int> rotIndices;
+    int maxDecomposed;
+
+    int calculateMax() const {
+        int maxDecomposed = 0;
+        int step;
+        for (int index : rotIndices) {
+            if (step == index / 2)
+                maxDecomposed += index;
+            step = index;
+        }
+        return maxDecomposed;
+    }
+
   public:
+    Decomposer(std::vector<int> rot) : rotIndices(rot) {
+        std::sort(rotIndices.begin(), rotIndices.end());
+        maxDecomposed = calculateMax();
+    }
+
     std::vector<Step> decompose(int rotation, DecomposeAlgo algo) {
+        std::vector<Step> steps;
+        int largestStep = rotIndices.back();
+
+        // Handle rotations larger than the biggest step, this can be an
+        // arbitrarily large step size depending on the range.
+        while (rotation >= largestStep) {
+            steps.emplace_back(largestStep);
+            rotation -= largestStep;
+        }
+        if (!rotation)
+            return steps;
+
+        while (rotation > maxDecomposed) {
+            // Get the largest available rotation step smaller than the required
+            // rotation
+            int legalStep = *(std::lower_bound(rotIndices.begin(),
+                                               rotIndices.end(), rotation) -
+                              1);
+            steps.emplace_back(legalStep);
+            rotation -= legalStep;
+        }
+        if (!rotation)
+            return steps;
+
+        // Now in the safe range decompose the remaining rotation
+        std::vector<Step> remainingSteps;
         switch (algo) {
         case DecomposeAlgo::NAF:
-            return decomposeNAF(rotation);
+            remainingSteps = decomposeNAF(rotation);
+            break;
         case DecomposeAlgo::BINARY:
-            return decomposeBinary(rotation);
-        default:
-            return decomposeNAF(rotation);
+            remainingSteps = decomposeBinary(rotation);
+            break;
         }
-    };
+        steps.insert(steps.end(), remainingSteps.begin(), remainingSteps.end());
+
+        return steps;
+    }
 
   private:
     std::vector<Step> decomposeBinary(int rotation) const {
@@ -81,8 +131,9 @@ template <int N> class RotationComposer {
   public:
     RotationComposer(CryptoContext<DCRTPoly> cc,
                      std::shared_ptr<Encryption> enc,
+                     std::vector<int> rotIndices,
                      DecomposeAlgo algo = DecomposeAlgo::NAF)
-        : m_cc(cc), m_enc(enc), m_algo(algo) {}
+        : m_cc(cc), m_enc(enc), m_decomposer(rotIndices), m_algo(algo) {}
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
