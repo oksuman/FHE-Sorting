@@ -31,7 +31,7 @@ template <int N> class Decomposer {
 
     int calculateMax() const {
         int maxDecomposed = 0;
-        int step;
+        int step = 1;
         for (int index : rotIndices) {
             if (step == index / 2)
                 maxDecomposed += index;
@@ -46,7 +46,7 @@ template <int N> class Decomposer {
         maxDecomposed = calculateMax();
     }
 
-    std::vector<Step> decompose(int rotation, DecomposeAlgo algo) {
+    std::vector<Step> decompose(int rotation, int wrapN, DecomposeAlgo algo) {
         std::vector<Step> steps;
         int largestStep = rotIndices.back();
 
@@ -83,6 +83,13 @@ template <int N> class Decomposer {
         }
         steps.insert(steps.end(), remainingSteps.begin(), remainingSteps.end());
 
+        // Sanitize by removing unnecessary rotates
+        steps.erase(std::remove_if(steps.begin(), steps.end(),
+                                   [wrapN](const Step &step) {
+                                       return step.stepSize % wrapN == 0;
+                                   }),
+                    steps.end());
+
         return steps;
     }
 
@@ -108,7 +115,7 @@ template <int N> class Decomposer {
                 // -N/2 rotation is equal to N/2 rotation
                 if (stepSize == -N / 2) {
                     steps.emplace_back(-z, -stepSize);
-                } else if (std::abs(stepSize) < N)
+                } else
                     steps.emplace_back(z, stepSize);
 
                 rotation -= z;
@@ -137,7 +144,8 @@ template <int N> class RotationComposer {
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
-        auto steps = m_decomposer.decompose(rotation, m_algo);
+        auto steps =
+            m_decomposer.decompose(rotation, input->GetSlots(), m_algo);
         Ciphertext<DCRTPoly> result = input->Clone();
         for (auto step : steps)
             result = m_cc->EvalRotate(result, step.stepSize);
