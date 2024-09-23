@@ -36,9 +36,9 @@ add_unit_test(CompareTest
 add_unit_test(DecomposeTest
 	      DecomposeTest.cpp)
 
-add_unit_test(RotateTest
-	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	      RotationTest.cpp)
+add_unit_test(RotationTest
+	      RotationTest.cpp
+	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
 
 add_unit_test(BitonicSortTest 
               BitonicSortTest.cpp 
