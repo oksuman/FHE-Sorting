@@ -24,3 +24,9 @@ DebugEncryption::getPlaintext(const Ciphertext<DCRTPoly> &ct,
     }
     return result;
 }
+
+Plaintext DebugEncryption::getDecrypt(const Ciphertext<DCRTPoly> &ct) const {
+    Plaintext decryptedResult;
+    m_cc->Decrypt(m_PrivateKey, ct, &decryptedResult);
+    return decryptedResult;
+}

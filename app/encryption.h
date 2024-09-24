@@ -35,8 +35,10 @@ inline std::string getContextLines(const char *filename, int lineNum,
 #define PRINT_PT(enc, ct)                                                      \
     do {                                                                       \
         if (dynamic_cast<const DebugEncryption *>((enc).get()) != nullptr) {   \
-            std::cout << (enc)->getPlaintext((ct)) << ": " << #ct              \
-                      << " Level: " << (ct)->GetLevel() << "\n";               \
+            auto pt = (enc) -> getPlaintext((ct));                             \
+            std::cout << pt << ": " << #ct << " Level: " << (ct)->GetLevel()   \
+                      << ", LogPrecision: "                                    \
+                      << (enc)->getDecrypt((ct))->GetLogPrecision() << "\n";   \
         }                                                                      \
     } while (0)
 #else
@@ -63,6 +65,11 @@ class Encryption {
         throw std::runtime_error(
             "Decryption not available in base Encryption class");
     }
+    virtual Plaintext getDecrypt(const Ciphertext<DCRTPoly> &ct) const {
+        // Default implementation throws an exception
+        throw std::runtime_error(
+            "Decryption not available in base Encryption class");
+    }
     virtual ~Encryption() = default;
 
     CryptoContext<DCRTPoly> m_cc;
@@ -74,6 +81,8 @@ class DebugEncryption : public Encryption {
     [[nodiscard]] std::vector<double>
     getPlaintext(const Ciphertext<DCRTPoly> &ct,
                  double threshold = 1e-10) const override;
+
+    Plaintext getDecrypt(const Ciphertext<DCRTPoly> &ct) const override;
 
     DebugEncryption(CryptoContext<DCRTPoly> cc, KeyPair<DCRTPoly> keyPair)
         : Encryption(cc, keyPair.publicKey), m_PrivateKey(keyPair.secretKey) {}
