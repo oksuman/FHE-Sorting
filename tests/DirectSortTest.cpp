@@ -54,7 +54,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 4;
-    static constexpr int MultDepth = 41;
+    static constexpr int MultDepth = 43;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
@@ -91,7 +91,7 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     // Compare the results
     for (int i = 0; i < array_length; ++i) {
-        EXPECT_NEAR(decryptedRanks[i], expectedRanks[i], 0.1)
+        EXPECT_NEAR(decryptedRanks[i], expectedRanks[i], 0.000001)
             << "Mismatch at index " << i << ": expected " << expectedRanks[i]
             << ", got " << decryptedRanks[i];
     }
@@ -137,18 +137,18 @@ TEST_F(DirectSortTest, DirectSort) {
     for (size_t i = 0; i < output_array.size(); ++i) {
         double error = std::abs(output_array[i] - expected[i]);
         maxError = std::max(maxError, error);
-        if (error > 0.1) {
+        if (error > 0.02) {
             largeErrorCount++;
         }
     }
 
     // Print statistics
     std::cout << "Maximum error: " << maxError << std::endl;
-    std::cout << "Number of errors larger than 0.1: " << largeErrorCount
+    std::cout << "Number of errors larger than 0.02: " << largeErrorCount
               << std::endl;
 
     // Assert on the quality of the sort
-    EXPECT_LT(maxError, 1.0); // Maximum error should be less than 1
+    EXPECT_LT(maxError, 0.2); // Maximum error should be less than 1
 
     // Print the input array and the calculated ranks
     std::cout << "Input array: ";

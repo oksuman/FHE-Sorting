@@ -98,10 +98,14 @@ template <int N> class DirectSort : public SortBase<N> {
             { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
         }
 
-        auto duplicated_input_array = inputOver255;
+        auto duplicated_input_array = inputOver255->Clone();
         duplicated_input_array->SetSlots(N * N);
         auto ctxRank =
             comp.compare(m_cc, duplicated_input_array, shifted_input_array);
+
+        ctxRank = m_cc->EvalMult(
+            ctxRank, m_cc->MakeCKKSPackedPlaintext(generateMaskVector2(N, 127),
+                                                   1, 0, nullptr, N * N));
 
         // This cannot be parallelized
         for (int i = 1; i < log2(N) + 1; i++) {
@@ -112,7 +116,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
         // This operation is necessary because the result of comp(input_array,
         // 0) is added to ctxRank
-        m_cc->EvalSubInPlace(ctxRank, 1);
+        // m_cc->EvalSubInPlace(ctxRank, 1);
 
         return ctxRank;
     }
