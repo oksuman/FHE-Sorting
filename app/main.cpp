@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
             rotKeyLocation = argv[i + 1];
         } else if (arg == "--cc") {
             ccLocation = argv[i + 1];
-        } else if (arg == "--input") {
+        } else if (arg == "--input" || arg == "--array") {
             arrayLocation = argv[i + 1];
         } else if (arg == "--output") {
             outputLocation = argv[i + 1];
