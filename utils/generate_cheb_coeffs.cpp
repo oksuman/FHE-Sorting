@@ -8,7 +8,7 @@
 #include <iostream>
 #include <vector>
 
-constexpr double COEFFICIENT_THRESHOLD = 1e-4;
+constexpr double COEFFICIENT_THRESHOLD = 1e-10;
 constexpr int sincPolyDegree = 611;
 
 template <int N> std::vector<double> generateTruncatedCoefficients(int i) {
