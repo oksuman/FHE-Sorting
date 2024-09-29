@@ -104,8 +104,8 @@ template <int N> class DirectSort : public SortBase<N> {
             comp.compare(m_cc, duplicated_input_array, shifted_input_array);
 
         ctxRank = m_cc->EvalMult(
-            ctxRank, m_cc->MakeCKKSPackedPlaintext(generateMaskVector2(N, N - 1),
-                                                   1, 0, nullptr, N * N));
+            ctxRank, m_cc->MakeCKKSPackedPlaintext(
+                         generateMaskVector2(N, N - 1), 1, 0, nullptr, N * N));
 
         // This cannot be parallelized
         for (int i = 1; i < log2(N) + 1; i++) {
