@@ -22,10 +22,10 @@ std::vector<double> getVectorWithMinDiff(int N) {
     return result;
 }
 
-// Setup function to create the necessary objects
-template <int N> auto setupBenchmark() {
+// Setup function for BitonicSort
+template <int N> auto setupBitonicSort() {
     CCParams<CryptoContextCKKSRNS> parameters;
-    parameters.SetMultiplicativeDepth(48);
+    parameters.SetMultiplicativeDepth(58);
     parameters.SetScalingModSize(59);
     parameters.SetBatchSize(N);
     parameters.SetSecurityLevel(HEStd_128_classic);
@@ -45,49 +45,36 @@ template <int N> auto setupBenchmark() {
     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
     cc->EvalMultKeyGen(keyPair.secretKey);
 
-    auto enc = std::make_shared<Encryption>(cc, keyPair.publicKey);
-    auto directSort =
-        std::make_unique<DirectSort<N>>(cc, keyPair.publicKey, rotations, enc);
+    // Bootstrapping setup
+    cc->Enable(FHE);
+    std::vector<uint32_t> levelBudget = {4, 4};
+    cc->EvalBootstrapSetup(levelBudget, {0, 0}, N);
+    cc->EvalBootstrapKeyGen(keyPair.secretKey, N);
 
+    auto enc = std::make_shared<Encryption>(cc, keyPair.publicKey);
+    auto bitonicSort =
+        std::make_unique<BitonicSort<N>>(cc, keyPair.publicKey, rotations, enc);
     std::vector<double> inputArray = getVectorWithMinDiff(N);
     auto ctxt = enc->encryptInput(inputArray);
 
-    return std::make_tuple(std::move(cc), std::move(directSort),
+    return std::make_tuple(std::move(cc), std::move(bitonicSort),
                            std::move(ctxt));
 }
 
-// Benchmark function for sort
-template <int N> static void BM_DirectSort(benchmark::State &state) {
-    auto [cc, directSort, ctxt] = setupBenchmark<N>();
-
+// Benchmark function for BitonicSort
+template <int N> static void BM_BitonicSort(benchmark::State &state) {
+    auto [cc, bitonicSort, ctxt] = setupBitonicSort<N>();
     for (auto _ : state) {
-        auto ctxt_out = directSort->sort(ctxt);
+        auto ctxt_out = bitonicSort->sort(ctxt);
         benchmark::DoNotOptimize(ctxt_out);
         benchmark::ClobberMemory();
     }
-
-    state.counters["ArraySize"] = N;
-    state.counters["RingDimension"] = cc->GetRingDimension();
-}
-
-// Benchmark function for constructRank
-template <int N> static void BM_ConstructRank(benchmark::State &state) {
-    auto [cc, directSort, ctxt] = setupBenchmark<N>();
-
-    for (auto _ : state) {
-        auto rank = directSort->constructRank(ctxt);
-        benchmark::DoNotOptimize(rank);
-        benchmark::ClobberMemory();
-    }
-
     state.counters["ArraySize"] = N;
     state.counters["RingDimension"] = cc->GetRingDimension();
 }
 
 // Register the benchmarks
-BENCHMARK(BM_DirectSort<128>)->Unit(benchmark::kMillisecond)->UseRealTime();
-
-BENCHMARK(BM_ConstructRank<128>)->Unit(benchmark::kMillisecond)->UseRealTime();
+BENCHMARK(BM_BitonicSort<128>)->Unit(benchmark::kMillisecond)->UseRealTime();
 
 // Run the benchmark
 BENCHMARK_MAIN();
