@@ -55,7 +55,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 128;
-    static constexpr int MultDepth = 49;
+    static constexpr int MultDepth = 48;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
@@ -124,27 +124,16 @@ TEST_F(DirectSortTest, RotationIndexCheck) {
                           [&](double val) { return val < inputArray[i]; });
     }
 
-    // Create index array [0, 1, 2, ...]
-    std::vector<double> indexArray(array_length);
-    std::iota(indexArray.begin(), indexArray.end(), 0.0);
-
-    // Calculate Index_minus_Rank
-    std::vector<double> indexMinusRank(array_length);
-    for (size_t i = 0; i < array_length; ++i) {
-        indexMinusRank[i] = indexArray[i] - rankArray[i];
-    }
-
     // Encrypt input arrays
     auto ctxtInput = m_enc->encryptInput(inputArray);
-    auto ctxtIndexMinusRank = m_enc->encryptInput(indexMinusRank);
+    auto ctxRank = m_enc->encryptInput(rankArray);
 
     // Create DirectSort object
     auto directSort = std::make_unique<DirectSort<array_length>>(
         m_cc, m_publicKey, rotations, m_enc);
 
     // Call rotationIndexCheck
-    auto ctxtResult =
-        directSort->rotationIndexCheck(ctxtIndexMinusRank, ctxtInput);
+    auto ctxtResult = directSort->rotationIndexCheck(ctxRank, ctxtInput);
 
     // Decrypt the result
     Plaintext result;
@@ -165,7 +154,6 @@ TEST_F(DirectSortTest, RotationIndexCheck) {
     // Print arrays for visualization
     std::cout << "Input array: " << inputArray << std::endl;
     std::cout << "Rank array: " << rankArray << std::endl;
-    std::cout << "Index minus Rank: " << indexMinusRank << std::endl;
     std::cout << "Output array: " << outputArray << std::endl;
     std::cout << "Expected array: " << expectedArray << std::endl;
 

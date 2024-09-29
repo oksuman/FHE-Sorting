@@ -9,6 +9,7 @@
 
 using namespace lbcrypto;
 
+#include "generated_coeffs.h"
 
 enum class SortAlgo { DirectSort, BitonicSort };
 
@@ -185,7 +186,7 @@ template <int N> class DirectSort : public SortBase<N> {
     Ciphertext<DCRTPoly>
     rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
-
+        static const auto &sincCoefficients = selectCoefficients<N>();
         auto output_array = this->getZero()->Clone();
         output_array->SetSlots(2 * N * N);
         ctx_Rank->SetSlots(2 * N * N);
@@ -205,15 +206,9 @@ template <int N> class DirectSort : public SortBase<N> {
 
         m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
 
-        rotIndex = m_cc->EvalChebyshevFunction(
-            [](double x) {
-                if (std::abs(x) < 1e-10) {
-                    return 1.0;
-                } else {
-                    return std::sin(M_PI * 256 * x) / (M_PI * 256 * x);
-                }
-            },
-            rotIndex, -1, 1, 1011);
+        rotIndex =
+            m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
+
         auto masked_input = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
 
 #pragma omp parallel for
@@ -254,7 +249,6 @@ template <int N> class DirectSort : public SortBase<N> {
         auto ctx_Rank = constructRank(input_array);
         std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
-
 
         auto output_array = rotationIndexCheck(ctx_Rank, input_array);
         std::cout << "\n===== Final Output: \n";
