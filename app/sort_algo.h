@@ -77,6 +77,72 @@ template <int N> class DirectSort : public SortBase<N> {
         return result;
     }
 
+    std::vector<double> generateMaskVector3(int array_size, int k) {
+        std::vector<double> result(2 * array_size * array_size, 0.0);
+
+        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            result[i] = 1.0;
+        }
+
+        return result;
+    }
+
+    std::vector<double> generateMaskVector4(int array_size, int k) {
+        std::vector<double> result(2 * array_size * array_size, 0.0);
+
+        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            result[i] = 1.0;
+        }
+        for (int i = array_size * (2 * array_size - k);
+             i < array_size * (2 * array_size - k + 1); ++i) {
+            result[i] = 1.0;
+        }
+
+        return result;
+    }
+
+    std::vector<double> generateCheckingVector(int array_size) {
+        const int total_size = 2 * array_size * array_size;
+        std::vector<double> stretched_index(total_size);
+
+#pragma omp parallel
+        {
+#pragma omp for nowait
+            for (int i = 0; i < array_size * array_size; ++i) {
+                stretched_index[i] = i / array_size;
+            }
+
+#pragma omp for nowait
+            for (int i = array_size * array_size;
+                 i < array_size * array_size + array_size; ++i) {
+                stretched_index[i] = array_size;
+            }
+
+#pragma omp for
+            for (int i = array_size * array_size + array_size; i < total_size;
+                 ++i) {
+                stretched_index[i] =
+                    -((i - array_size * array_size - array_size) / array_size +
+                      1);
+            }
+        }
+
+        return stretched_index;
+    }
+
+    std::vector<double> generateRepeatedIndex(int array_size) {
+        std::vector<double> result;
+        result.reserve(2 * array_size * array_size);
+
+        for (int i = 0; i < 2 * array_size; ++i) {
+            for (int j = 0; j < array_size; ++j) {
+                result.push_back(static_cast<double>(j));
+            }
+        }
+
+        return result;
+    }
+
     Ciphertext<DCRTPoly>
     constructRank(const Ciphertext<DCRTPoly> &input_array) {
 
@@ -156,6 +222,71 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     Ciphertext<DCRTPoly>
+    rotationIndexCheckOpt(const Ciphertext<DCRTPoly> &ctx_Rank,
+                          const Ciphertext<DCRTPoly> &input_array) {
+        // int N = input_array->GetSlots();
+
+        auto output_array = this->getZero()->Clone();
+        output_array->SetSlots(2 * N * N);
+        ctx_Rank->SetSlots(2 * N * N);
+        input_array->SetSlots(2 * N * N);
+
+        Plaintext duplicated_index = m_cc->MakeCKKSPackedPlaintext(
+            generateRepeatedIndex(N), 1, ctx_Rank->GetLevel(), nullptr,
+            2 * N * N);
+
+        auto index_minus_rank = m_cc->EvalSub(duplicated_index, ctx_Rank);
+
+        Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
+            generateCheckingVector(N), 1, ctx_Rank->GetLevel(), nullptr,
+            2 * N * N);
+
+        auto rotIndex = m_cc->EvalSub(index_minus_rank, rot_checking_vector);
+
+        m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
+
+        rotIndex = m_cc->EvalChebyshevFunction(
+            [](double x) {
+                if (std::abs(x) < 1e-10) {
+                    return 1.0;
+                } else {
+                    return std::sin(M_PI * 256 * x) / (M_PI * 256 * x);
+                }
+            },
+            rotIndex, -1, 1, 1011);
+        auto masked_input = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
+
+#pragma omp parallel for
+        for (int i = 0; i < N; i++) {
+            if (i == 0) {
+                Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
+                    generateMaskVector3(N, i), 1, masked_input->GetLevel(),
+                    nullptr, 2 * N * N);
+                auto rotated = m_cc->EvalMult(masked_input, msk);
+#pragma omp critical
+                // Add to the output array
+                { m_cc->EvalAddInPlace(output_array, rotated); }
+            } else {
+                Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
+                    generateMaskVector4(N, i), 1, masked_input->GetLevel(),
+                    nullptr, 2 * N * N);
+                auto rotated = m_cc->EvalMult(masked_input, msk);
+                rotated = rot.rotate(rotated, i);
+#pragma omp critical
+                // Add to the output array
+                { m_cc->EvalAddInPlace(output_array, rotated); }
+            }
+        }
+
+        for (int i = 1; i < log2(2 * N) + 1; i++) {
+            m_cc->EvalAddInPlace(
+                output_array, rot.rotate(output_array, (2 * N * N) / (1 << i)));
+        }
+        output_array->SetSlots(N);
+        return output_array;
+    }
+
+    Ciphertext<DCRTPoly>
     sort(const Ciphertext<DCRTPoly> &input_array) override {
 
         std::cout << "\n===== Direct Sort Input Array: \n";
@@ -176,6 +307,7 @@ template <int N> class DirectSort : public SortBase<N> {
         PRINT_PT(m_enc, Index_minus_Rank);
 
         auto output_array = rotationIndexCheck(Index_minus_Rank, input_array);
+        // auto output_array = rotationIndexCheckOpt(ctx_Rank, input_array);
         std::cout << "\n===== Final Output: \n";
         PRINT_PT(m_enc, output_array);
         return output_array;
