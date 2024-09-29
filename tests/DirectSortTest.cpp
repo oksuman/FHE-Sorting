@@ -25,7 +25,7 @@ class DirectSortTest : public ::testing::Test {
         parameters.SetScalingModSize(59);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr usint ringDim = 1 << 17;
+        constexpr usint ringDim = 1 << 16;
         parameters.SetRingDim(ringDim);
         assert(ringDim / 2 > array_length * array_length &&
                "Ring dimension should be higher than the square of array "
@@ -53,8 +53,8 @@ class DirectSortTest : public ::testing::Test {
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
     }
 
-    static constexpr int array_length = 4;
-    static constexpr int MultDepth = 43;
+    static constexpr int array_length = 128;
+    static constexpr int MultDepth = 46;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
