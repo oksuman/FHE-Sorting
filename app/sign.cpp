@@ -76,6 +76,17 @@ Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
     return y;
 }
 
+Ciphertext<lbcrypto::DCRTPoly> minimaxSign(Ciphertext<lbcrypto::DCRTPoly> x,
+                                           CryptoContext<DCRTPoly> cc,
+                                           const MinimaxSignConfig &config) {
+    Ciphertext<lbcrypto::DCRTPoly> result = x;
+    for (const auto &coeff : config.coeffs) {
+        result = cc->EvalChebyshevSeriesPS(result, coeff, -1, 1);
+    }
+
+    return result;
+}
+
 // Source of signum
 // https://github.com/fairmath/polycircuit/blob/main/include/polycircuit/component/SignEvaluation/SignEvaluation.hpp#L29
 Ciphertext<lbcrypto::DCRTPoly>
@@ -531,10 +542,13 @@ Ciphertext<lbcrypto::DCRTPoly> tanh(Ciphertext<lbcrypto::DCRTPoly> a,
 Ciphertext<lbcrypto::DCRTPoly> sign(Ciphertext<lbcrypto::DCRTPoly> x,
                                     CryptoContext<DCRTPoly> cc, SignFunc func,
                                     const SignConfig &Cfg) {
+
     switch (func) {
     case SignFunc::CompositeSign:
     default:
         return compositeSign(x, cc, Cfg.compos.dg, Cfg.compos.df);
+    case SignFunc::MinimaxSign:
+        return minimaxSign(x, cc, Cfg.minimax);
     case SignFunc::SignumPolycircuit:
         return signum_polycircuit(x, cc);
     case SignFunc::Tanh:
@@ -542,4 +556,16 @@ Ciphertext<lbcrypto::DCRTPoly> sign(Ciphertext<lbcrypto::DCRTPoly> x,
     case SignFunc::NaiveDiscrete:
         return naive_discrete_sign(x, cc);
     }
+}
+
+Ciphertext<lbcrypto::DCRTPoly>
+hybrid_sign(Ciphertext<lbcrypto::DCRTPoly> x, CryptoContext<DCRTPoly> cc,
+            const std::vector<SignFunctionConfig> &chain_config) {
+    Ciphertext<lbcrypto::DCRTPoly> result = x;
+
+    for (const auto &config : chain_config) {
+        result = sign(result, cc, config.func, config.config);
+    }
+
+    return result;
 }
