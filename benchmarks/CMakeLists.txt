@@ -20,6 +20,12 @@ add_benchmark(SincBenchmark
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
 
+add_benchmark(BitonicSortBenchmark 
+	      BitonicSortBenchmark.cpp 
+              ${CMAKE_SOURCE_DIR}/app/sign.cpp
+              ${CMAKE_SOURCE_DIR}/app/comparison.cpp
+              ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
+
 add_benchmark(DirectSortBenchmark 
 	      DirectSortBenchmark.cpp 
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
