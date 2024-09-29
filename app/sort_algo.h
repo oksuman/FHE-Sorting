@@ -9,7 +9,6 @@
 
 using namespace lbcrypto;
 
-#include "generated_coeffs.h"
 
 enum class SortAlgo { DirectSort, BitonicSort };
 
@@ -180,51 +179,12 @@ template <int N> class DirectSort : public SortBase<N> {
         }
         ctxRank->SetSlots(N);
 
-        // This operation is necessary because the result of comp(input_array,
-        // 0) is added to ctxRank
-        // m_cc->EvalSubInPlace(ctxRank, 1);
-
         return ctxRank;
     }
 
     Ciphertext<DCRTPoly>
-    rotationIndexCheck(Ciphertext<DCRTPoly> &Index_minus_Rank,
+    rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
-        // int N = input_array->GetSlots();
-
-        m_cc->EvalMultInPlace(Index_minus_Rank, 1.0 / N);
-
-        auto output_array = this->getZero()->Clone();
-        static const auto allCoefficients = selectCoefficients<N>();
-        assert(allCoefficients.size() == N &&
-               "The size of precomputed coefficient matrix is different than "
-               "the array size.");
-
-#pragma omp parallel for
-        for (int i = 0; i < N; i++) {
-            // Compute the sinc interpolation for this rotation
-            const auto &coefficients = allCoefficients[i];
-            auto rotIndex = m_cc->EvalChebyshevSeriesPS(Index_minus_Rank,
-                                                        coefficients, -1, 1);
-            // Apply the rotation mask to the input array
-            auto masked_input =
-                m_cc->EvalMultAndRelinearize(rotIndex, input_array);
-
-            // Rotate the masked input
-            auto rotated = rot.rotate(masked_input, i);
-
-#pragma omp critical
-            // Add to the output array
-            { m_cc->EvalAddInPlace(output_array, rotated); }
-        }
-
-        return output_array;
-    }
-
-    Ciphertext<DCRTPoly>
-    rotationIndexCheckOpt(const Ciphertext<DCRTPoly> &ctx_Rank,
-                          const Ciphertext<DCRTPoly> &input_array) {
-        // int N = input_array->GetSlots();
 
         auto output_array = this->getZero()->Clone();
         output_array->SetSlots(2 * N * N);
@@ -295,19 +255,8 @@ template <int N> class DirectSort : public SortBase<N> {
         std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
 
-        // Make a plaintext index array [1, 2, 3, ...]
-        std::vector<double> Index(N);
-        std::iota(Index.begin(), Index.end(), 0);
-        Plaintext ptx_Index = m_cc->MakeCKKSPackedPlaintext(
-            Index, 1 /*scaleDeg=*/, ctx_Rank->GetLevel());
 
-        // Evaluate index - rank, which denotes the rotation index to be sorted
-        auto Index_minus_Rank = m_cc->EvalSub(ptx_Index, ctx_Rank);
-        std::cout << "\n===== Index - Rank: \n";
-        PRINT_PT(m_enc, Index_minus_Rank);
-
-        auto output_array = rotationIndexCheck(Index_minus_Rank, input_array);
-        // auto output_array = rotationIndexCheckOpt(ctx_Rank, input_array);
+        auto output_array = rotationIndexCheck(ctx_Rank, input_array);
         std::cout << "\n===== Final Output: \n";
         PRINT_PT(m_enc, output_array);
         return output_array;

@@ -42,7 +42,8 @@ class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        rotations = {-1, -2, -4, -8, -16, -32, 1, 2, 4, 8, 16, 32, 64, 512};
+        rotations = {-1, -2, -4, -8, -16, -32, 1,  2,
+                     4,  8,  16, 32, 64,  128, 512};
 
         // Generate the rotation keys
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
@@ -54,7 +55,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 128;
-    static constexpr int MultDepth = 46;
+    static constexpr int MultDepth = 49;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
