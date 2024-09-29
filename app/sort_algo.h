@@ -4,11 +4,157 @@
 #include "encryption.h"
 #include "openfhe.h"
 #include "rotation.h"
+#include <array>
+#include <cmath>
 #include <iostream>
 #include <vector>
 
 using namespace lbcrypto;
 
+template <int N> class Masking {
+  private:
+    // Functor for generating mask vectors
+    template <int Size> struct MaskVectorGenerator {
+        template <int K>
+        static constexpr std::array<double, Size * Size> generateMaskVector1() {
+            std::array<double, Size * Size> result{};
+            for (int i = K * Size; i < (K + 1) * Size && i < Size * Size; ++i) {
+                result[i] = 1.0;
+            }
+            return result;
+        }
+
+        template <int K>
+        static constexpr std::array<double, 2 * Size * Size>
+        generateMaskVector4() {
+            std::array<double, 2 * Size * Size> result{};
+            for (int i = K * Size; i < (K + 1) * Size && i < 2 * Size * Size;
+                 ++i) {
+                result[i] = 1.0;
+            }
+            for (int i = Size * (2 * Size - K);
+                 i < Size * (2 * Size - K + 1) && i < 2 * Size * Size; ++i) {
+                result[i] = 1.0;
+            }
+            return result;
+        }
+    };
+
+    static constexpr std::array<double, N * N> generateMaskVector2() {
+        std::array<double, N * N> result{};
+        for (int i = 0; i < N * (N - 1); ++i) {
+            result[i] = 1.0;
+        }
+        return result;
+    }
+
+    static constexpr std::array<double, 2 * N * N> generateMaskVector3() {
+        std::array<double, 2 * N * N> result{};
+        for (int i = 0; i < N && i < 2 * N * N; ++i) {
+            result[i] = 1.0;
+        }
+        return result;
+    }
+
+    // Compile-time generation of checking vector and repeated index
+    static constexpr auto generateCheckingVectorImpl() {
+        std::array<double, 2 * N * N> result{};
+        for (int i = 0; i < 2 * N * N; ++i) {
+            if (i < N * N) {
+                result[i] = static_cast<double>(i / N);
+            } else if (i < N * N + N) {
+                result[i] = static_cast<double>(N);
+            } else {
+                result[i] = -static_cast<double>((i - N * N - N) / N + 1);
+            }
+        }
+        return result;
+    }
+
+    static constexpr auto generateRepeatedIndexImpl() {
+        std::array<double, 2 * N * N> result{};
+        for (int i = 0; i < 2 * N * N; ++i) {
+            result[i] = static_cast<double>(i % N);
+        }
+        return result;
+    }
+
+    // Helper function to generate all mask vectors
+    template <typename F, size_t... I>
+    static constexpr auto generateAllMaskVectors(std::index_sequence<I...>) {
+        return std::array{F::template generateMaskVector1<I>()...};
+    }
+
+    template <typename F, size_t... I>
+    static constexpr auto generateAllMaskVectors4(std::index_sequence<I...>) {
+        return std::array{F::template generateMaskVector4<I>()...};
+    }
+
+    // Compile-time constants
+    static constexpr auto maskVectors1 =
+        generateAllMaskVectors<MaskVectorGenerator<N>>(
+            std::make_index_sequence<N>{});
+    static constexpr auto maskVector2 = generateMaskVector2();
+    static constexpr auto maskVector3 = generateMaskVector3();
+    static constexpr auto maskVectors4 =
+        generateAllMaskVectors4<MaskVectorGenerator<N>>(
+            std::make_index_sequence<N>{});
+    static constexpr auto checkingVectorArray = generateCheckingVectorImpl();
+    static constexpr auto repeatedIndexArray = generateRepeatedIndexImpl();
+
+    // Cached vectors
+    std::vector<std::vector<double>> cachedMaskVectors1;
+    std::vector<double> cachedMaskVector2;
+    std::vector<double> cachedMaskVector3;
+    std::vector<std::vector<double>> cachedMaskVectors4;
+    std::vector<double> cachedCheckingVector;
+    std::vector<double> cachedRepeatedIndex;
+
+    // Helper function to convert std::array to std::vector
+    template <typename T, size_t S>
+    static std::vector<T> to_vector(const std::array<T, S> &arr) {
+        return std::vector<T>(arr.begin(), arr.end());
+    }
+
+  public:
+    Masking() { initializeCachedVectors(); }
+
+    void initializeCachedVectors() {
+        cachedMaskVectors1.reserve(N);
+        cachedMaskVectors4.reserve(N);
+
+        for (const auto &arr : maskVectors1) {
+            cachedMaskVectors1.push_back(to_vector(arr));
+        }
+        for (const auto &arr : maskVectors4) {
+            cachedMaskVectors4.push_back(to_vector(arr));
+        }
+
+        cachedMaskVector2 = to_vector(maskVector2);
+        cachedMaskVector3 = to_vector(maskVector3);
+        cachedCheckingVector = to_vector(checkingVectorArray);
+        cachedRepeatedIndex = to_vector(repeatedIndexArray);
+    }
+
+    const std::vector<double> &getMaskVector1(int index) const {
+        return cachedMaskVectors1[index];
+    }
+    const std::vector<double> &getMaskVector2() const {
+        return cachedMaskVector2;
+    }
+    const std::vector<double> &getMaskVector3() const {
+        return cachedMaskVector3;
+    }
+    const std::vector<double> &getMaskVector4(int index) const {
+        return cachedMaskVectors4[index];
+    }
+    const std::vector<double> &getCheckingVector() const {
+        return cachedCheckingVector;
+    }
+    const std::vector<double> &getRepeatedIndex() const {
+        return cachedRepeatedIndex;
+    }
+};
 
 enum class SortAlgo { DirectSort, BitonicSort };
 
@@ -34,8 +180,6 @@ class SortBase {
     sort(const Ciphertext<DCRTPoly> &input_array) = 0;
 
     virtual const Ciphertext<DCRTPoly> &getZero() const { return m_zeroCache; }
-    // Common methods that can be used by all sorting algorithms
-    constexpr size_t getArraySize() const { return N; }
 };
 
 template <int N> class DirectSort : public SortBase<N> {
@@ -44,6 +188,7 @@ template <int N> class DirectSort : public SortBase<N> {
     PublicKey<DCRTPoly> m_PublicKey;
     Comparison comp;
     RotationComposer<N> rot;
+    Masking<N> masking;
 
   public:
     std::shared_ptr<Encryption> m_enc;
@@ -52,95 +197,6 @@ template <int N> class DirectSort : public SortBase<N> {
                std::vector<int> rotIndices, std::shared_ptr<Encryption> enc)
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
           rot(m_cc, enc, rotIndices), m_enc(enc) {}
-
-    /*
-        masking vector generation for SIMD optimization
-    */
-    std::vector<double> generateMaskVector1(int array_size, int k) {
-        std::vector<double> result(array_size * array_size, 0.0);
-
-        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
-            result[i] = 1.0;
-        }
-
-        return result;
-    }
-
-    std::vector<double> generateMaskVector2(int array_size, int k) {
-        std::vector<double> result(array_size * array_size, 1.0);
-
-        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
-            result[i] = 0.0;
-        }
-
-        return result;
-    }
-
-    std::vector<double> generateMaskVector3(int array_size, int k) {
-        std::vector<double> result(2 * array_size * array_size, 0.0);
-
-        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
-            result[i] = 1.0;
-        }
-
-        return result;
-    }
-
-    std::vector<double> generateMaskVector4(int array_size, int k) {
-        std::vector<double> result(2 * array_size * array_size, 0.0);
-
-        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
-            result[i] = 1.0;
-        }
-        for (int i = array_size * (2 * array_size - k);
-             i < array_size * (2 * array_size - k + 1); ++i) {
-            result[i] = 1.0;
-        }
-
-        return result;
-    }
-
-    std::vector<double> generateCheckingVector(int array_size) {
-        const int total_size = 2 * array_size * array_size;
-        std::vector<double> stretched_index(total_size);
-
-#pragma omp parallel
-        {
-#pragma omp for nowait
-            for (int i = 0; i < array_size * array_size; ++i) {
-                stretched_index[i] = i / array_size;
-            }
-
-#pragma omp for nowait
-            for (int i = array_size * array_size;
-                 i < array_size * array_size + array_size; ++i) {
-                stretched_index[i] = array_size;
-            }
-
-#pragma omp for
-            for (int i = array_size * array_size + array_size; i < total_size;
-                 ++i) {
-                stretched_index[i] =
-                    -((i - array_size * array_size - array_size) / array_size +
-                      1);
-            }
-        }
-
-        return stretched_index;
-    }
-
-    std::vector<double> generateRepeatedIndex(int array_size) {
-        std::vector<double> result;
-        result.reserve(2 * array_size * array_size);
-
-        for (int i = 0; i < 2 * array_size; ++i) {
-            for (int j = 0; j < array_size; ++j) {
-                result.push_back(static_cast<double>(j));
-            }
-        }
-
-        return result;
-    }
 
     Ciphertext<DCRTPoly>
     constructRank(const Ciphertext<DCRTPoly> &input_array) {
@@ -154,7 +210,7 @@ template <int N> class DirectSort : public SortBase<N> {
             auto rotated = rot.rotate(inputOver255, i);
             rotated->SetSlots(N * N);
             rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
-                                                  generateMaskVector1(N, i - 1),
+                                                  masking.getMaskVector1(i - 1),
                                                   1, 0, nullptr, N * N));
 
             // TODO remove critical section for performance and instead add
@@ -169,8 +225,8 @@ template <int N> class DirectSort : public SortBase<N> {
             comp.compare(m_cc, duplicated_input_array, shifted_input_array);
 
         ctxRank = m_cc->EvalMult(
-            ctxRank, m_cc->MakeCKKSPackedPlaintext(
-                         generateMaskVector2(N, N - 1), 1, 0, nullptr, N * N));
+            ctxRank, m_cc->MakeCKKSPackedPlaintext(masking.getMaskVector2(), 1,
+                                                   0, nullptr, N * N));
 
         // This cannot be parallelized
         for (int i = 1; i < log2(N) + 1; i++) {
@@ -192,13 +248,13 @@ template <int N> class DirectSort : public SortBase<N> {
         input_array->SetSlots(2 * N * N);
 
         Plaintext duplicated_index = m_cc->MakeCKKSPackedPlaintext(
-            generateRepeatedIndex(N), 1, ctx_Rank->GetLevel(), nullptr,
+            masking.getRepeatedIndex(), 1, ctx_Rank->GetLevel(), nullptr,
             2 * N * N);
 
         auto index_minus_rank = m_cc->EvalSub(duplicated_index, ctx_Rank);
 
         Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
-            generateCheckingVector(N), 1, ctx_Rank->GetLevel(), nullptr,
+            masking.getCheckingVector(), 1, ctx_Rank->GetLevel(), nullptr,
             2 * N * N);
 
         auto rotIndex = m_cc->EvalSub(index_minus_rank, rot_checking_vector);
@@ -220,7 +276,7 @@ template <int N> class DirectSort : public SortBase<N> {
         for (int i = 0; i < N; i++) {
             if (i == 0) {
                 Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
-                    generateMaskVector3(N, i), 1, masked_input->GetLevel(),
+                    masking.getMaskVector3(), 1, masked_input->GetLevel(),
                     nullptr, 2 * N * N);
                 auto rotated = m_cc->EvalMult(masked_input, msk);
 #pragma omp critical
@@ -228,7 +284,7 @@ template <int N> class DirectSort : public SortBase<N> {
                 { m_cc->EvalAddInPlace(output_array, rotated); }
             } else {
                 Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
-                    generateMaskVector4(N, i), 1, masked_input->GetLevel(),
+                    masking.getMaskVector4(i), 1, masked_input->GetLevel(),
                     nullptr, 2 * N * N);
                 auto rotated = m_cc->EvalMult(masked_input, msk);
                 rotated = rot.rotate(rotated, i);
