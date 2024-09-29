@@ -122,9 +122,11 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     Ciphertext<DCRTPoly>
-    rotationIndexCheck(const Ciphertext<DCRTPoly> &Index_minus_Rank,
+    rotationIndexCheck(Ciphertext<DCRTPoly> &Index_minus_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
         // int N = input_array->GetSlots();
+
+        m_cc->EvalMultInPlace(Index_minus_Rank, 1.0 / N);
 
         auto output_array = this->getZero()->Clone();
         static const auto allCoefficients = selectCoefficients<N>();
@@ -172,8 +174,6 @@ template <int N> class DirectSort : public SortBase<N> {
         auto Index_minus_Rank = m_cc->EvalSub(ptx_Index, ctx_Rank);
         std::cout << "\n===== Index - Rank: \n";
         PRINT_PT(m_enc, Index_minus_Rank);
-
-        m_cc->EvalMultInPlace(Index_minus_Rank, 1.0 / N);
 
         auto output_array = rotationIndexCheck(Index_minus_Rank, input_array);
         std::cout << "\n===== Final Output: \n";
