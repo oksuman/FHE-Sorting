@@ -25,7 +25,7 @@ class DecomposerTest : public ::testing::Test {
                         std::function<bool(const std::vector<Step> &)>
                             additionalCheck = nullptr) {
         for (int num = start; num <= end; ++num) {
-            auto steps = decomposer->decompose(num, algo);
+            auto steps = decomposer->decompose(num, 128, algo);
             int recomposed = compose(steps);
             EXPECT_EQ(num, recomposed)
                 << "Number: " << num
@@ -89,7 +89,8 @@ TEST_F(DecomposerTest, PowerOfTwoSingleStep) {
         int powerOfTwo = 1 << i;
 
         // Test NAF decomposition
-        auto nafSteps = decomposer->decompose(powerOfTwo, DecomposeAlgo::NAF);
+        auto nafSteps =
+            decomposer->decompose(powerOfTwo, 128, DecomposeAlgo::NAF);
         EXPECT_EQ(nafSteps.size(), 1) << "NAF decomposition of " << powerOfTwo
                                       << " should have single step";
         EXPECT_EQ(nafSteps[0].value, 1)
@@ -100,7 +101,7 @@ TEST_F(DecomposerTest, PowerOfTwoSingleStep) {
 
         // Test Binary decomposition
         auto binarySteps =
-            decomposer->decompose(powerOfTwo, DecomposeAlgo::BINARY);
+            decomposer->decompose(powerOfTwo, 128, DecomposeAlgo::BINARY);
         EXPECT_EQ(binarySteps.size(), 1)
             << "Binary decomposition of " << powerOfTwo
             << " should have single step";
