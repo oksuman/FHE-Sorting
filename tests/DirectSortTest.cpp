@@ -110,6 +110,68 @@ TEST_F(DirectSortTest, ConstructRank) {
     std::cout << std::endl;
 }
 
+TEST_F(DirectSortTest, RotationIndexCheck) {
+    // Generate a random permutation for the input array
+
+    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
+
+    // Calculate the rank array
+    std::vector<double> rankArray(array_length);
+    for (size_t i = 0; i < array_length; ++i) {
+        rankArray[i] =
+            std::count_if(inputArray.begin(), inputArray.end(),
+                          [&](double val) { return val < inputArray[i]; });
+    }
+
+    // Create index array [0, 1, 2, ...]
+    std::vector<double> indexArray(array_length);
+    std::iota(indexArray.begin(), indexArray.end(), 0.0);
+
+    // Calculate Index_minus_Rank
+    std::vector<double> indexMinusRank(array_length);
+    for (size_t i = 0; i < array_length; ++i) {
+        indexMinusRank[i] = indexArray[i] - rankArray[i];
+    }
+
+    // Encrypt input arrays
+    auto ctxtInput = m_enc->encryptInput(inputArray);
+    auto ctxtIndexMinusRank = m_enc->encryptInput(indexMinusRank);
+
+    // Create DirectSort object
+    auto directSort = std::make_unique<DirectSort<array_length>>(
+        m_cc, m_publicKey, rotations, m_enc);
+
+    // Call rotationIndexCheck
+    auto ctxtResult =
+        directSort->rotationIndexCheck(ctxtIndexMinusRank, ctxtInput);
+
+    // Decrypt the result
+    Plaintext result;
+    m_cc->Decrypt(m_privateKey, ctxtResult, &result);
+    std::vector<double> outputArray = result->GetRealPackedValue();
+
+    // Expected sorted array
+    std::vector<double> expectedArray = inputArray;
+    std::sort(expectedArray.begin(), expectedArray.end());
+
+    // Compare results
+    for (size_t i = 0; i < array_length; ++i) {
+        EXPECT_NEAR(outputArray[i], expectedArray[i], 0.01)
+            << "Mismatch at index " << i << ": expected " << expectedArray[i]
+            << ", got " << outputArray[i];
+    }
+
+    // Print arrays for visualization
+    std::cout << "Input array: " << inputArray << std::endl;
+    std::cout << "Rank array: " << rankArray << std::endl;
+    std::cout << "Index minus Rank: " << indexMinusRank << std::endl;
+    std::cout << "Output array: " << outputArray << std::endl;
+    std::cout << "Expected array: " << expectedArray << std::endl;
+
+    // Check the level of the result
+    std::cout << "Result level: " << ctxtResult->GetLevel() << std::endl;
+}
+
 TEST_F(DirectSortTest, DirectSort) {
 
     std::vector<double> inputArray = getVectorWithMinDiff(array_length);
