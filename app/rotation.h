@@ -49,6 +49,8 @@ template <int N> class Decomposer {
         maxDecomposed = calculateMax();
     }
 
+    std::vector<int> getRotIndices() { return rotIndices; }
+
     std::vector<Step> decompose(int rotation, int wrapN, DecomposeAlgo algo) {
         std::vector<Step> steps;
         int largestStep = rotIndices.back();
@@ -162,22 +164,7 @@ template <int N> class RotationComposer {
     std::shared_ptr<Encryption> m_enc;
     Decomposer<N> m_decomposer;
     DecomposeAlgo m_algo;
-    uint32_t M;
-    RotationStats stats;
-
-    struct RotationNode {
-        int stepSize;
-        RotationNode *parent;
-        std::map<int, std::unique_ptr<RotationNode>> children;
-        std::vector<int> finalValues;
-        Ciphertext<DCRTPoly> rotatedCiphertext;
-        std::shared_ptr<std::vector<DCRTPoly>> cPrecomp;
-
-        RotationNode(int step, RotationNode *p = nullptr)
-            : stepSize(step), parent(p) {}
-    };
-
-    std::unique_ptr<RotationNode> rotationTree;
+    // uint32_t M;
 
   public:
     RotationComposer(CryptoContext<DCRTPoly> cc,
@@ -185,10 +172,10 @@ template <int N> class RotationComposer {
                      std::vector<int> rotIndices,
                      DecomposeAlgo algo = DecomposeAlgo::NAF)
         : m_cc(cc), m_enc(enc), m_decomposer(rotIndices), m_algo(algo) {
-        M = cc->GetCyclotomicOrder();
+        // M = cc->GetCyclotomicOrder();
     }
 
-    const RotationStats &getStats() const { return stats; }
+    std::vector<int> getRotIndices() { return m_decomposer.getRotIndices(); }
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
@@ -201,28 +188,62 @@ template <int N> class RotationComposer {
             result = m_cc->EvalRotate(result, step.stepSize);
         return result;
     }
+};
+
+template <int N> class RotationTree {
+  public:
+    struct RotationNode {
+        int stepSize;
+        RotationNode *parent;
+        std::map<int, std::unique_ptr<RotationNode>> children;
+        std::vector<int> finalValues;
+        Ciphertext<DCRTPoly> rotatedCiphertext;
+        std::shared_ptr<std::vector<DCRTPoly>> cPrecomp;
+
+        RotationNode(int step, RotationNode *p = nullptr)
+            : stepSize(step), parent(p) {}
+    };
+
+  private:
+    std::unique_ptr<RotationNode> root;
+    Decomposer<N> m_decomposer;
+    DecomposeAlgo m_algo;
+    CryptoContext<DCRTPoly> m_cc;
+    uint32_t M;
+    RotationStats stats;
+
+  public:
+    RotationTree(CryptoContext<DCRTPoly> cc, const std::vector<int> &rotIndices,
+                 DecomposeAlgo algo = DecomposeAlgo::NAF)
+        : m_decomposer(rotIndices), m_algo(algo), m_cc(cc) {
+        root = std::make_unique<RotationNode>(0); // Root node
+        M = cc->GetCyclotomicOrder();
+    }
+
+    void buildTree(int start, int end) {
+        assert(start >= -N && end <= N &&
+               "Start and end should be an interval in [-N,N]");
+#pragma omp parallel for
+        for (int i = start; i <= end; ++i) {
+            auto steps = m_decomposer.decompose(i, end, m_algo);
+#pragma omp critical
+            { addToTree(root.get(), steps, 0, i); }
+        }
+    }
 
     Ciphertext<DCRTPoly> treeRotate(const Ciphertext<DCRTPoly> &input,
                                     int rotation) {
         auto steps =
             m_decomposer.decompose(rotation, input->GetSlots(), m_algo);
-        if (!rotationTree->cPrecomp)
-            rotationTree->cPrecomp = m_cc->EvalFastRotationPrecompute(input);
+        // std::cout << "Tree rotate " << rotation << "\n";
+        // dump(steps);
+        if (!root->cPrecomp)
+            root->cPrecomp = m_cc->EvalFastRotationPrecompute(input);
 
-        return traverseAndRotate(input, rotationTree.get(), steps, 0);
+        return traverseAndRotate(input, root.get(), steps, 0);
     }
 
-    void buildRotationTree(int start, int end) {
-        assert(start >= -N && end <= N &&
-               "Start and end should be an interval in [-N,N]");
-        rotationTree = std::make_unique<RotationNode>(0); // Root node
-#pragma omp parallel for
-        for (int i = start; i <= end; ++i) {
-            auto steps = m_decomposer.decompose(i, end, m_algo);
-#pragma omp critical
-            { addToTree(rotationTree.get(), steps, 0, i); }
-        }
-    }
+    const RotationStats &getStats() const { return stats; }
 
   private:
     void addToTree(RotationNode *node, const std::vector<Step> &steps,
@@ -264,25 +285,25 @@ template <int N> class RotationComposer {
                       << step.stepSize << std::endl;
             return input;
         }
-        RotationNode *child = childIt->second.get();
+        auto *child = childIt->second.get();
         Ciphertext<DCRTPoly> rotated;
 
         if (child->rotatedCiphertext) {
             rotated = child->rotatedCiphertext;
-            stats.cacheHits++;
+            // stats.cacheHits++;
         } else {
-            stats.cacheMisses++;
-            stats.totalRotationCount++;
+            // stats.cacheMisses++;
+            // stats.totalRotationCount++;
             if (std::abs(node->stepSize) > 2 || !node->stepSize /*root node*/) {
                 if (!node->cPrecomp) {
                     node->cPrecomp = m_cc->EvalFastRotationPrecompute(input);
                 }
                 rotated = m_cc->EvalFastRotation(input, child->stepSize, M,
                                                  node->cPrecomp);
-                stats.fastRotationCount++;
+                // stats.fastRotationCount++;
             } else {
                 rotated = m_cc->EvalRotate(input, child->stepSize);
-                stats.normalRotationCount++;
+                // stats.normalRotationCount++;
             }
             child->rotatedCiphertext = rotated;
         }
