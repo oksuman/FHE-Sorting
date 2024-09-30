@@ -42,8 +42,8 @@ class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        rotations = {-1, -2, -4, -8, -16, -32, 1,  2,
-                     4,  8,  16, 32, 64,  128, 512};
+        rotations = {-1, -2, -4, -8, -16, -32, 1,   2,
+                     4,  8,  16, 32, 64,  128, 512, 4096};
 
         // Generate the rotation keys
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
