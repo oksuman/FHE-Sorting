@@ -334,6 +334,7 @@ template <int N> class DirectSort : public SortBase<N> {
                 Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
                     vec, 1, masked_input->GetLevel(), nullptr, 2 * N * N);
                 rotated = m_cc->EvalMult(rotated, msk);
+
 #pragma omp critical
                 // Add to the output array
                 { m_cc->EvalAddInPlace(output_array, rotated); }
