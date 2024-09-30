@@ -153,9 +153,14 @@ template <int N> class DirectSort : public SortBase<N> {
         // The repeated rotation is optimized with treeRotate structure by
         // reusing intermediate rotations
         rot.buildRotationTree(1, N);
+        std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
+        for (int i = 1; i < N; i++) {
+            rotated_results[i] = rot.treeRotate(inputOver255, i);
+            rotated_results[i]->SetSlots(N * N);
+        }
 #pragma omp parallel for
         for (int i = 1; i < N; i++) {
-            auto rotated = rot.treeRotate(inputOver255, i);
+            auto rotated = rotated_results[i];
             rotated->SetSlots(N * N);
             rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
                                                   generateMaskVector1(N, i - 1),

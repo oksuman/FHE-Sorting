@@ -26,7 +26,7 @@ std::vector<double> getVectorWithMinDiff(int N) {
 template <int N> auto setupBenchmark() {
     CCParams<CryptoContextCKKSRNS> parameters;
     parameters.SetMultiplicativeDepth(48);
-    parameters.SetScalingModSize(35);
+    parameters.SetScalingModSize(40);
     parameters.SetBatchSize(N);
     parameters.SetSecurityLevel(HEStd_128_classic);
     parameters.SetRingDim(1 << 17);
