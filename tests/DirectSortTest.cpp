@@ -1,15 +1,8 @@
 #include <algorithm>
 #include <gtest/gtest.h>
-#include <random>
 #include <vector>
 
-#include "ciphertext-fwd.h"
-#include "comparison.h"
-#include "constants.h"
 #include "encryption.h"
-#include "key/privatekey-fwd.h"
-#include "lattice/hal/lat-backend.h"
-#include "sign.h"
 #include "sort_algo.h"
 #include "utils.h"
 
@@ -92,7 +85,7 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     // Compare the results
     for (int i = 0; i < array_length; ++i) {
-        EXPECT_NEAR(decryptedRanks[i], expectedRanks[i], 0.000001)
+        ASSERT_NEAR(decryptedRanks[i], expectedRanks[i], 0.000001)
             << "Mismatch at index " << i << ": expected " << expectedRanks[i]
             << ", got " << decryptedRanks[i];
     }
@@ -146,7 +139,7 @@ TEST_F(DirectSortTest, RotationIndexCheck) {
 
     // Compare results
     for (size_t i = 0; i < array_length; ++i) {
-        EXPECT_NEAR(outputArray[i], expectedArray[i], 0.01)
+        ASSERT_NEAR(outputArray[i], expectedArray[i], 0.01)
             << "Mismatch at index " << i << ": expected " << expectedArray[i]
             << ", got " << outputArray[i];
     }
@@ -188,7 +181,7 @@ TEST_F(DirectSortTest, DirectSort) {
     for (size_t i = 0; i < output_array.size(); ++i) {
         double error = std::abs(output_array[i] - expected[i]);
         maxError = std::max(maxError, error);
-        if (error > 0.02) {
+        if (error >= 0.01) {
             largeErrorCount++;
         }
     }
@@ -197,9 +190,6 @@ TEST_F(DirectSortTest, DirectSort) {
     std::cout << "Maximum error: " << maxError << std::endl;
     std::cout << "Number of errors larger than 0.02: " << largeErrorCount
               << std::endl;
-
-    // Assert on the quality of the sort
-    EXPECT_LT(maxError, 0.2); // Maximum error should be less than 1
 
     // Print the input array and the calculated ranks
     std::cout << "Input array: ";
@@ -213,4 +203,6 @@ TEST_F(DirectSortTest, DirectSort) {
         std::cout << rank << " ";
     }
     std::cout << std::endl;
+
+    ASSERT_LT(maxError, 0.01);
 }
