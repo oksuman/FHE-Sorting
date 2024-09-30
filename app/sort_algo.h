@@ -66,9 +66,30 @@ template <int N> class DirectSort : public SortBase<N> {
 
         return result;
     }
+    std::vector<double> generateMaskVectorFlexible1(int array_size,
+                                                    int expansion, int k) {
+        std::vector<double> result(array_size * expansion, 0.0);
+
+        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            result[i] = 1.0;
+        }
+
+        return result;
+    }
 
     std::vector<double> generateMaskVector2(int array_size, int k) {
         std::vector<double> result(array_size * array_size, 1.0);
+
+        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            result[i] = 0.0;
+        }
+
+        return result;
+    }
+
+    std::vector<double> generateMaskVectorFlexible2(int array_size,
+                                                    int expansion, int k) {
+        std::vector<double> result(array_size * expansion, 1.0);
 
         for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
             result[i] = 0.0;
@@ -193,6 +214,72 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     Ciphertext<DCRTPoly>
+    constructRankParallel(const Ciphertext<DCRTPoly> &input_array) {
+
+        auto shifted_input_array = this->getZero()->Clone();
+        const auto inputOver255 =
+            m_cc->EvalMult(input_array, (double)1.0 / 255);
+
+        int num_parallel =
+            4; // The number of sign functions to evaluate in parallel
+        int expansion_rate = N / num_parallel;
+
+#pragma omp parallel for
+        for (int i = 0; i < expansion_rate; i++) {
+            auto rotated = rot.rotate(inputOver255, i);
+            rotated->SetSlots(N * expansion_rate);
+
+            rotated = m_cc->EvalMult(
+                rotated,
+                m_cc->MakeCKKSPackedPlaintext(
+                    generateMaskVectorFlexible1(N, expansion_rate, i), 1,
+                    rotated->GetLevel(), nullptr, N * expansion_rate));
+
+            // TODO remove critical section for performance and instead add
+            // results later
+#pragma omp critical
+            { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
+        }
+
+        // parallel sign evaluation
+        auto ctxRank = this->getZero()->Clone();
+
+#pragma omp parallel for
+        for (int i = 0; i < num_parallel; i++) {
+            auto duplicated_array = inputOver255->Clone();
+            if (i != 0)
+                duplicated_array =
+                    rot.rotate(duplicated_array, i * expansion_rate);
+            duplicated_array->SetSlots(N * expansion_rate);
+            auto compResult =
+                comp.compare(m_cc, duplicated_array, shifted_input_array);
+
+            if (i == 0) {
+                compResult = m_cc->EvalMult(
+                    compResult,
+                    m_cc->MakeCKKSPackedPlaintext(
+                        generateMaskVectorFlexible2(N, expansion_rate, 0), 1,
+                        compResult->GetLevel(), nullptr, N * expansion_rate));
+            }
+
+            for (int i = 1; i < log2(expansion_rate) + 1; i++) {
+                m_cc->EvalAddInPlace(
+                    compResult,
+                    rot.rotate(compResult, (N * expansion_rate) / (1 << i)));
+            }
+
+            compResult = rot.rotate(compResult, -i * expansion_rate);
+
+#pragma omp critical
+            { m_cc->EvalAddInPlace(ctxRank, compResult); }
+        }
+
+        ctxRank->SetSlots(N);
+
+        return ctxRank;
+    }
+
+    Ciphertext<DCRTPoly>
     rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
         static const auto &sincCoefficients = selectCoefficients<N>();
@@ -265,7 +352,8 @@ template <int N> class DirectSort : public SortBase<N> {
 
         std::cout << "\n===== Direct Sort Input Array: \n";
         PRINT_PT(m_enc, input_array);
-        auto ctx_Rank = constructRank(input_array);
+        // auto ctx_Rank = constructRank(input_array);
+        auto ctx_Rank = constructRankParallel(input_array);
         std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
 
