@@ -101,6 +101,16 @@ template <int N> class DirectSort : public SortBase<N> {
         return result;
     }
 
+    std::vector<double> generateMaskVector5(int array_size, int start, int k) {
+        std::vector<double> result(array_size * array_size, 0.0);
+
+        for (int i = start + k; i < start + k + array_size; ++i) {
+            result[i] = 1.0;
+        }
+
+        return result;
+    }
+
     std::vector<double> generateCheckingVector(int array_size) {
         const int total_size = 2 * array_size * array_size;
         std::vector<double> stretched_index(total_size);
@@ -149,17 +159,16 @@ template <int N> class DirectSort : public SortBase<N> {
         auto shifted_input_array = this->getZero()->Clone();
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
+	inputOver255->SetSlots(N*N);
 
 #pragma omp parallel for
         for (int i = 1; i < N; i++) {
-            auto rotated = rot.rotate(inputOver255, i);
+            auto multiplied = m_cc->EvalMult(
+                inputOver255, m_cc->MakeCKKSPackedPlaintext(
+                                  generateMaskVector5(N, N * (i - 1), i), 1, 0,
+                                  nullptr, N * N));
+            auto rotated = rot.rotate(multiplied, i);
             rotated->SetSlots(N * N);
-            rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
-                                                  generateMaskVector1(N, i - 1),
-                                                  1, 0, nullptr, N * N));
-
-            // TODO remove critical section for performance and instead add
-            // results later
 #pragma omp critical
             { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
         }
