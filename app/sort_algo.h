@@ -150,17 +150,17 @@ template <int N> class DirectSort : public SortBase<N> {
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
 
+        MultithreadRotationTree<N> frot(
+            m_cc, m_enc,
+            {-1, -2, -4,  -8,  -16, -32,  1,    2,    4,    8,    16,
+                     32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384});
+
         // The repeated rotation is optimized with treeRotate structure by
         // reusing intermediate rotations
-        rot.buildRotationTree(1, N);
-        std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
-        for (int i = 1; i < N; i++) {
-            rotated_results[i] = rot.treeRotate(inputOver255, i);
-            rotated_results[i]->SetSlots(N * N);
-        }
+        frot.buildRotationTree(1, N);
 #pragma omp parallel for
         for (int i = 1; i < N; i++) {
-            auto rotated = rotated_results[i];
+            auto rotated = frot.treeRotate(inputOver255, i);
             rotated->SetSlots(N * N);
             rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
                                                   generateMaskVector1(N, i - 1),
