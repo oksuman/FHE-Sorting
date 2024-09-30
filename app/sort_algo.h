@@ -268,6 +268,7 @@ template <int N> class DirectSort : public SortBase<N> {
                     rot.rotate(compResult, (N * expansion_rate) / (1 << i)));
             }
 
+            compResult->SetSlots(N); // Needed to wrap the negative rotation
             compResult = rot.rotate(compResult, -i * expansion_rate);
 
 #pragma omp critical
