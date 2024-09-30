@@ -226,6 +226,7 @@ template <int N> class DirectSort : public SortBase<N> {
                     generateMaskVector4(N, i), 1, masked_input->GetLevel(),
                     nullptr, 2 * N * N);
                 auto rotated = m_cc->EvalMult(masked_input, msk);
+                rotated->SetSlots(N);
                 rotated = rot.rotate(rotated, i);
 #pragma omp critical
                 // Add to the output array

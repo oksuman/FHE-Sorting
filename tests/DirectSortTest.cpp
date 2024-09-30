@@ -22,7 +22,7 @@ class DirectSortTest : public ::testing::Test {
         CCParams<CryptoContextCKKSRNS> parameters;
         // TODO: check optimal level
         parameters.SetMultiplicativeDepth(MultDepth);
-        parameters.SetScalingModSize(35);
+        parameters.SetScalingModSize(39);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
         constexpr usint ringDim = 1 << 16;
@@ -42,8 +42,8 @@ class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        rotations = {-1, -2, -4, -8, -16, -32, 1,   2,
-                     4,  8,  16, 32, 64,  128, 512, 4096};
+        rotations = {-1, -2, -4,  -8,  -16, -32,  1,    2,    4,    8,    16,
+                     32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
 
         // Generate the rotation keys
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
