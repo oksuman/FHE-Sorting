@@ -221,8 +221,6 @@ template <int N> class RotationTree {
     }
 
     void buildTree(int start, int end) {
-        assert(start >= -N && end <= N &&
-               "Start and end should be an interval in [-N,N]");
 #pragma omp parallel for
         for (int i = start; i <= end; ++i) {
             auto steps = m_decomposer.decompose(i, end, m_algo);
