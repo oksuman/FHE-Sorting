@@ -3,7 +3,7 @@
 	                         1,  2,  4,  8,  16,  32,  64, 128, 512, 4096],
   "mult_depth": 48,
   "ring_dimension": 131072,
-  "scale_mod_size": 59,
+  "scale_mod_size": 35,
   "batch_size": 128,
   "enable_bootstrapping": false
 }
