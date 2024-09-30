@@ -22,7 +22,7 @@ class DirectSortTest : public ::testing::Test {
         CCParams<CryptoContextCKKSRNS> parameters;
         // TODO: check optimal level
         parameters.SetMultiplicativeDepth(MultDepth);
-        parameters.SetScalingModSize(35);
+        parameters.SetScalingModSize(39);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
         constexpr usint ringDim = 1 << 16;
@@ -188,18 +188,18 @@ TEST_F(DirectSortTest, DirectSort) {
     for (size_t i = 0; i < output_array.size(); ++i) {
         double error = std::abs(output_array[i] - expected[i]);
         maxError = std::max(maxError, error);
-        if (error > 0.02) {
+        if (error >= 0.01) {
             largeErrorCount++;
         }
     }
 
     // Print statistics
     std::cout << "Maximum error: " << maxError << std::endl;
-    std::cout << "Number of errors larger than 0.02: " << largeErrorCount
+    std::cout << "Number of errors larger than 0.01: " << largeErrorCount
               << std::endl;
 
     // Assert on the quality of the sort
-    EXPECT_LT(maxError, 0.2); // Maximum error should be less than 1
+    ASSERT_LT(maxError, 0.01);
 
     // Print the input array and the calculated ranks
     std::cout << "Input array: ";
