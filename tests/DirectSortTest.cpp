@@ -15,7 +15,7 @@ class DirectSortTest : public ::testing::Test {
         CCParams<CryptoContextCKKSRNS> parameters;
         // TODO: check optimal level
         parameters.SetMultiplicativeDepth(MultDepth);
-        parameters.SetScalingModSize(39);
+        parameters.SetScalingModSize(40);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
         constexpr usint ringDim = 1 << 16;
