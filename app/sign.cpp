@@ -33,27 +33,70 @@ Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
     constexpr double c13 = 1.69189453125;
     constexpr double c15 = -0.20947265625;
 
-    auto x2 = cc->EvalSquare(x);
-    auto x4 = cc->EvalSquare(x2);
+    Ciphertext<lbcrypto::DCRTPoly> x2, x4, c1x, c3x, c5x, c7x, c9x, c11x, c13x,
+        c15x;
+    Ciphertext<lbcrypto::DCRTPoly> c3x3, c7x3, c11x3, c15x3;
+
+// First parallel block: calculate x^2 and all cx terms
+#pragma omp parallel sections
+    {
+#pragma omp section
+        x2 = cc->EvalSquare(x);
+
+#pragma omp section
+        c1x = cc->EvalMult(x, c1);
+
+#pragma omp section
+        c3x = cc->EvalMult(x, c3);
+
+#pragma omp section
+        c5x = cc->EvalMult(x, c5);
+
+#pragma omp section
+        c7x = cc->EvalMult(x, c7);
+
+#pragma omp section
+        c9x = cc->EvalMult(x, c9);
+
+#pragma omp section
+        c11x = cc->EvalMult(x, c11);
+
+#pragma omp section
+        c13x = cc->EvalMult(x, c13);
+
+#pragma omp section
+        c15x = cc->EvalMult(x, c15);
+    }
+
+// Second parallel block: calculate x^4 and terms involving x^2
+#pragma omp parallel sections
+    {
+#pragma omp section
+        x4 = cc->EvalSquare(x2);
+
+#pragma omp section
+        c3x3 = cc->EvalMultAndRelinearize(c3x, x2);
+
+#pragma omp section
+        c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
+
+#pragma omp section
+        c11x3 = cc->EvalMultAndRelinearize(c11x, x2);
+
+#pragma omp section
+        c15x3 = cc->EvalMultAndRelinearize(c15x, x2);
+    }
+
     auto x8 = cc->EvalSquare(x4);
 
-    auto y = cc->EvalMult(x, c1);
-    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(cc->EvalMult(x, c3), x2));
+    auto y = c1x;
+    cc->EvalAddInPlace(y, c3x3);
 
-    auto c5x = cc->EvalMult(x, c5);
-    auto c7x = cc->EvalMult(x, c7);
-    auto c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
-    cc->EvalAddInPlace(y,
-                       cc->EvalMultAndRelinearize(cc->EvalAdd(c5x, c7x3), x4));
+    auto c5x_plus_c7x3 = cc->EvalAdd(c5x, c7x3);
+    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(c5x_plus_c7x3, x4));
 
-    auto c9x = cc->EvalMult(x, c9);
-    auto c11x = cc->EvalMult(x, c11);
-    auto tmp1 = cc->EvalAdd(c9x, cc->EvalMultAndRelinearize(c11x, x2));
-
-    auto c13x = cc->EvalMult(x, c13);
-    auto c15x = cc->EvalMult(x, c15);
-    auto tmp2 = cc->EvalAdd(c13x, cc->EvalMultAndRelinearize(c15x, x2));
-
+    auto tmp1 = cc->EvalAdd(c9x, c11x3);
+    auto tmp2 = cc->EvalAdd(c13x, c15x3);
     cc->EvalAddInPlace(tmp1, cc->EvalMultAndRelinearize(tmp2, x4));
     cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(tmp1, x8));
 
