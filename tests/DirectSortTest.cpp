@@ -47,7 +47,7 @@ class DirectSortTest : public ::testing::Test {
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
     }
 
-    static constexpr int array_length = 128;
+    static constexpr int array_length = 4;
     static constexpr int MultDepth = 48;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;

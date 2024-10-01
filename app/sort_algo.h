@@ -1,7 +1,9 @@
 #pragma once
 
+#include "ciphertext-fwd.h"
 #include "comparison.h"
 #include "encryption.h"
+#include "lattice/hal/lat-backend.h"
 #include "openfhe.h"
 #include "rotation.h"
 #include <iostream>
@@ -12,6 +14,17 @@ using namespace lbcrypto;
 #include "generated_coeffs.h"
 
 enum class SortAlgo { DirectSort, BitonicSort };
+
+static void
+printElapsedTime(const std::string &description,
+                 const std::chrono::high_resolution_clock::time_point &start) {
+    auto end = std::chrono::high_resolution_clock::now();
+    std::cout << description << ": "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end -
+                                                                       start)
+                     .count()
+              << " ms" << std::endl;
+}
 
 // Base class for sorting algorithms
 template <int N> // Array size
@@ -63,6 +76,48 @@ template <int N> class DirectSort : public SortBase<N> {
         for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
             result[i] = 1.0;
         }
+
+        std::cout << "Vector 1 :" << result << "\n";
+
+        return result;
+    }
+    std::vector<double> generateMaskVector1_2n(int array_size, int k) {
+        std::vector<double> result(array_size * array_size, 0.0);
+
+        for (int i = k * array_size * 2; i < (k + 1) * array_size * 2; ++i) {
+            result[i] = 1.0;
+        }
+
+        std::cout << "Vector 1 :" << result << "\n";
+
+        return result;
+    }
+
+    std::vector<double> generateMaskVectorSetUnset(int array_size) {
+        std::vector<double> result;
+
+        for (int i = 0; i < array_size / 2; ++i) {
+            result.insert(result.end(), array_size, 1.0);
+            result.insert(result.end(), array_size, 0.0);
+        }
+
+        std::cout << "Result is " << result << "\n";
+
+        return result;
+    }
+
+    std::vector<double> generateMaskVectorSetUnset2(int array_size) {
+        std::vector<double> result;
+
+        for (int i = 0; i < array_size / 2; ++i) {
+            result.insert(result.end(), array_size, 1.0);
+            result.insert(result.end(), array_size, 0.0);
+        }
+
+        result.erase(result.end() - array_size, result.end());
+        result.insert(result.end(), array_size, 1.0);
+
+        std::cout << "Result is " << result << "\n";
 
         return result;
     }
@@ -155,31 +210,81 @@ template <int N> class DirectSort : public SortBase<N> {
         std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
         { // Scoped so we can let go of the tree from memory after calculating
             RotationTree<N> rotTree(m_cc, rot.getRotIndices());
-            rotTree.buildTree(1, N);
-            for (int i = 1; i < N; i++) {
+            rotTree.buildTree(1, N / 2 + 1);
+            for (int i = 1; i <= N / 2; i++) {
                 rotated_results[i] = rotTree.treeRotate(inputOver255, i);
             }
         }
-#pragma omp parallel for
-        for (int i = 1; i < N; i++) {
-            auto rotated = rotated_results[i];
-            rotated->SetSlots(N * N);
-            rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
-                                                  generateMaskVector1(N, i - 1),
-                                                  1, 0, nullptr, N * N));
+        PRINT_PT(m_enc, inputOver255);
 
-#pragma omp critical
+        // #pragma omp parallel for
+        for (int i = 1; i <= N / 2; i++) {
+            // auto rotated = rotated_results[i];
+            auto rotated = rot.rotate(inputOver255, i);
+            rotated->SetSlots(N * N);
+            rotated = m_cc->EvalMult(
+                rotated,
+                m_cc->MakeCKKSPackedPlaintext(generateMaskVector1_2n(N, i - 1),
+                                              1, 0, nullptr, N * N));
+
+            PRINT_PT(m_enc, rotated);
+            // #pragma omp critical
             { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
         }
+        shifted_input_array->SetSlots(N * N);
 
         auto duplicated_input_array = inputOver255->Clone();
         duplicated_input_array->SetSlots(N * N);
+        PRINT_PT(m_enc, duplicated_input_array);
+        PRINT_PT(m_enc, shifted_input_array);
+
+        auto start = std::chrono::high_resolution_clock::now();
         auto ctxRank =
             comp.compare(m_cc, duplicated_input_array, shifted_input_array);
+        printElapsedTime("Comparison operation", start);
+
+        ctxRank->SetSlots(N * N);
+        PRINT_PT(m_enc, ctxRank);
+
+        auto half_comparisons = m_cc->EvalMult(
+            ctxRank, m_cc->MakeCKKSPackedPlaintext(
+                         generateMaskVectorSetUnset(N), 1, 0, nullptr, N * N));
+        PRINT_PT(m_enc, half_comparisons);
+
+        auto inverted_comparisons = this->getZero()->Clone();
+        Ciphertext<DCRTPoly> rotated = ctxRank->Clone();
+        for (int i = 2; i <= N / 2; i += 2) {
+            // auto rotated = rotated_results[i];
+            rotated = m_cc->EvalRotate(rotated, -1);
+            PRINT_PT(m_enc, rotated);
+
+            rotated->SetSlots(N * N);
+            auto masked = m_cc->EvalMult(
+                rotated,
+                m_cc->MakeCKKSPackedPlaintext(generateMaskVector1(N, i - 1), 1,
+                                              0, nullptr, N * N));
+
+            PRINT_PT(m_enc, masked);
+            // #pragma omp critical
+            { m_cc->EvalAddInPlace(inverted_comparisons, masked); }
+        }
+        inverted_comparisons->SetSlots(N * N);
+        PRINT_PT(m_enc, inverted_comparisons);
+        inverted_comparisons = m_cc->EvalAdd(
+            inverted_comparisons,
+            m_cc->MakeCKKSPackedPlaintext(generateMaskVectorSetUnset2(N), 1, 0,
+                                          nullptr, N * N));
+        inverted_comparisons = m_cc->EvalSub(1, inverted_comparisons);
+        PRINT_PT(m_enc, inverted_comparisons);
+
+        ctxRank = m_cc->EvalAdd(half_comparisons, inverted_comparisons);
+        PRINT_PT(m_enc, ctxRank);
 
         ctxRank = m_cc->EvalMult(
             ctxRank, m_cc->MakeCKKSPackedPlaintext(
                          generateMaskVector2(N, N - 1), 1, 0, nullptr, N * N));
+
+        PRINT_PT(m_enc, ctxRank);
 
         // This cannot be parallelized
         for (int i = 1; i < log2(N) + 1; i++) {
@@ -265,7 +370,9 @@ template <int N> class DirectSort : public SortBase<N> {
 
         std::cout << "\n===== Direct Sort Input Array: \n";
         PRINT_PT(m_enc, input_array);
+        auto start = std::chrono::high_resolution_clock::now();
         auto ctx_Rank = constructRank(input_array);
+        printElapsedTime("constructRank total time", start);
         std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
 
