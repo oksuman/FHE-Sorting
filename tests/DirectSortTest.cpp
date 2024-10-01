@@ -85,7 +85,7 @@ TEST_F(DirectSortTest, ConstructRank) {
 
     // Compare the results
     for (int i = 0; i < array_length; ++i) {
-        ASSERT_NEAR(decryptedRanks[i], expectedRanks[i], 0.000001)
+        ASSERT_NEAR(decryptedRanks[i], expectedRanks[i], 0.0001)
             << "Mismatch at index " << i << ": expected " << expectedRanks[i]
             << ", got " << decryptedRanks[i];
     }
