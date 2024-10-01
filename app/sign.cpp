@@ -79,9 +79,15 @@ Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
 Ciphertext<lbcrypto::DCRTPoly> minimaxSign(Ciphertext<lbcrypto::DCRTPoly> x,
                                            CryptoContext<DCRTPoly> cc,
                                            const MinimaxSignConfig &config) {
+
+    if (config.coeffs.size() != config.interval_bound.size()) {
+        throw std::runtime_error("Mismatch in sizes of coeffs and interval_bound");
+    }
+
     Ciphertext<lbcrypto::DCRTPoly> result = x;
-    for (const auto &coeff : config.coeffs) {
-        result = cc->EvalChebyshevSeriesPS(result, coeff, -1, 1);
+    for (size_t i = 0; i < config.coeffs.size(); ++i) {
+        double bound = config.interval_bound[i];
+        result = cc->EvalChebyshevSeriesPS(result, config.coeffs[i], -bound, bound);
     }
 
     return result;

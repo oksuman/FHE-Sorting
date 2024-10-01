@@ -21,10 +21,15 @@ struct CompositeSignConfig {
 struct MinimaxSignConfig {
     std::vector<int> degrees;
     std::vector<std::vector<double>> coeffs;
+    std::vector<double> interval_bound;
+
     MinimaxSignConfig(std::vector<int> deg,
-                      std::vector<std::vector<double>> coeffs)
-        : degrees(deg), coeffs(coeffs) {}
-    MinimaxSignConfig() : degrees({0}), coeffs({{0.0}}) {}
+                      std::vector<std::vector<double>> coef,
+                      std::vector<double> bound)
+        : degrees(deg), coeffs(coef), interval_bound(bound) {}
+
+    MinimaxSignConfig()
+        : degrees({0}), coeffs({{0.0}}), interval_bound({0.0}) {}
 };
 
 struct SignConfig {
@@ -34,7 +39,7 @@ struct SignConfig {
     SignConfig() : compos(0, 0) {}
     SignConfig(CompositeSignConfig compos) : compos(compos.dg, compos.df) {}
     SignConfig(MinimaxSignConfig minimax)
-        : minimax(minimax.degrees, minimax.coeffs) {}
+        : minimax(minimax.degrees, minimax.coeffs, minimax.interval_bound) {}
 };
 
 struct SignFunctionConfig {
