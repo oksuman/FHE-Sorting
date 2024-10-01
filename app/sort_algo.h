@@ -166,67 +166,27 @@ template <int N> class DirectSort : public SortBase<N> {
 
     Ciphertext<DCRTPoly>
     constructRank(const Ciphertext<DCRTPoly> &input_array) {
-
         auto shifted_input_array = this->getZero()->Clone();
         const auto inputOver255 =
             m_cc->EvalMult(input_array, (double)1.0 / 255);
-
+        int num_parallel =
+            2; // The number of sign functions to evaluate in parallel
+        int expansion_rate = N / num_parallel;
         // The repeated rotation is optimized with treeRotate structure by
         // reusing intermediate rotations
         std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
         { // Scoped so we can let go of the tree from memory after calculating
             RotationTree<N> rotTree(m_cc, rot.getRotIndices());
-            rotTree.buildTree(1, N);
-            for (int i = 1; i < N; i++) {
+            rotTree.buildTree(1, expansion_rate + 1);
+            for (int i = 1; i < expansion_rate; i++) {
                 rotated_results[i] = rotTree.treeRotate(inputOver255, i);
             }
         }
-#pragma omp parallel for
-        for (int i = 1; i < N; i++) {
-            auto rotated = rotated_results[i];
-            rotated->SetSlots(N * N);
-            rotated = m_cc->EvalMult(rotated, m_cc->MakeCKKSPackedPlaintext(
-                                                  generateMaskVector1(N, i - 1),
-                                                  1, 0, nullptr, N * N));
-
-#pragma omp critical
-            { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
-        }
-
-        auto duplicated_input_array = inputOver255->Clone();
-        duplicated_input_array->SetSlots(N * N);
-        auto ctxRank =
-            comp.compare(m_cc, duplicated_input_array, shifted_input_array);
-
-        ctxRank = m_cc->EvalMult(
-            ctxRank, m_cc->MakeCKKSPackedPlaintext(
-                         generateMaskVector2(N, N - 1), 1, 0, nullptr, N * N));
-
-        // This cannot be parallelized
-        for (int i = 1; i < log2(N) + 1; i++) {
-            m_cc->EvalAddInPlace(ctxRank,
-                                 rot.rotate(ctxRank, (N * N) / (1 << i)));
-        }
-        ctxRank->SetSlots(N);
-        // rot.getStats().print();
-
-        return ctxRank;
-    }
-
-    Ciphertext<DCRTPoly>
-    constructRankParallel(const Ciphertext<DCRTPoly> &input_array) {
-
-        auto shifted_input_array = this->getZero()->Clone();
-        const auto inputOver255 =
-            m_cc->EvalMult(input_array, (double)1.0 / 255);
-
-        int num_parallel =
-            4; // The number of sign functions to evaluate in parallel
-        int expansion_rate = N / num_parallel;
+        rotated_results[0] = inputOver255;
 
 #pragma omp parallel for
         for (int i = 0; i < expansion_rate; i++) {
-            auto rotated = rot.rotate(inputOver255, i);
+            auto rotated = rotated_results[i];
             rotated->SetSlots(N * expansion_rate);
 
             rotated = m_cc->EvalMult(
@@ -243,7 +203,6 @@ template <int N> class DirectSort : public SortBase<N> {
 
         // parallel sign evaluation
         auto ctxRank = this->getZero()->Clone();
-
 #pragma omp parallel for
         for (int i = 0; i < num_parallel; i++) {
             auto duplicated_array = inputOver255->Clone();
@@ -351,11 +310,9 @@ template <int N> class DirectSort : public SortBase<N> {
 
     Ciphertext<DCRTPoly>
     sort(const Ciphertext<DCRTPoly> &input_array) override {
-
         std::cout << "\n===== Direct Sort Input Array: \n";
         PRINT_PT(m_enc, input_array);
-        // auto ctx_Rank = constructRank(input_array);
-        auto ctx_Rank = constructRankParallel(input_array);
+        auto ctx_Rank = constructRank(input_array);
         std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
 
