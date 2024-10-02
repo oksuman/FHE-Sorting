@@ -258,10 +258,6 @@ template <int N> class DirectSort : public SortBase<N> {
 
         ctxRank = m_cc->EvalAdd(half_comparisons, inverted_comparisons);
 
-        ctxRank = m_cc->EvalMult(
-            ctxRank, m_cc->MakeCKKSPackedPlaintext(
-                         generateMaskVector2(N, N - 1), 1, 0, nullptr, N * N));
-
         // This cannot be parallelized
         for (int i = 1; i < log2(N) + 1; i++) {
             m_cc->EvalAddInPlace(ctxRank,
