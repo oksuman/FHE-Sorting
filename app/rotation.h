@@ -25,7 +25,7 @@ inline void dump(std::vector<Step> steps) {
     }
     std::cout << " ]" << std::endl;
 }
-enum class DecomposeAlgo { NAF, BINARY };
+enum class DecomposeAlgo { NAF, BNAF, BINARY };
 
 template <int N> class Decomposer {
 
@@ -82,6 +82,9 @@ template <int N> class Decomposer {
         case DecomposeAlgo::NAF:
             remainingSteps = decomposeNAF(rotation);
             break;
+        case DecomposeAlgo::BNAF:
+            remainingSteps = decomposeBNAF(rotation);
+            break;
         case DecomposeAlgo::BINARY:
             remainingSteps = decomposeBinary(rotation);
             break;
@@ -128,6 +131,34 @@ template <int N> class Decomposer {
             rotation >>= 1;
             i++;
         }
+        std::reverse(steps.begin(), steps.end());
+        return steps;
+    }
+
+    std::vector<Step> decomposeBNAF(int k) const {
+        std::vector<int> digits;
+        int K = k;
+        int B = 2; // Since we're working in binary
+
+        while (K != 0) {
+            int ki = K % B;
+            K = (K - ki) / B;
+
+            if (ki > B / 2 || (ki == B / 2 && (K % B) >= B / 2)) {
+                ki = ki - B;
+                K = K + 1;
+            }
+
+            digits.push_back(ki);
+        }
+
+        std::vector<Step> steps;
+        for (int i = 0; i < digits.size(); ++i) {
+            if (digits[i] != 0) {
+                steps.emplace_back(digits[i], digits[i] * 1 << i);
+            }
+        }
+
         std::reverse(steps.begin(), steps.end());
         return steps;
     }
@@ -181,8 +212,8 @@ template <int N> class RotationComposer {
                                 int rotation) {
         auto steps =
             m_decomposer.decompose(rotation, input->GetSlots(), m_algo);
-        // std::cout << "Rotation: " << rotation << "\n";
-        // dump(steps);
+        std::cout << "Rotation: " << rotation << "\n";
+        dump(steps);
         Ciphertext<DCRTPoly> result = input->Clone();
         for (auto step : steps)
             result = m_cc->EvalRotate(result, step.stepSize);
