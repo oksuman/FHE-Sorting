@@ -48,7 +48,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 128;
-    static constexpr int MultDepth = 48;
+    static constexpr int MultDepth = 44;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
@@ -166,8 +166,8 @@ TEST_F(DirectSortTest, DirectSort) {
 
     Ciphertext<DCRTPoly> ctxt_out = directSort->sort(ctxt);
 
-    EXPECT_EQ(ctxt_out->GetLevel() + 1, MultDepth)
-        << "Use the level + 1 returned by the result for best performance";
+    EXPECT_EQ(ctxt_out->GetLevel(), MultDepth)
+        << "Use the level returned by the result for best performance";
 
     // Decrypt the result
     Plaintext result;

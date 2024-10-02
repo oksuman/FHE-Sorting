@@ -25,7 +25,7 @@ std::vector<double> getVectorWithMinDiff(int N) {
 // Setup function to create the necessary objects
 template <int N> auto setupBenchmark() {
     CCParams<CryptoContextCKKSRNS> parameters;
-    parameters.SetMultiplicativeDepth(48);
+    parameters.SetMultiplicativeDepth(44);
     parameters.SetScalingModSize(40);
     parameters.SetBatchSize(N);
     parameters.SetSecurityLevel(HEStd_128_classic);
