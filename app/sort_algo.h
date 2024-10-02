@@ -200,17 +200,15 @@ template <int N> class DirectSort : public SortBase<N> {
         // The repeated rotation is optimized with treeRotate structure by
         // reusing intermediate rotations
         std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
-        { // Scoped so we can let go of the tree from memory after calculating
-            RotationTree<N> rotTree(m_cc, rot.getRotIndices());
-            rotTree.buildTree(1, N / 2 + 1);
-            for (int i = 1; i <= N / 2; i++) {
-                rotated_results[i] = rotTree.treeRotate(inputOver255, i);
-            }
+        RotationTree<N> rotTree(m_cc, rot.getRotIndices());
+        rotTree.buildTree(1, N / 2 + 1);
+        for (int i = 4; i <= N / 2; i += 4) {
+            rotated_results[i] = rotTree.treeRotate(inputOver255, i);
         }
 #pragma omp parallel for
         for (int i = 1; i <= N / 2; i++) {
-            auto rotated = rotated_results[i];
-            // auto rotated = rot.rotate(inputOver255, i);
+            auto rotated = i % 4 == 0 ? rotated_results[i]
+                                      : rotTree.treeRotate(inputOver255, i);
             rotated->SetSlots(N * N);
             rotated = m_cc->EvalMult(
                 rotated,
@@ -298,12 +296,11 @@ template <int N> class DirectSort : public SortBase<N> {
         auto masked_input = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
 
         std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
-        { // Scoped so we can let go of the tree from memory after calculating
-            RotationTree<N> rotTree(m_cc, rot.getRotIndices());
-            rotTree.buildTree(1, N * 2);
-            for (int i = 1; i < N; i++) {
-                rotated_results[i] = rotTree.treeRotate(masked_input, i);
-            }
+        RotationTree<N> rotTree(m_cc, rot.getRotIndices());
+        rotTree.buildTree(1, N + 1);
+        for (int i = 4; i < N; i += 4) {
+	    // std::cout << "Rottree Index " << i << "\n";
+            rotated_results[i] = rotTree.treeRotate(masked_input, i);
         }
 #pragma omp parallel for
         for (int i = 0; i < N; i++) {
@@ -313,11 +310,11 @@ template <int N> class DirectSort : public SortBase<N> {
                     nullptr, 2 * N * N);
                 auto rotated = m_cc->EvalMult(masked_input, msk);
 #pragma omp critical
-                // Add to the output array
                 { m_cc->EvalAddInPlace(output_array, rotated); }
             } else {
-                auto rotated = rotated_results[i];
-                // auto rotated = rot.rotate(masked_input, i);
+		// std::cout << "Index " << i << "\n";
+                auto rotated = i % 4 == 0 ? rotated_results[i]
+                                          : rotTree.treeRotate(masked_input, i);
                 auto vec = generateMaskVector4(N, i);
                 std::rotate(vec.begin(), vec.begin() + i, vec.end());
                 Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
