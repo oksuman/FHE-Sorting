@@ -121,14 +121,15 @@ Ciphertext<lbcrypto::DCRTPoly> scaledLogistic(Ciphertext<lbcrypto::DCRTPoly> x,
     y = cc->EvalChebyshevFunction(
         [](double x) -> double {
             const double N = 256.0;
-            const double k = 192.0;
+            const double k = 1024.0;
 
             if (std::abs(x) < std::numeric_limits<double>::epsilon()) {
                 return 1.0 / (2.0 * N);
             }
             return (1.0 / N) / (1.0 + std::exp(-k * x));
         },
-        y, -1, 1, 512);
+        y, -1, 1, 2048);
+
     return y;
 }
 
