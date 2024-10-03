@@ -348,6 +348,98 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 };
 
+// Enum for operation categories
+enum class OperationCategory {
+    Masking,
+    Rotation,
+    Comparison,
+    Addition,
+    Multiplication,
+    Bootstrapping
+};
+
+// Global struct for performance tracking
+struct PerformanceTracker {
+    std::unordered_map<OperationCategory, size_t> counts;
+    std::unordered_map<OperationCategory, std::chrono::duration<double>>
+        durations;
+    std::chrono::duration<double> totalTime;
+
+    void track(OperationCategory category,
+               std::chrono::duration<double> duration) {
+        counts[category]++;
+        durations[category] += duration;
+    }
+
+    void setTotalTime(std::chrono::duration<double> total) {
+        totalTime = total;
+    }
+
+    void clearStats() {
+        counts.clear();
+        durations.clear();
+        totalTime = std::chrono::duration<double>::zero();
+    }
+
+    void printResults() {
+        std::cout << std::setw(20) << "Operation Category" << std::setw(10)
+                  << "Count" << std::setw(15) << "Time (s)" << std::setw(15)
+                  << "Percentage" << std::endl;
+        std::cout << std::string(60, '-') << std::endl;
+
+        for (const auto &[category, duration] : durations) {
+            double percentage = (duration.count() / totalTime.count()) * 100;
+            std::cout << std::setw(20) << getCategoryName(category)
+                      << std::setw(10) << counts[category] << std::setw(15)
+                      << std::fixed << std::setprecision(6) << duration.count()
+                      << std::setw(15) << std::fixed << std::setprecision(2)
+                      << percentage << "%" << std::endl;
+        }
+
+        std::cout << std::string(60, '-') << std::endl;
+        std::cout << std::setw(20) << "Total" << std::setw(10) << ""
+                  << std::setw(15) << std::fixed << std::setprecision(6)
+                  << totalTime.count() << std::setw(15) << "100.00%"
+                  << std::endl;
+
+        // Calculate and print unaccounted time
+        double accountedTime = 0;
+        for (const auto &[category, duration] : durations) {
+            accountedTime += duration.count();
+        }
+        double unaccountedTime = totalTime.count() - accountedTime;
+        double unaccountedPercentage =
+            (unaccountedTime / totalTime.count()) * 100;
+        std::cout << std::setw(20) << "Unaccounted" << std::setw(10) << ""
+                  << std::setw(15) << std::fixed << std::setprecision(6)
+                  << unaccountedTime << std::setw(15) << std::fixed
+                  << std::setprecision(2) << unaccountedPercentage << "%"
+                  << std::endl;
+    }
+
+  private:
+    std::string getCategoryName(OperationCategory category) {
+        switch (category) {
+        case OperationCategory::Masking:
+            return "Masking";
+        case OperationCategory::Rotation:
+            return "Rotation";
+        case OperationCategory::Comparison:
+            return "Comparison";
+        case OperationCategory::Addition:
+            return "Addition";
+        case OperationCategory::Multiplication:
+            return "Multiplication";
+        case OperationCategory::Bootstrapping:
+            return "Bootstrapping";
+        default:
+            return "Unknown";
+        }
+    }
+};
+
+static PerformanceTracker performanceTracker;
+
 template <int N> class BitonicSort : public SortBase<N> {
   private:
     CryptoContext<DCRTPoly> m_cc;
@@ -359,11 +451,21 @@ template <int N> class BitonicSort : public SortBase<N> {
                                           const Ciphertext<DCRTPoly> &a2,
                                           const Ciphertext<DCRTPoly> &a3,
                                           const Ciphertext<DCRTPoly> &a4) {
+        auto start = std::chrono::high_resolution_clock::now();
+
         auto comparison_result = comp.compare(m_cc, a1, a2);
         auto temp1 = m_cc->EvalMult(comparison_result, a3);
         auto one = m_cc->EvalSub(1, comparison_result);
         auto temp2 = m_cc->EvalMult(one, a4);
-        return m_cc->EvalAdd(temp1, temp2);
+        auto result = m_cc->EvalAdd(temp1, temp2);
+
+        auto end = std::chrono::high_resolution_clock::now();
+        performanceTracker.track(
+            OperationCategory::Comparison,
+            std::chrono::duration_cast<std::chrono::duration<double>>(end -
+                                                                      start));
+
+        return result;
     }
 
   public:
@@ -376,9 +478,18 @@ template <int N> class BitonicSort : public SortBase<N> {
 
     Ciphertext<DCRTPoly>
     sort(const Ciphertext<DCRTPoly> &input_array) override {
+        performanceTracker
+            .clearStats(); // Clear stats before starting a new sort operation
+        auto start_total = std::chrono::high_resolution_clock::now();
 
         // Normalize the input
+        auto start = std::chrono::high_resolution_clock::now();
         auto inputOver255 = m_cc->EvalMult(input_array, (double)1.0 / 255);
+        auto end = std::chrono::high_resolution_clock::now();
+        performanceTracker.track(
+            OperationCategory::Multiplication,
+            std::chrono::duration_cast<std::chrono::duration<double>>(end -
+                                                                      start));
 
         auto result = inputOver255;
 
@@ -390,14 +501,18 @@ template <int N> class BitonicSort : public SortBase<N> {
                 std::vector<double> mask1(N, 0), mask2(N, 0), mask3(N, 0),
                     mask4(N, 0);
 
-                // TODO add a class constructor parameter for bootstrap
-                // threshold
                 if (result->GetLevel() > 32) {
-                    // We use double iteration bootstrapping for better
-                    // precision
+                    auto start = std::chrono::high_resolution_clock::now();
                     result = m_cc->EvalBootstrap(result, 2, 20);
+                    auto end = std::chrono::high_resolution_clock::now();
+                    performanceTracker.track(
+                        OperationCategory::Bootstrapping,
+                        std::chrono::duration_cast<
+                            std::chrono::duration<double>>(end - start));
                 }
 
+                // Masking operations
+                auto start_masking = std::chrono::high_resolution_clock::now();
                 for (size_t i = 0; i < N; i++) {
                     size_t l = i ^ j;
                     if (i < l) {
@@ -410,7 +525,6 @@ template <int N> class BitonicSort : public SortBase<N> {
                         }
                     }
                 }
-
                 auto arr1 = m_cc->EvalMult(
                     result, m_cc->MakeCKKSPackedPlaintext(mask1));
                 auto arr2 = m_cc->EvalMult(
@@ -419,12 +533,26 @@ template <int N> class BitonicSort : public SortBase<N> {
                     result, m_cc->MakeCKKSPackedPlaintext(mask3));
                 auto arr4 = m_cc->EvalMult(
                     result, m_cc->MakeCKKSPackedPlaintext(mask4));
+                auto end_masking = std::chrono::high_resolution_clock::now();
+                performanceTracker.track(
+                    OperationCategory::Masking,
+                    std::chrono::duration_cast<std::chrono::duration<double>>(
+                        end_masking - start_masking));
 
+                // Rotation operations
+                auto start_rotation = std::chrono::high_resolution_clock::now();
                 auto arr5_1 = rot.rotate(arr1, -j);
                 auto arr5_2 = rot.rotate(arr3, -j);
                 auto arr6_1 = rot.rotate(arr2, j);
                 auto arr6_2 = rot.rotate(arr4, j);
+                auto end_rotation = std::chrono::high_resolution_clock::now();
+                performanceTracker.track(
+                    OperationCategory::Rotation,
+                    std::chrono::duration_cast<std::chrono::duration<double>>(
+                        end_rotation - start_rotation));
 
+                // Addition operations
+                auto start_addition = std::chrono::high_resolution_clock::now();
                 auto arr7 = m_cc->EvalAdd(m_cc->EvalAdd(arr5_1, arr5_2),
                                           m_cc->EvalAdd(arr6_1, arr6_2));
                 auto arr8 = result;
@@ -432,13 +560,33 @@ template <int N> class BitonicSort : public SortBase<N> {
                                           m_cc->EvalAdd(arr6_2, arr4));
                 auto arr10 = m_cc->EvalAdd(m_cc->EvalAdd(arr5_2, arr3),
                                            m_cc->EvalAdd(arr6_1, arr2));
+                auto end_addition = std::chrono::high_resolution_clock::now();
+                performanceTracker.track(
+                    OperationCategory::Addition,
+                    std::chrono::duration_cast<std::chrono::duration<double>>(
+                        end_addition - start_addition));
 
                 result = compare_and_swap(arr7, arr8, arr9, arr10);
             }
         }
 
         // Denormalize to recover the data
+        start = std::chrono::high_resolution_clock::now();
         result = m_cc->EvalMult(result, (double)255);
+        end = std::chrono::high_resolution_clock::now();
+        performanceTracker.track(
+            OperationCategory::Multiplication,
+            std::chrono::duration_cast<std::chrono::duration<double>>(end -
+                                                                      start));
+
+        auto end_total = std::chrono::high_resolution_clock::now();
+        performanceTracker.setTotalTime(
+            std::chrono::duration_cast<std::chrono::duration<double>>(
+                end_total - start_total));
+
         return result;
     }
+
+    // Method to print performance results
+    void printPerformanceResults() { performanceTracker.printResults(); }
 };
