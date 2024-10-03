@@ -153,9 +153,10 @@ template <int N> class Decomposer {
         }
 
         std::vector<Step> steps;
-        for (int i = 0; i < digits.size(); ++i) {
+        for (size_t i = 0; i < digits.size(); ++i) {
             if (digits[i] != 0) {
-                steps.emplace_back(digits[i], digits[i] * 1 << i);
+                steps.emplace_back(digits[i],
+                                   digits[i] * static_cast<int64_t>(1) << i);
             }
         }
 
