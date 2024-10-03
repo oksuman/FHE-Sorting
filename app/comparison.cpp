@@ -20,6 +20,23 @@ Ciphertext<DCRTPoly> Comparison::compare(const CryptoContext<DCRTPoly> &cc,
     return comp;
 }
 
+Ciphertext<DCRTPoly>
+Comparison::compareLogistic(const CryptoContext<DCRTPoly> &cc,
+                            const Ciphertext<DCRTPoly> &a,
+                            const Ciphertext<DCRTPoly> &b) {
+
+    // scaledLogistic(a-b)
+    // Returns 1/N if a > b
+    //         0 if a < b
+    // Step 1: Subtraction
+    auto diff = cc->EvalSub(a, b);
+
+    // Step 2: ScaledLogistic function
+    auto res = scaledLogistic(diff, cc, 3);
+
+    return res;
+}
+
 // TODO add unittest if used
 Ciphertext<DCRTPoly> Comparison::max(const CryptoContext<DCRTPoly> &cc,
                                      const Ciphertext<DCRTPoly> &a,

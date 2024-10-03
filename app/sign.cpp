@@ -111,6 +111,27 @@ Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
     return y;
 }
 
+Ciphertext<lbcrypto::DCRTPoly> scaledLogistic(Ciphertext<lbcrypto::DCRTPoly> x,
+                                              CryptoContext<DCRTPoly> cc,
+                                              int dg) {
+    auto y = g_n(x, cc);
+    for (int i = 1; i < dg; i++) {
+        y = g_n(y, cc);
+    }
+    y = cc->EvalChebyshevFunction(
+        [](double x) -> double {
+            const double N = 256.0;
+            const double k = 192.0;
+
+            if (std::abs(x) < std::numeric_limits<double>::epsilon()) {
+                return 1.0 / (2.0 * N);
+            }
+            return (1.0 / N) / (1.0 + std::exp(-k * x));
+        },
+        y, -1, 1, 512);
+    return y;
+}
+
 // Source of signum
 // https://github.com/fairmath/polycircuit/blob/main/include/polycircuit/component/SignEvaluation/SignEvaluation.hpp#L29
 Ciphertext<lbcrypto::DCRTPoly>

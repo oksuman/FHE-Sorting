@@ -48,7 +48,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 128;
-    static constexpr int MultDepth = 44;
+    static constexpr int MultDepth = 41;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
