@@ -32,7 +32,7 @@ Comparison::compareLogistic(const CryptoContext<DCRTPoly> &cc,
     auto diff = cc->EvalSub(a, b);
 
     // Step 2: ScaledLogistic function
-    auto res = scaledLogistic(diff, cc, 3);
+    auto res = scaledLogistic(diff, cc, 2);
 
     return res;
 }

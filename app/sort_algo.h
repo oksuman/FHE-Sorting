@@ -101,15 +101,16 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     std::vector<double> generateMaskVectorSetUnset2(int array_size) {
+        const double value = 1.0 / 256.0;
         std::vector<double> result;
 
         for (int i = 0; i < array_size / 2; ++i) {
-            result.insert(result.end(), array_size, 1.0);
+            result.insert(result.end(), array_size, value);
             result.insert(result.end(), array_size, 0.0);
         }
 
         result.erase(result.end() - array_size, result.end());
-        result.insert(result.end(), array_size, 1.0);
+        result.insert(result.end(), array_size, value);
 
         return result;
     }
@@ -220,7 +221,7 @@ template <int N> class DirectSort : public SortBase<N> {
 #pragma omp critical
             { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
         }
-        shifted_input_array->SetSlots(N * N);
+        // shifted_input_array->SetSlots(N * N);
 
         auto duplicated_input_array = inputOver255->Clone();
         duplicated_input_array->SetSlots(N * N);
@@ -228,19 +229,22 @@ template <int N> class DirectSort : public SortBase<N> {
         auto ctxRank = comp.compareLogistic(m_cc, duplicated_input_array,
                                             shifted_input_array);
 
-        ctxRank->SetSlots(N * N);
+        // ctxRank->SetSlots(N * N);
 
-        auto half_comparisons = m_cc->EvalMult(
-            ctxRank, m_cc->MakeCKKSPackedPlaintext(
-                         generateMaskVectorSetUnset(N), 1, 0, nullptr, N * N));
+        // auto half_comparisons = m_cc->EvalMult(
+        //     ctxRank, m_cc->MakeCKKSPackedPlaintext(
+        //                  generateMaskVectorSetUnset(N), 1, 0, nullptr, N *
+        //                  N));
+        auto half_comparisons = m_cc->EvalMult(ctxRank, 0.5);
 
         auto inverted_comparisons = this->getZero()->Clone();
         Ciphertext<DCRTPoly> rotated = ctxRank->Clone();
-        for (int i = 2; i <= N - 2; i += 2) {
-            // auto rotated = rotated_results[i];
-            rotated = m_cc->EvalRotate(rotated, -1);
 
-            rotated->SetSlots(N * N);
+        for (int i = 2; i <= N - 2; i += 2) {
+            rotated = m_cc->EvalRotate(rotated, -1);
+            // auto rotated = rotated_results[i];
+            // rotated->SetSlots(N * N);
+
             auto masked = m_cc->EvalMult(
                 rotated,
                 m_cc->MakeCKKSPackedPlaintext(generateMaskVector1(N, i - 1), 1,
@@ -249,12 +253,12 @@ template <int N> class DirectSort : public SortBase<N> {
             // #pragma omp critical
             { m_cc->EvalAddInPlace(inverted_comparisons, masked); }
         }
-        inverted_comparisons->SetSlots(N * N);
+        // inverted_comparisons->SetSlots(N * N);
         inverted_comparisons = m_cc->EvalAdd(
             inverted_comparisons,
             m_cc->MakeCKKSPackedPlaintext(generateMaskVectorSetUnset2(N), 1, 0,
                                           nullptr, N * N));
-        inverted_comparisons = m_cc->EvalSub(1 / 256.0, inverted_comparisons);
+        inverted_comparisons = m_cc->EvalSub(1.0 / 256.0, inverted_comparisons);
 
         ctxRank = m_cc->EvalAdd(half_comparisons, inverted_comparisons);
 
@@ -264,6 +268,7 @@ template <int N> class DirectSort : public SortBase<N> {
                                  rot.rotate(ctxRank, (N * N) / (1 << i)));
         }
         ctxRank->SetSlots(N);
+        PRINT_PT(m_enc, ctxRank);
         // rot.getStats().print();
 
         return ctxRank;
@@ -295,7 +300,7 @@ template <int N> class DirectSort : public SortBase<N> {
         rotIndex =
             m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
 
-        auto masked_input = m_cc->EvalMultAndRelinearize(rotIndex, input_array);
+        auto masked_input = m_cc->EvalMult(rotIndex, input_array);
 
         std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
         RotationTree<N> rotTree(m_cc, rot.getRotIndices());

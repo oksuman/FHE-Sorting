@@ -15,7 +15,7 @@ class DirectSortTest : public ::testing::Test {
         CCParams<CryptoContextCKKSRNS> parameters;
         // TODO: check optimal level
         parameters.SetMultiplicativeDepth(MultDepth);
-        parameters.SetScalingModSize(40);
+        parameters.SetScalingModSize(59);
         parameters.SetBatchSize(array_length);
         parameters.SetSecurityLevel(HEStd_NotSet);
         constexpr usint ringDim = 1 << 16;
@@ -48,7 +48,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 128;
-    static constexpr int MultDepth = 41;
+    static constexpr int MultDepth = 38;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
