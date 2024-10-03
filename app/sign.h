@@ -31,3 +31,7 @@ Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
 Ciphertext<lbcrypto::DCRTPoly> sign(Ciphertext<lbcrypto::DCRTPoly> x,
                                     CryptoContext<DCRTPoly> cc, SignFunc func,
                                     const SignConfig &Cfg);
+
+Ciphertext<lbcrypto::DCRTPoly> scaledLogistic(Ciphertext<lbcrypto::DCRTPoly> x,
+                                              CryptoContext<DCRTPoly> cc,
+                                              int dg);

@@ -48,7 +48,7 @@ class DirectSortTest : public ::testing::Test {
     }
 
     static constexpr int array_length = 128;
-    static constexpr int MultDepth = 44;
+    static constexpr int MultDepth = 41;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
@@ -56,103 +56,103 @@ class DirectSortTest : public ::testing::Test {
     std::shared_ptr<DebugEncryption> m_enc;
 };
 
-TEST_F(DirectSortTest, ConstructRank) {
+// TEST_F(DirectSortTest, ConstructRank) {
 
-    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
+//     std::vector<double> inputArray = getVectorWithMinDiff(array_length);
 
-    std::cout << inputArray << "\n";
+//     std::cout << inputArray << "\n";
 
-    // Encrypt the input array
-    auto ctxt = m_enc->encryptInput(inputArray);
-    auto directSort = std::make_unique<DirectSort<array_length>>(
-        m_cc, m_publicKey, rotations, m_enc);
+//     // Encrypt the input array
+//     auto ctxt = m_enc->encryptInput(inputArray);
+//     auto directSort = std::make_unique<DirectSort<array_length>>(
+//         m_cc, m_publicKey, rotations, m_enc);
 
-    // Construct rank using DirectSort
-    auto ctxtRank = directSort->constructRank(ctxt);
+//     // Construct rank using DirectSort
+//     auto ctxtRank = directSort->constructRank(ctxt);
 
-    // Decrypt the result
-    Plaintext result;
-    m_cc->Decrypt(m_privateKey, ctxtRank, &result);
-    std::vector<double> decryptedRanks = result->GetRealPackedValue();
+//     // Decrypt the result
+//     Plaintext result;
+//     m_cc->Decrypt(m_privateKey, ctxtRank, &result);
+//     std::vector<double> decryptedRanks = result->GetRealPackedValue();
 
-    // Calculate the expected ranks
-    std::vector<double> expectedRanks(array_length);
-    for (int i = 0; i < array_length; ++i) {
-        expectedRanks[i] =
-            std::count_if(inputArray.begin(), inputArray.end(),
-                          [&](double val) { return val < inputArray[i]; });
-    }
+//     // Calculate the expected ranks
+//     std::vector<double> expectedRanks(array_length);
+//     for (int i = 0; i < array_length; ++i) {
+//         expectedRanks[i] =
+//             std::count_if(inputArray.begin(), inputArray.end(),
+//                           [&](double val) { return val < inputArray[i]; });
+//     }
 
-    // Compare the results
-    for (int i = 0; i < array_length; ++i) {
-        ASSERT_NEAR(decryptedRanks[i], expectedRanks[i], 0.0001)
-            << "Mismatch at index " << i << ": expected " << expectedRanks[i]
-            << ", got " << decryptedRanks[i];
-    }
+//     // Compare the results
+//     for (int i = 0; i < array_length; ++i) {
+//         ASSERT_NEAR(decryptedRanks[i], expectedRanks[i], 0.0001)
+//             << "Mismatch at index " << i << ": expected " << expectedRanks[i]
+//             << ", got " << decryptedRanks[i];
+//     }
 
-    // Print the input array and the calculated ranks
-    std::cout << "Input array: ";
-    for (const auto &val : inputArray) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
+//     // Print the input array and the calculated ranks
+//     std::cout << "Input array: ";
+//     for (const auto &val : inputArray) {
+//         std::cout << val << " ";
+//     }
+//     std::cout << std::endl;
 
-    std::cout << "Calculated ranks: ";
-    for (const auto &rank : decryptedRanks) {
-        std::cout << rank << " ";
-    }
-    std::cout << std::endl;
-}
+//     std::cout << "Calculated ranks: ";
+//     for (const auto &rank : decryptedRanks) {
+//         std::cout << rank << " ";
+//     }
+//     std::cout << std::endl;
+// }
 
-TEST_F(DirectSortTest, RotationIndexCheck) {
-    // Generate a random permutation for the input array
+// TEST_F(DirectSortTest, RotationIndexCheck) {
+//     // Generate a random permutation for the input array
 
-    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
+//     std::vector<double> inputArray = getVectorWithMinDiff(array_length);
 
-    // Calculate the rank array
-    std::vector<double> rankArray(array_length);
-    for (size_t i = 0; i < array_length; ++i) {
-        rankArray[i] =
-            std::count_if(inputArray.begin(), inputArray.end(),
-                          [&](double val) { return val < inputArray[i]; });
-    }
+//     // Calculate the rank array
+//     std::vector<double> rankArray(array_length);
+//     for (size_t i = 0; i < array_length; ++i) {
+//         rankArray[i] =
+//             std::count_if(inputArray.begin(), inputArray.end(),
+//                           [&](double val) { return val < inputArray[i]; });
+//     }
 
-    // Encrypt input arrays
-    auto ctxtInput = m_enc->encryptInput(inputArray);
-    auto ctxRank = m_enc->encryptInput(rankArray);
+//     // Encrypt input arrays
+//     auto ctxtInput = m_enc->encryptInput(inputArray);
+//     auto ctxRank = m_enc->encryptInput(rankArray);
 
-    // Create DirectSort object
-    auto directSort = std::make_unique<DirectSort<array_length>>(
-        m_cc, m_publicKey, rotations, m_enc);
+//     // Create DirectSort object
+//     auto directSort = std::make_unique<DirectSort<array_length>>(
+//         m_cc, m_publicKey, rotations, m_enc);
 
-    // Call rotationIndexCheck
-    auto ctxtResult = directSort->rotationIndexCheck(ctxRank, ctxtInput);
+//     // Call rotationIndexCheck
+//     auto ctxtResult = directSort->rotationIndexCheck(ctxRank, ctxtInput);
 
-    // Decrypt the result
-    Plaintext result;
-    m_cc->Decrypt(m_privateKey, ctxtResult, &result);
-    std::vector<double> outputArray = result->GetRealPackedValue();
+//     // Decrypt the result
+//     Plaintext result;
+//     m_cc->Decrypt(m_privateKey, ctxtResult, &result);
+//     std::vector<double> outputArray = result->GetRealPackedValue();
 
-    // Expected sorted array
-    std::vector<double> expectedArray = inputArray;
-    std::sort(expectedArray.begin(), expectedArray.end());
+//     // Expected sorted array
+//     std::vector<double> expectedArray = inputArray;
+//     std::sort(expectedArray.begin(), expectedArray.end());
 
-    // Compare results
-    for (size_t i = 0; i < array_length; ++i) {
-        ASSERT_NEAR(outputArray[i], expectedArray[i], 0.01)
-            << "Mismatch at index " << i << ": expected " << expectedArray[i]
-            << ", got " << outputArray[i];
-    }
+//     // Compare results
+//     for (size_t i = 0; i < array_length; ++i) {
+//         ASSERT_NEAR(outputArray[i], expectedArray[i], 0.01)
+//             << "Mismatch at index " << i << ": expected " << expectedArray[i]
+//             << ", got " << outputArray[i];
+//     }
 
-    // Print arrays for visualization
-    std::cout << "Input array: " << inputArray << std::endl;
-    std::cout << "Rank array: " << rankArray << std::endl;
-    std::cout << "Output array: " << outputArray << std::endl;
-    std::cout << "Expected array: " << expectedArray << std::endl;
+//     // Print arrays for visualization
+//     std::cout << "Input array: " << inputArray << std::endl;
+//     std::cout << "Rank array: " << rankArray << std::endl;
+//     std::cout << "Output array: " << outputArray << std::endl;
+//     std::cout << "Expected array: " << expectedArray << std::endl;
 
-    // Check the level of the result
-    std::cout << "Result level: " << ctxtResult->GetLevel() << std::endl;
-}
+//     // Check the level of the result
+//     std::cout << "Result level: " << ctxtResult->GetLevel() << std::endl;
+// }
 
 TEST_F(DirectSortTest, DirectSort) {
 

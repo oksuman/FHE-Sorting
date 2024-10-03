@@ -49,6 +49,10 @@ class Comparison {
                                  const Ciphertext<DCRTPoly> &a,
                                  const Ciphertext<DCRTPoly> &b);
 
+    Ciphertext<DCRTPoly> compareLogistic(const CryptoContext<DCRTPoly> &cc,
+                                         const Ciphertext<DCRTPoly> &a,
+                                         const Ciphertext<DCRTPoly> &b);
+
     Ciphertext<DCRTPoly> max(const CryptoContext<DCRTPoly> &cc,
                              const Ciphertext<DCRTPoly> &a,
                              const Ciphertext<DCRTPoly> &b);

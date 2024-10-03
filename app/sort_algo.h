@@ -151,18 +151,19 @@ template <int N> class DirectSort : public SortBase<N> {
     std::vector<double> generateCheckingVector(int array_size) {
         const int total_size = 2 * array_size * array_size;
         std::vector<double> stretched_index(total_size);
+        const double scale = 1.0 / 256.0;
 
 #pragma omp parallel
         {
 #pragma omp for nowait
             for (int i = 0; i < array_size * array_size; ++i) {
-                stretched_index[i] = i / array_size;
+                stretched_index[i] = (i / array_size) * scale;
             }
 
 #pragma omp for nowait
             for (int i = array_size * array_size;
                  i < array_size * array_size + array_size; ++i) {
-                stretched_index[i] = array_size;
+                stretched_index[i] = array_size * scale;
             }
 
 #pragma omp for
@@ -170,7 +171,8 @@ template <int N> class DirectSort : public SortBase<N> {
                  ++i) {
                 stretched_index[i] =
                     -((i - array_size * array_size - array_size) / array_size +
-                      1);
+                      1) *
+                    scale;
             }
         }
 
@@ -178,13 +180,13 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     std::vector<double> generateRepeatedIndex(int array_size) {
-        std::vector<double> result;
-        result.reserve(2 * array_size * array_size);
+        const int total_size = 2 * array_size * array_size;
+        std::vector<double> result(total_size);
+        const double scale = 1.0 / 256.0;
 
-        for (int i = 0; i < 2 * array_size; ++i) {
-            for (int j = 0; j < array_size; ++j) {
-                result.push_back(static_cast<double>(j));
-            }
+#pragma omp parallel for
+        for (int i = 0; i < total_size; ++i) {
+            result[i] = (i % array_size) * scale;
         }
 
         return result;
@@ -195,7 +197,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
         auto shifted_input_array = this->getZero()->Clone();
         const auto inputOver255 =
-            m_cc->EvalMult(input_array, (double)1.0 / 255);
+            m_cc->EvalMult(input_array, (double)1.0 / 255); // depth 1
 
         // The repeated rotation is optimized with treeRotate structure by
         // reusing intermediate rotations
@@ -223,8 +225,8 @@ template <int N> class DirectSort : public SortBase<N> {
         auto duplicated_input_array = inputOver255->Clone();
         duplicated_input_array->SetSlots(N * N);
 
-        auto ctxRank =
-            comp.compare(m_cc, duplicated_input_array, shifted_input_array);
+        auto ctxRank = comp.compareLogistic(m_cc, duplicated_input_array,
+                                            shifted_input_array);
 
         ctxRank->SetSlots(N * N);
 
@@ -252,7 +254,7 @@ template <int N> class DirectSort : public SortBase<N> {
             inverted_comparisons,
             m_cc->MakeCKKSPackedPlaintext(generateMaskVectorSetUnset2(N), 1, 0,
                                           nullptr, N * N));
-        inverted_comparisons = m_cc->EvalSub(1, inverted_comparisons);
+        inverted_comparisons = m_cc->EvalSub(1 / 256.0, inverted_comparisons);
 
         ctxRank = m_cc->EvalAdd(half_comparisons, inverted_comparisons);
 
@@ -288,7 +290,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
         auto rotIndex = m_cc->EvalSub(index_minus_rank, rot_checking_vector);
 
-        m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
+        // m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
 
         rotIndex =
             m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
