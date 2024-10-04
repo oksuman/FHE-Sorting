@@ -12,6 +12,36 @@ constexpr double COEFFICIENT_THRESHOLD = 1e-15;
 constexpr double EVEN_COEFFICIENT_THRESHOLD =
     1e-6; // New threshold for even coefficients
 constexpr int sincPolyDegree = 1011;
+constexpr int logisticPolyDegree = 2560;
+template <int N> std::vector<double> generateLogisticCoefficients() {
+    constexpr double UNIFORM_COEFFICIENT_THRESHOLD = 1e-15;
+
+    auto coeffs = lbcrypto::EvalChebyshevCoefficients(
+        [](double x) -> double {
+            const double n = 256.0;
+            const double k = 1024.0;
+
+            if (std::abs(x) < std::numeric_limits<double>::epsilon()) {
+                return 1.0 / (2.0 * n);
+            }
+            return (1.0 / n) / (1.0 + std::exp(-k * x));
+        },
+        -1, 1, logisticPolyDegree);
+
+    for (auto &coeff : coeffs) {
+        if (std::abs(coeff) < UNIFORM_COEFFICIENT_THRESHOLD) {
+            coeff = 0.0;
+        }
+    }
+
+    // Trim trailing zeros
+    while (!coeffs.empty() &&
+           std::abs(coeffs.back()) < UNIFORM_COEFFICIENT_THRESHOLD) {
+        coeffs.pop_back();
+    }
+
+    return coeffs;
+}
 
 template <int N> std::vector<double> generateTruncatedCoefficients() {
     auto coeffs = lbcrypto::EvalChebyshevCoefficients(
@@ -55,6 +85,19 @@ template <int N> void generateCoefficients(std::ofstream &outFile) {
     outFile << "};\n\n";
 }
 
+template <int N> void generateCoefficients2(std::ofstream &outFile) {
+    outFile << "const std::vector<double> generatedLogisticCoefficients_" << N
+            << " = {\n";
+    auto coeffs = generateLogisticCoefficients<N>();
+    for (size_t j = 0; j < coeffs.size(); ++j) {
+        outFile << "    " << coeffs[j];
+        if (j < coeffs.size() - 1)
+            outFile << ",";
+        outFile << "\n";
+    }
+    outFile << "};\n\n";
+}
+
 void generateSelectorFunction(std::ofstream &outFile) {
     outFile << "template<std::size_t N>\n";
     outFile << "const std::vector<double>& selectCoefficients() {\n";
@@ -84,6 +127,7 @@ int main() {
     generateCoefficients<4>(outFile);
     generateCoefficients<32>(outFile);
     generateCoefficients<128>(outFile);
+    generateCoefficients2<256>(outFile);
     generateSelectorFunction(outFile);
 
     outFile.close();
