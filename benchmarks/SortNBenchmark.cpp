@@ -25,44 +25,42 @@ std::vector<double> getVectorWithMinDiff(int N) {
 }
 
 // // Setup function for DirectSort
-// template <int N> auto setupDirectSort() {
-//     CCParams<CryptoContextCKKSRNS> parameters;
-//     parameters.SetMultiplicativeDepth(DirectSort<N>::getDepth());
-//     parameters.SetScalingModSize(59);
-//     parameters.SetBatchSize(N);
-//     parameters.SetSecurityLevel(HEStd_NotSet);
-//     usint ringDim = 1 << 12;
-//     parameters.SetRingDim(ringDim);
-//     // assert(ringDim / 2 > N * N && "Ring dimension should be higher than
-//     the
-//     // square of array length due to SIMD batching.");
-//
-//     auto cc = GenCryptoContext(parameters);
-//     cc->Enable(PKE);
-//     cc->Enable(KEYSWITCH);
-//     cc->Enable(LEVELEDSHE);
-//     cc->Enable(ADVANCEDSHE);
-//
-//     auto keyPair = cc->KeyGen();
-//     std::vector<int> rotations;
-//     // std::vector<int> rotations = {-1, -2, -4, -8, -16, -32, -64, 1,
-//     //                               2,  4,  8,  16, 32,  64, 128};
-//     for (int i = 1; i < N; i *= 2) {
-//         rotations.push_back(i);
-//         rotations.push_back(-i);
-//     }
-//     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
-//     cc->EvalMultKeyGen(keyPair.secretKey);
-//
-//     auto enc = std::make_shared<Encryption>(cc, keyPair.publicKey);
-//     auto directSort =
-//         std::make_unique<DirectSort<N>>(cc, keyPair.publicKey, enc);
-//     std::vector<double> inputArray = getVectorWithMinDiff(N);
-//     auto ctxt = enc->encryptInput(inputArray);
-//
-//     return std::make_tuple(std::move(cc), std::move(directSort),
-//                            std::move(ctxt));
-// }
+template <int N> auto setupDirectSort() {
+    CCParams<CryptoContextCKKSRNS> parameters;
+    // TODO create a DirectSortGetDepth for variable sizes
+    parameters.SetMultiplicativeDepth(44);
+    parameters.SetScalingModSize(40);
+    parameters.SetBatchSize(N);
+    parameters.SetSecurityLevel(HEStd_NotSet);
+    usint ringDim = 1 << 17;
+    parameters.SetRingDim(ringDim);
+
+    auto cc = GenCryptoContext(parameters);
+    cc->Enable(PKE);
+    cc->Enable(KEYSWITCH);
+    cc->Enable(LEVELEDSHE);
+    cc->Enable(ADVANCEDSHE);
+
+    auto keyPair = cc->KeyGen();
+    std::vector<int> rotations = {-1,  -2,  -4,   -8,   -16,  -32,  1,
+                                  2,   4,   8,    16,   32,   64,   128,
+                                  256, 512, 1024, 2048, 4096, 8192, 16384};
+    for (int i = 1; i < N; i *= 2) {
+        rotations.push_back(i);
+        rotations.push_back(-i);
+    }
+    cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
+    cc->EvalMultKeyGen(keyPair.secretKey);
+
+    auto enc = std::make_shared<Encryption>(cc, keyPair.publicKey);
+    auto directSort =
+        std::make_unique<DirectSort<N>>(cc, keyPair.publicKey, enc);
+    std::vector<double> inputArray = getVectorWithMinDiff(N);
+    auto ctxt = enc->encryptInput(inputArray);
+
+    return std::make_tuple(std::move(cc), std::move(directSort),
+                           std::move(ctxt));
+}
 
 // Setup function for BitonicSort
 template <int N> auto setupBitonicSort() {
@@ -105,16 +103,16 @@ template <int N> auto setupBitonicSort() {
 }
 
 // Benchmark function for DirectSort
-// template <int N> static void BM_DirectSort(benchmark::State &state) {
-//     auto [cc, directSort, ctxt] = setupDirectSort<N>();
-//     for (auto _ : state) {
-//         auto ctxt_out = directSort->sort(ctxt);
-//         benchmark::DoNotOptimize(ctxt_out);
-//         benchmark::ClobberMemory();
-//     }
-//     state.counters["ArraySize"] = N;
-//     state.counters["RingDimension"] = cc->GetRingDimension();
-// }
+template <int N> static void BM_DirectSort(benchmark::State &state) {
+    auto [cc, directSort, ctxt] = setupDirectSort<N>();
+    for (auto _ : state) {
+        auto ctxt_out = directSort->sort(ctxt);
+        benchmark::DoNotOptimize(ctxt_out);
+        benchmark::ClobberMemory();
+    }
+    state.counters["ArraySize"] = N;
+    state.counters["RingDimension"] = cc->GetRingDimension();
+}
 
 // Benchmark function for BitonicSort
 template <int N> static void BM_BitonicSort(benchmark::State &state) {
@@ -131,7 +129,10 @@ template <int N> static void BM_BitonicSort(benchmark::State &state) {
 
 // Register the benchmarks for different input sizes
 #define REGISTER_BENCHMARKS(N)                                                 \
-    BENCHMARK(BM_BitonicSort<N>)->Unit(benchmark::kMillisecond)->UseRealTime();
+    BENCHMARK(BM_BitonicSort<N>)                                               \
+        ->Unit(benchmark::kMillisecond)                                        \
+        ->UseRealTime();                                                       \
+    BENCHMARK(BM_DirectSort<N>)->Unit(benchmark::kMillisecond)->UseRealTime();
 
 REGISTER_BENCHMARKS(4)
 REGISTER_BENCHMARKS(8)
