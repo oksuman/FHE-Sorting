@@ -67,6 +67,57 @@ template <int N> class DirectSort : public SortBase<N> {
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
           rot(m_cc, enc, rotIndices), m_enc(enc) {}
 
+    static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
+                                  std::vector<int> &rotations) {
+        parameters.SetBatchSize(N);
+        parameters.SetScalingModSize(40);
+
+        for (int i = 1; i < N / 2; i *= 2) {
+            rotations.push_back(-i);
+            rotations.push_back(i);
+        }
+        rotations.push_back(N / 2);
+
+        // Pattern for output_array rotations
+        for (int i = 1; i < log2(2 * N) + 1; i++) {
+            rotations.push_back((2 * N * N) / (1 << i));
+        }
+
+        std::cout << "Rotation indices: "
+                  << "\n";
+        std::cout << rotations << "\n";
+        switch (N) {
+        case 4:
+            parameters.SetMultiplicativeDepth(40);
+            break;
+        case 8:
+            parameters.SetMultiplicativeDepth(41);
+            break;
+        case 16:
+            parameters.SetMultiplicativeDepth(41);
+            break;
+        case 32:
+            parameters.SetMultiplicativeDepth(42);
+            break;
+        case 64:
+            parameters.SetMultiplicativeDepth(43);
+            break;
+        case 128:
+            parameters.SetMultiplicativeDepth(44);
+            break;
+            // TODO correct depths for large sizes
+        case 256:
+            parameters.SetMultiplicativeDepth(44);
+            break;
+        case 512:
+            parameters.SetMultiplicativeDepth(44);
+            break;
+        case 1024:
+            parameters.SetMultiplicativeDepth(44);
+            break;
+        }
+    }
+
     /*
         masking vector generation for SIMD optimization
     */
