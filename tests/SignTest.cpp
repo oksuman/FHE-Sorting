@@ -51,7 +51,7 @@ TEST_F(ArraySortTest, CompositeSignTest) {
     int df = 3;
 
     // Apply compositeSign
-    auto result = compositeSign(encrypted_input, cc, dg, df);
+    auto result = compositeSign<4>(encrypted_input, cc, dg, df);
 
     // Decrypt the result
     Plaintext decryptedResult;
@@ -91,7 +91,7 @@ TEST_F(ArraySortTest, VerySmallElementsTest) {
     int df = 3;
 
     // Apply compositeSign
-    auto result = compositeSign(encrypted_input, cc, dg, df);
+    auto result = compositeSign<4>(encrypted_input, cc, dg, df);
 
     // Decrypt the result
     Plaintext decryptedResult;

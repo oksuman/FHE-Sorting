@@ -64,8 +64,9 @@ template <int N> auto setupBitonicSort() {
 // Benchmark function for BitonicSort
 template <int N> static void BM_BitonicSort(benchmark::State &state) {
     auto [cc, bitonicSort, ctxt] = setupBitonicSort<N>();
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
     for (auto _ : state) {
-        auto ctxt_out = bitonicSort->sort(ctxt);
+        auto ctxt_out = bitonicSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
         benchmark::DoNotOptimize(ctxt_out);
         benchmark::ClobberMemory();
     }

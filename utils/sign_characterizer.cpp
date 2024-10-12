@@ -115,8 +115,8 @@ class SignFunctionCharacterizer {
         {SignFunc::Tanh, "Tanh", {SignConfig()}},
         {SignFunc::CompositeSign,
          "CompositeSign",
-         {SignConfig(CompositeSignConfig(2, 2)),
-          SignConfig(CompositeSignConfig(3, 3))}},
+         {SignConfig(CompositeSignConfig(4, 2, 2)),
+          SignConfig(CompositeSignConfig(4, 3, 3))}},
     };
 
     std::string getConfigString(const SignConfig &cfg) {

@@ -44,8 +44,8 @@ class SortBase {
 
     virtual ~SortBase() = default;
 
-    virtual Ciphertext<DCRTPoly>
-    sort(const Ciphertext<DCRTPoly> &input_array) = 0;
+    virtual Ciphertext<DCRTPoly> sort(const Ciphertext<DCRTPoly> &input_array,
+                                      SignFunc SignFunc, SignConfig &Cfg) = 0;
 
     virtual const Ciphertext<DCRTPoly> &getZero() const { return m_zeroCache; }
     // Common methods that can be used by all sorting algorithms
@@ -190,8 +190,8 @@ template <int N> class DirectSort : public SortBase<N> {
         return result;
     }
 
-    Ciphertext<DCRTPoly>
-    constructRank(const Ciphertext<DCRTPoly> &input_array) {
+    Ciphertext<DCRTPoly> constructRank(const Ciphertext<DCRTPoly> &input_array,
+                                       SignFunc SignFunc, SignConfig &Cfg) {
 
         auto shifted_input_array = this->getZero()->Clone();
         const auto inputOver255 =
@@ -223,8 +223,8 @@ template <int N> class DirectSort : public SortBase<N> {
         auto duplicated_input_array = inputOver255->Clone();
         duplicated_input_array->SetSlots(N * N);
 
-        auto ctxRank =
-            comp.compare(m_cc, duplicated_input_array, shifted_input_array);
+        auto ctxRank = comp.compare(m_cc, duplicated_input_array,
+                                    shifted_input_array, SignFunc, Cfg);
 
         ctxRank->SetSlots(N * N);
 
@@ -332,12 +332,12 @@ template <int N> class DirectSort : public SortBase<N> {
         return output_array;
     }
 
-    Ciphertext<DCRTPoly>
-    sort(const Ciphertext<DCRTPoly> &input_array) override {
+    Ciphertext<DCRTPoly> sort(const Ciphertext<DCRTPoly> &input_array,
+                              SignFunc SignFunc, SignConfig &Cfg) override {
 
         std::cout << "\n===== Direct Sort Input Array: \n";
         PRINT_PT(m_enc, input_array);
-        auto ctx_Rank = constructRank(input_array);
+        auto ctx_Rank = constructRank(input_array, SignFunc, Cfg);
         std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
 
@@ -358,8 +358,9 @@ template <int N> class BitonicSort : public SortBase<N> {
     Ciphertext<DCRTPoly> compare_and_swap(const Ciphertext<DCRTPoly> &a1,
                                           const Ciphertext<DCRTPoly> &a2,
                                           const Ciphertext<DCRTPoly> &a3,
-                                          const Ciphertext<DCRTPoly> &a4) {
-        auto comparison_result = comp.compare(m_cc, a1, a2);
+                                          const Ciphertext<DCRTPoly> &a4,
+                                          SignFunc SignFunc, SignConfig &Cfg) {
+        auto comparison_result = comp.compare(m_cc, a1, a2, SignFunc, Cfg);
         auto temp1 = m_cc->EvalMult(comparison_result, a3);
         auto one = m_cc->EvalSub(1, comparison_result);
         auto temp2 = m_cc->EvalMult(one, a4);
@@ -375,8 +376,8 @@ template <int N> class BitonicSort : public SortBase<N> {
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
           rot(cc, enc, rotIndices), m_enc(enc) {}
 
-    Ciphertext<DCRTPoly>
-    sort(const Ciphertext<DCRTPoly> &input_array) override {
+    Ciphertext<DCRTPoly> sort(const Ciphertext<DCRTPoly> &input_array,
+                              SignFunc SignFunc, SignConfig &Cfg) override {
         // Normalize the input
         auto inputOver255 = m_cc->EvalMult(input_array, (double)1.0 / 255);
 
@@ -390,7 +391,7 @@ template <int N> class BitonicSort : public SortBase<N> {
                 std::vector<double> mask1(N, 0), mask2(N, 0), mask3(N, 0),
                     mask4(N, 0);
 
-                if (result->GetLevel() > 32) {
+                if (result->GetLevel() > 29) {
                     result = m_cc->EvalBootstrap(result, 2, 20);
                 }
 
@@ -431,7 +432,8 @@ template <int N> class BitonicSort : public SortBase<N> {
                 auto arr10 = m_cc->EvalAdd(m_cc->EvalAdd(arr5_2, arr3),
                                            m_cc->EvalAdd(arr6_1, arr2));
 
-                result = compare_and_swap(arr7, arr8, arr9, arr10);
+                result =
+                    compare_and_swap(arr7, arr8, arr9, arr10, SignFunc, Cfg);
             }
         }
 

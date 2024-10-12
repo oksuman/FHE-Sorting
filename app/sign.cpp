@@ -3,8 +3,16 @@
 
 // Based on the paper "Efficient Homomorphic Comparison Methods with Optimal
 // Complexity" https://eprint.iacr.org/2019/1234
-Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x,
-                                   CryptoContext<DCRTPoly> cc) {
+
+template <int n>
+Ciphertext<DCRTPoly> g_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {}
+
+template <int n>
+Ciphertext<DCRTPoly> f_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {}
+
+template <>
+Ciphertext<DCRTPoly> g_n<4>(Ciphertext<DCRTPoly> x,
+                            CryptoContext<DCRTPoly> cc) {
     std::vector<double> coeffs = {
         0.0, 1.077117252745569,    0.0, -0.36166113998402755,
         0.0, 0.2137420717859748,   0.0, -0.15635204788780485,
@@ -16,8 +24,9 @@ Ciphertext<lbcrypto::DCRTPoly> g_n(Ciphertext<lbcrypto::DCRTPoly> x,
     return cc->EvalChebyshevSeriesPS(x, coeffs, -1, 1);
 }
 
-Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
-                                   CryptoContext<DCRTPoly> cc) {
+template <>
+Ciphertext<DCRTPoly> f_n<4>(Ciphertext<DCRTPoly> x,
+                            CryptoContext<DCRTPoly> cc) {
     constexpr double c1 = 3.14208984375;
     constexpr double c3 = -7.33154296875;
     constexpr double c5 = 13.19677734375;
@@ -27,9 +36,8 @@ Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
     constexpr double c13 = 1.69189453125;
     constexpr double c15 = -0.20947265625;
 
-    Ciphertext<lbcrypto::DCRTPoly> x2, x4, c1x, c3x, c5x, c7x, c9x, c11x, c13x,
-        c15x;
-    Ciphertext<lbcrypto::DCRTPoly> c3x3, c7x3, c11x3, c15x3;
+    Ciphertext<DCRTPoly> x2, x4, c1x, c3x, c5x, c7x, c9x, c11x, c13x, c15x;
+    Ciphertext<DCRTPoly> c3x3, c7x3, c11x3, c15x3;
 
 // First parallel block: calculate x^2 and all cx terms
 #pragma omp parallel sections
@@ -97,25 +105,70 @@ Ciphertext<lbcrypto::DCRTPoly> f_n(Ciphertext<lbcrypto::DCRTPoly> x,
     return y;
 }
 
-Ciphertext<lbcrypto::DCRTPoly> compositeSign(Ciphertext<lbcrypto::DCRTPoly> x,
-                                             CryptoContext<DCRTPoly> cc, int dg,
-                                             int df) {
+template <>
+Ciphertext<DCRTPoly> g_n<3>(Ciphertext<DCRTPoly> x,
+                            CryptoContext<DCRTPoly> cc) {
+    // g_3(x) = (4589x - 16577x^3 + 25614x^5 - 12860x^7)/2^10
+    constexpr double c1 = 4589.0 / 1024.0;
+    constexpr double c3 = -16577.0 / 1024.0;
+    constexpr double c5 = 25614.0 / 1024.0;
+    constexpr double c7 = -12860.0 / 1024.0;
 
-    auto y = g_n(x, cc);
+    auto x2 = cc->EvalSquare(x);
+    auto x4 = cc->EvalSquare(x2);
+
+    auto y = cc->EvalMult(x, c1);
+    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(cc->EvalMult(x, c3), x2));
+    auto c5x = cc->EvalMult(x, c5);
+    auto c7x = cc->EvalMult(x, c7);
+    auto c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
+    cc->EvalAddInPlace(y,
+                       cc->EvalMultAndRelinearize(cc->EvalAdd(c5x, c7x3), x4));
+
+    return y;
+}
+
+template <>
+Ciphertext<DCRTPoly> f_n<3>(Ciphertext<DCRTPoly> x,
+                            CryptoContext<DCRTPoly> cc) {
+    // f_3(x) = (35x - 35x^3 + 21x^5 - 5x^7)/2^4
+    constexpr double c1 = 35.0 / 16.0;
+    constexpr double c3 = -35.0 / 16.0;
+    constexpr double c5 = 21.0 / 16.0;
+    constexpr double c7 = -5.0 / 16.0;
+
+    auto x2 = cc->EvalSquare(x);
+    auto x4 = cc->EvalSquare(x2);
+
+    auto y = cc->EvalMult(x, c1);
+    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(cc->EvalMult(x, c3), x2));
+    auto c5x = cc->EvalMult(x, c5);
+    auto c7x = cc->EvalMult(x, c7);
+    auto c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
+    cc->EvalAddInPlace(y,
+                       cc->EvalMultAndRelinearize(cc->EvalAdd(c5x, c7x3), x4));
+
+    return y;
+}
+
+template <int n>
+Ciphertext<DCRTPoly> compositeSign(Ciphertext<DCRTPoly> x,
+                                   CryptoContext<DCRTPoly> cc, int dg, int df) {
+
+    auto y = g_n<n>(x, cc);
     for (int i = 1; i < dg; i++) {
-        y = g_n(y, cc);
+        y = g_n<n>(y, cc);
     }
     for (int i = 0; i < df; i++) {
-        y = f_n(y, cc);
+        y = f_n<n>(y, cc);
     }
     return y;
 }
 
 // Source of signum
 // https://github.com/fairmath/polycircuit/blob/main/include/polycircuit/component/SignEvaluation/SignEvaluation.hpp#L29
-Ciphertext<lbcrypto::DCRTPoly>
-signum_polycircuit(Ciphertext<lbcrypto::DCRTPoly> x,
-                   CryptoContext<DCRTPoly> cc) {
+Ciphertext<DCRTPoly> signum_polycircuit(Ciphertext<DCRTPoly> x,
+                                        CryptoContext<DCRTPoly> cc) {
     static std::vector<double> coeffVal(
         {0.0, 1.273238551875655,      0.0, -0.42441020299615195,
          0.0, 0.25464294463091813,    0.0, -0.18188441346502052,
@@ -371,12 +424,11 @@ signum_polycircuit(Ciphertext<lbcrypto::DCRTPoly> x,
          0.0, 6.555346011130787e-05,  0.0, -5.95901494265071e-05,
          0.0});
 
-    cc->Enable(lbcrypto::PKESchemeFeature::ADVANCEDSHE);
+    cc->Enable(PKESchemeFeature::ADVANCEDSHE);
 
-    Ciphertext<lbcrypto::DCRTPoly> outputC =
-        cc->EvalChebyshevSeries(x, coeffVal, -1, 1);
+    Ciphertext<DCRTPoly> outputC = cc->EvalChebyshevSeries(x, coeffVal, -1, 1);
 
-    std::vector<Ciphertext<lbcrypto::DCRTPoly>> t(1024);
+    std::vector<Ciphertext<DCRTPoly>> t(1024);
     int l = 512;
     t[1] = x;
 
@@ -533,12 +585,11 @@ signum_polycircuit(Ciphertext<lbcrypto::DCRTPoly> x,
 
         outputC = cc->EvalAdd(outputC, t59);
     }
-    return Ciphertext<lbcrypto::DCRTPoly>(std::move(outputC));
+    return Ciphertext<DCRTPoly>(std::move(outputC));
 }
 
-Ciphertext<lbcrypto::DCRTPoly>
-naive_discrete_sign(Ciphertext<lbcrypto::DCRTPoly> a,
-                    CryptoContext<DCRTPoly> cc) {
+Ciphertext<DCRTPoly> naive_discrete_sign(Ciphertext<DCRTPoly> a,
+                                         CryptoContext<DCRTPoly> cc) {
     // https://github.com/FHE-Applications/FHE-Applications/blob/master/dev/CKKS-App/Sorting/src/main.cpp#L28
     double lowerBound = -1;
     double upperBound = 1;
@@ -553,8 +604,7 @@ naive_discrete_sign(Ciphertext<lbcrypto::DCRTPoly> a,
         a, lowerBound, upperBound, polyDegree);
 }
 
-Ciphertext<lbcrypto::DCRTPoly> tanh(Ciphertext<lbcrypto::DCRTPoly> a,
-                                    CryptoContext<DCRTPoly> cc) {
+Ciphertext<DCRTPoly> tanh(Ciphertext<DCRTPoly> a, CryptoContext<DCRTPoly> cc) {
     double lowerBound = -1;
     double upperBound = 1;
     int polyDegree = 1006;
@@ -563,13 +613,15 @@ Ciphertext<lbcrypto::DCRTPoly> tanh(Ciphertext<lbcrypto::DCRTPoly> a,
         lowerBound, upperBound, polyDegree);
 }
 
-Ciphertext<lbcrypto::DCRTPoly> sign(Ciphertext<lbcrypto::DCRTPoly> x,
-                                    CryptoContext<DCRTPoly> cc, SignFunc func,
-                                    const SignConfig &Cfg) {
+Ciphertext<DCRTPoly> sign(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc,
+                          SignFunc func, const SignConfig &Cfg) {
     switch (func) {
     case SignFunc::CompositeSign:
     default:
-        return compositeSign(x, cc, Cfg.compos.dg, Cfg.compos.df);
+        if (Cfg.compos.n == 3)
+            return compositeSign<3>(x, cc, Cfg.compos.dg, Cfg.compos.df);
+        else if (Cfg.compos.n == 4)
+            return compositeSign<4>(x, cc, Cfg.compos.dg, Cfg.compos.df);
     case SignFunc::SignumPolycircuit:
         return signum_polycircuit(x, cc);
     case SignFunc::Tanh:

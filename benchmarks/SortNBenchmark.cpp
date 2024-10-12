@@ -6,6 +6,7 @@
 #include "encryption.h"
 #include "lattice/stdlatticeparms.h"
 #include "openfhe.h"
+#include "sign.h"
 #include "sort_algo.h"
 #include <benchmark/benchmark.h>
 
@@ -54,7 +55,7 @@ template <int N> auto setupDirectSort() {
 
     auto enc = std::make_shared<Encryption>(cc, keyPair.publicKey);
     auto directSort =
-        std::make_unique<DirectSort<N>>(cc, keyPair.publicKey, enc);
+        std::make_unique<DirectSort<N>>(cc, keyPair.publicKey, rotations, enc);
     std::vector<double> inputArray = getVectorWithMinDiff(N);
     auto ctxt = enc->encryptInput(inputArray);
 
@@ -105,8 +106,9 @@ template <int N> auto setupBitonicSort() {
 // Benchmark function for DirectSort
 template <int N> static void BM_DirectSort(benchmark::State &state) {
     auto [cc, directSort, ctxt] = setupDirectSort<N>();
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
     for (auto _ : state) {
-        auto ctxt_out = directSort->sort(ctxt);
+        auto ctxt_out = directSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
         benchmark::DoNotOptimize(ctxt_out);
         benchmark::ClobberMemory();
     }
@@ -117,12 +119,12 @@ template <int N> static void BM_DirectSort(benchmark::State &state) {
 // Benchmark function for BitonicSort
 template <int N> static void BM_BitonicSort(benchmark::State &state) {
     auto [cc, bitonicSort, ctxt] = setupBitonicSort<N>();
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
     for (auto _ : state) {
-        auto ctxt_out = bitonicSort->sort(ctxt);
+        auto ctxt_out = bitonicSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
         benchmark::DoNotOptimize(ctxt_out);
         benchmark::ClobberMemory();
     }
-    bitonicSort->printPerformanceResults();
     state.counters["ArraySize"] = N;
     state.counters["RingDimension"] = cc->GetRingDimension();
 }

@@ -2,6 +2,7 @@
 
 #include "encryption.h"
 #include "openfhe.h"
+#include "sign.h"
 #include <cmath>
 #include <memory>
 
@@ -47,8 +48,8 @@ class Comparison {
 
     Ciphertext<DCRTPoly> compare(const CryptoContext<DCRTPoly> &cc,
                                  const Ciphertext<DCRTPoly> &a,
-                                 const Ciphertext<DCRTPoly> &b);
-
+                                 const Ciphertext<DCRTPoly> &b,
+                                 SignFunc SignFunc, SignConfig &Cfg);
     Ciphertext<DCRTPoly> max(const CryptoContext<DCRTPoly> &cc,
                              const Ciphertext<DCRTPoly> &a,
                              const Ciphertext<DCRTPoly> &b);
