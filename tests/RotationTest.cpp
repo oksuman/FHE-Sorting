@@ -77,7 +77,9 @@ TEST_F(RotationComposerTest, RotateVector) {
 TEST_F(RotationComposerTest, RotateTreeVector) {
     std::vector<double> input = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
     auto ctxt = m_enc->encryptInput(input);
-    m_rotator->buildRotationTree(-4, 4);
+    auto rotTree =
+        std::make_unique<RotationTree<8>>(m_cc, rotations, DecomposeAlgo::NAF);
+    rotTree->buildTree(-4, 4);
 
     std::vector<std::vector<double>> expectedResults = {
         {5.0, 6.0, 7.0, 8.0, 1.0, 2.0, 3.0, 4.0}, // -4
@@ -94,7 +96,7 @@ TEST_F(RotationComposerTest, RotateTreeVector) {
     for (int rotation = -4; rotation <= 4; ++rotation) {
         SCOPED_TRACE("Rotation: " + std::to_string(rotation));
 
-        auto rotated = m_rotator->treeRotate(ctxt, rotation);
+        auto rotated = rotTree->treeRotate(ctxt, rotation);
         auto result = m_enc->getPlaintext(rotated);
 
         const auto &expected = expectedResults[rotation + 4];
