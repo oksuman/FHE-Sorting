@@ -38,12 +38,10 @@ inline std::vector<double> getVectorWithMinDiff(int N, double minValue, double m
     std::iota(integers.begin(), integers.end(), 0);
     std::shuffle(integers.begin(), integers.end(), std::mt19937{std::random_device{}()});
     
-    std::vector<double> result;
-    result.reserve(N);
+    std::vector<double> result(N);
     
     for (int i = 0; i < N; ++i) {
-        double value = minValue + integers[i] * minDiff;
-        result.push_back(value);
+        result[i] = minValue + integers[i] * minDiff;
     }
     
     return result;

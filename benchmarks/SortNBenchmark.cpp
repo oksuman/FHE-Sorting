@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <random>
 #include <vector>
@@ -28,13 +29,14 @@ std::vector<double> getVectorWithMinDiff(int N) {
 // // Setup function for DirectSort
 template <int N> auto setupDirectSort() {
     CCParams<CryptoContextCKKSRNS> parameters;
-    // TODO create a DirectSortGetDepth for variable sizes
-    parameters.SetMultiplicativeDepth(44);
-    parameters.SetScalingModSize(40);
-    parameters.SetBatchSize(N);
-    parameters.SetSecurityLevel(HEStd_NotSet);
-    usint ringDim = 1 << 17;
-    parameters.SetRingDim(ringDim);
+    std::vector<int> rotations;
+    DirectSort<N>::getSizeParameters(parameters, rotations);
+    parameters.SetSecurityLevel(HEStd_128_classic);
+    constexpr int maxSlotRequirement = 2 * N * N;
+    if (maxSlotRequirement <= (1 << 16))
+        parameters.SetRingDim(1 << 17);
+    else
+        parameters.SetRingDim(1 << ((int)log2(maxSlotRequirement) + 1));
 
     auto cc = GenCryptoContext(parameters);
     cc->Enable(PKE);
@@ -43,13 +45,6 @@ template <int N> auto setupDirectSort() {
     cc->Enable(ADVANCEDSHE);
 
     auto keyPair = cc->KeyGen();
-    std::vector<int> rotations = {-1,  -2,  -4,   -8,   -16,  -32,  1,
-                                  2,   4,   8,    16,   32,   64,   128,
-                                  256, 512, 1024, 2048, 4096, 8192, 16384};
-    for (int i = 1; i < N; i *= 2) {
-        rotations.push_back(i);
-        rotations.push_back(-i);
-    }
     cc->EvalRotateKeyGen(keyPair.secretKey, rotations);
     cc->EvalMultKeyGen(keyPair.secretKey);
 
