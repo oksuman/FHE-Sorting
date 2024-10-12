@@ -16,6 +16,7 @@
 #include <omp.h>
 
 #include "comparison.h"
+#include "sign.h"
 #include "sort_algo.h"
 
 using namespace lbcrypto;
@@ -98,7 +99,8 @@ template <int N> struct SortContext {
             break;
         }
 
-        output_array = sorter->sort(input_array);
+        auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
+        output_array = sorter->sort(input_array, SignFunc::CompositeSign, Cfg);
     }
 
     void deserializeOutput() {

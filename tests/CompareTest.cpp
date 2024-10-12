@@ -47,7 +47,8 @@ TEST_F(CompareTest, CompareVectors) {
     auto cA = enc->encryptInput(a);
     auto cB = enc->encryptInput(b);
 
-    auto result = comp->compare(cc, cA, cB);
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
+    auto result = comp->compare(cc, cA, cB, SignFunc::CompositeSign, Cfg);
 
     Plaintext ptResult;
     cc->Decrypt(keys.secretKey, result, &ptResult);

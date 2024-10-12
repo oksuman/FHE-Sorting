@@ -60,9 +60,10 @@ template <int N> auto setupBenchmark() {
 // Benchmark function for sort
 template <int N> static void BM_DirectSort(benchmark::State &state) {
     auto [cc, directSort, ctxt] = setupBenchmark<N>();
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
 
     for (auto _ : state) {
-        auto ctxt_out = directSort->sort(ctxt);
+        auto ctxt_out = directSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
         benchmark::DoNotOptimize(ctxt_out);
         benchmark::ClobberMemory();
     }
@@ -74,9 +75,11 @@ template <int N> static void BM_DirectSort(benchmark::State &state) {
 // Benchmark function for constructRank
 template <int N> static void BM_ConstructRank(benchmark::State &state) {
     auto [cc, directSort, ctxt] = setupBenchmark<N>();
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
 
     for (auto _ : state) {
-        auto rank = directSort->constructRank(ctxt);
+        auto rank =
+            directSort->constructRank(ctxt, SignFunc::CompositeSign, Cfg);
         benchmark::DoNotOptimize(rank);
         benchmark::ClobberMemory();
     }
