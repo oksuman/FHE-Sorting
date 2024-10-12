@@ -161,11 +161,11 @@ static void BM_BatchTreeRotations(benchmark::State &state) {
     int numRotations = batchSize;
     std::vector<int32_t> rotations = {-32, -16, -8, -4, -2, -1, 1,
                                       2,   4,   8,  16, 32, 64};
-    RotationComposer<batchSize> rot(cc, nullptr, rotations);
+    RotationTree<batchSize> rot(cc, rotations);
 
     for (auto _ : state) {
         std::vector<Ciphertext<DCRTPoly>> rotated(numRotations);
-        rot.buildRotationTree(1, N);
+        rot.buildTree(1, N);
         for (int i = 0; i < numRotations; ++i) {
             rotated[i] = rot.treeRotate(c, i);
         }

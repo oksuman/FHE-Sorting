@@ -69,7 +69,9 @@ TEST_F(BitonicSortTest, SortCorrectness) {
         m_cc, m_publicKey, rotations, m_enc);
 
     // Sort the array
-    Ciphertext<DCRTPoly> ctxt_out = bitonicSort->sort(ctxt);
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
+    Ciphertext<DCRTPoly> ctxt_out =
+        bitonicSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
 
     // Decrypt the result
     Plaintext result;

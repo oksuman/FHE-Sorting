@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "encryption.h"
+#include "sign.h"
 #include "sort_algo.h"
 #include "utils.h"
 
@@ -67,8 +68,10 @@ TEST_F(DirectSortTest, ConstructRank) {
     auto directSort = std::make_unique<DirectSort<array_length>>(
         m_cc, m_publicKey, rotations, m_enc);
 
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
     // Construct rank using DirectSort
-    auto ctxtRank = directSort->constructRank(ctxt);
+    auto ctxtRank =
+        directSort->constructRank(ctxt, SignFunc::CompositeSign, Cfg);
 
     // Decrypt the result
     Plaintext result;
@@ -164,7 +167,9 @@ TEST_F(DirectSortTest, DirectSort) {
     auto directSort = std::make_unique<DirectSort<array_length>>(
         m_cc, m_publicKey, rotations, m_enc);
 
-    Ciphertext<DCRTPoly> ctxt_out = directSort->sort(ctxt);
+    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
+    Ciphertext<DCRTPoly> ctxt_out =
+        directSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
 
     EXPECT_EQ(ctxt_out->GetLevel(), MultDepth)
         << "Use the level returned by the result for best performance";
