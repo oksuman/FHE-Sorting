@@ -60,13 +60,26 @@ void generateSelectorFunction(std::ofstream &outFile) {
     outFile << "const std::vector<double>& selectCoefficients() {\n";
     outFile << "    if constexpr (N == 4) {\n";
     outFile << "        return generatedCoefficients_4;\n";
-    outFile << "    } else if constexpr (N == 32) {\n";
-    outFile << "        return generatedCoefficients_32;\n";
-    outFile << "    } else if constexpr (N == 128) {\n";
-    outFile << "        return generatedCoefficients_128;\n";
+
+    auto print_size = [&outFile](int size) {
+        outFile << " } else if constexpr (N == " << size << ") {\n";
+        outFile << "     return generatedCoefficients_" << size << ";\n";
+    };
+
+    print_size(8);
+    print_size(16);
+    print_size(32);
+    print_size(64);
+    print_size(128);
+    print_size(256);
+    print_size(512);
+    print_size(1024);
+    print_size(2048);
+    print_size(4096);
+    print_size(8192);
+    print_size(16384);
+
     outFile << "    } else {\n";
-    outFile << "        static_assert(N == 4 || N == 32 || N == 128, "
-               "\"Unsupported size for coefficients\");\n";
     outFile << "        return generatedCoefficients_4; // Default case to "
                "satisfy compiler\n";
     outFile << "    }\n";
@@ -82,8 +95,18 @@ int main() {
     outFile << "#include <vector>\n\n";
 
     generateCoefficients<4>(outFile);
+    generateCoefficients<8>(outFile);
+    generateCoefficients<16>(outFile);
     generateCoefficients<32>(outFile);
+    generateCoefficients<64>(outFile);
     generateCoefficients<128>(outFile);
+    generateCoefficients<256>(outFile);
+    generateCoefficients<512>(outFile);
+    generateCoefficients<1024>(outFile);
+    generateCoefficients<2048>(outFile);
+    generateCoefficients<4096>(outFile);
+    generateCoefficients<8192>(outFile);
+    generateCoefficients<16384>(outFile);
     generateSelectorFunction(outFile);
 
     outFile.close();
