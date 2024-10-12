@@ -51,3 +51,9 @@ add_unit_test(DirectSortTest
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
 	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
 	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
+
+add_unit_test(DirectSortNTest 
+	      DirectSortNTest.cpp 
+              ${CMAKE_SOURCE_DIR}/app/sign.cpp
+	      ${CMAKE_SOURCE_DIR}/app/comparison.cpp
+	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
