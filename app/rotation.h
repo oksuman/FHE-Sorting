@@ -213,8 +213,8 @@ template <int N> class RotationComposer {
                                 int rotation) {
         auto steps =
             m_decomposer.decompose(rotation, input->GetSlots(), m_algo);
-        std::cout << "Rotation: " << rotation << "\n";
-        dump(steps);
+        // std::cout << "Rotation: " << rotation << "\n";
+        // dump(steps);
         Ciphertext<DCRTPoly> result = input->Clone();
         for (auto step : steps)
             result = m_cc->EvalRotate(result, step.stepSize);
