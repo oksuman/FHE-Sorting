@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <random>
 #include <vector>
 
 #include "encryption.h"
@@ -57,7 +58,12 @@ TYPED_TEST_SUITE_P(DirectSortTestFixture);
 
 TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     constexpr size_t N = TypeParam::value;
-    std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 255, 0.01);
+    // std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 255, 0.01);
+    std::vector<double> inputArray(N);
+    std::generate(inputArray.begin(), inputArray.end(), []() {
+        return static_cast<long double>(std::rand()) / RAND_MAX;
+    });
+
     std::cout << "Input array size: " << N << std::endl;
     std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
 
