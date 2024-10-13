@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <gtest/gtest.h>
 #include <random>
 #include <vector>
@@ -95,9 +96,10 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
         }
     }
 
-    std::cout << "Maximum error: " << maxError << std::endl;
+    std::cout << "Maximum error: " << maxError
+              << ", log2: " << std::log2(maxError) << "\n";
     std::cout << "Number of errors larger than 0.01: " << largeErrorCount
-              << std::endl;
+              << "\n";
 
     ASSERT_LT(maxError, 0.01);
 }
