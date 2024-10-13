@@ -86,36 +86,40 @@ template <int N> class DirectSort : public SortBase<N> {
         std::cout << "Rotation indices: "
                   << "\n";
         std::cout << rotations << "\n";
+        int multDepth;
         switch (N) {
         case 4:
-            parameters.SetMultiplicativeDepth(40);
+            multDepth = 40;
             break;
         case 8:
-            parameters.SetMultiplicativeDepth(41);
+            multDepth = 41;
             break;
         case 16:
-            parameters.SetMultiplicativeDepth(41);
+            multDepth = 41;
             break;
         case 32:
-            parameters.SetMultiplicativeDepth(42);
+            multDepth = 42;
             break;
         case 64:
-            parameters.SetMultiplicativeDepth(43);
+            multDepth = 43;
             break;
         case 128:
-            parameters.SetMultiplicativeDepth(44);
+            multDepth = 44;
             break;
             // TODO correct depths for large sizes
         case 256:
-            parameters.SetMultiplicativeDepth(44);
+            multDepth = 44;
             break;
         case 512:
-            parameters.SetMultiplicativeDepth(44);
+            multDepth = 44;
             break;
         case 1024:
-            parameters.SetMultiplicativeDepth(44);
+            multDepth = 44;
             break;
         }
+        // Disabled normalization at constructRank
+        multDepth--;
+        parameters.SetMultiplicativeDepth(multDepth);
     }
 
     /*
@@ -245,8 +249,10 @@ template <int N> class DirectSort : public SortBase<N> {
                                        SignFunc SignFunc, SignConfig &Cfg) {
 
         auto shifted_input_array = this->getZero()->Clone();
-        const auto inputOver255 =
-            m_cc->EvalMult(input_array, (double)1.0 / 255);
+        // If the input is already normalized, else we should normalize by
+        // max-min
+        const auto inputOver255 = input_array;
+        // m_cc->EvalMult(input_array, (double)1.0 / 255);
 
         // The repeated rotation is optimized with treeRotate structure by
         // reusing intermediate rotations
