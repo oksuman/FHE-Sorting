@@ -87,6 +87,8 @@ template <int N> class DirectSort : public SortBase<N> {
                   << "\n";
         std::cout << rotations << "\n";
         int multDepth;
+        int modSize = 59;
+
         switch (N) {
         case 4:
             multDepth = 40;
@@ -119,6 +121,7 @@ template <int N> class DirectSort : public SortBase<N> {
         }
         // Disabled normalization at constructRank
         multDepth--;
+        parameters.SetScalingModSize(modSize);
         parameters.SetMultiplicativeDepth(multDepth);
     }
 
@@ -239,6 +242,17 @@ template <int N> class DirectSort : public SortBase<N> {
         return result;
     }
 
+    std::vector<double> generateMaskVector3_flexible(int array_size,
+                                                     int max_batch, int k) {
+        std::vector<double> result(max_batch, 0.0);
+
+        for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            result[i] = 1.0;
+        }
+
+        return result;
+    }
+
     std::vector<double> generateMaskVector4(int array_size, int k) {
         std::vector<double> result(2 * array_size * array_size, 0.0);
 
@@ -253,6 +267,13 @@ template <int N> class DirectSort : public SortBase<N> {
         return result;
     }
 
+    /*
+        checking all possible rotation indices
+
+        e.g. if N=4,
+        [0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, -1, -1, -1,
+       -1, -2, -2, -2, -2, -3, -3, -3, -3]
+    */
     std::vector<double> generateCheckingVector(int array_size) {
         const int total_size = 2 * array_size * array_size;
         std::vector<double> stretched_index(total_size);
@@ -282,14 +303,57 @@ template <int N> class DirectSort : public SortBase<N> {
         return stretched_index;
     }
 
-    std::vector<double> generateRepeatedIndex(int array_size) {
-        std::vector<double> result;
-        result.reserve(2 * array_size * array_size);
+    /*
+        This function creates a vector of size max_batch, filled with a
+       repeating pattern of [k, k, ..., k, -N+k, -N+k, ..., -N+k] where each
+       value is repeated N times.
+    */
+    std::vector<double> generateChunkedCheckingVector(int max_batch, int k) {
+        std::vector<double> result(max_batch);
+        int index = 0;
+        int current_k = k;
 
-        for (int i = 0; i < 2 * array_size; ++i) {
-            for (int j = 0; j < array_size; ++j) {
-                result.push_back(static_cast<double>(j));
+        while (index < max_batch) {
+            // Fill with [k | -N+k] pattern
+            for (int i = 0; i < N && index < max_batch; ++i) {
+                result[index++] = current_k;
             }
+            for (int i = 0; i < N && index < max_batch; ++i) {
+                result[index++] = -N + current_k;
+            }
+
+            // Move to next k
+            current_k = (current_k + 1) % N;
+        }
+
+        return result;
+    }
+
+    // /*
+    //     generate repeated index such as:
+    //     [0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2,
+    //     3, 0, 1, 2, 3, 0, 1, 2, 3]
+    // */
+    // std::vector<double> generateRepeatedIndex(int array_size) {
+    //     std::vector<double> result;
+    //     result.reserve(2 * array_size * array_size);
+
+    //     for (int i = 0; i < 2 * array_size; ++i) {
+    //         for (int j = 0; j < array_size; ++j) {
+    //             result.push_back(static_cast<double>(j));
+    //         }
+    //     }
+
+    //     return result;
+    // }
+
+    // generate index vector, e.g. n=4 [0,1,2,3]
+    std::vector<double> generatedIndexVector(int array_size) {
+        std::vector<double> result;
+        result.reserve(array_size);
+
+        for (int i = 0; i < array_size; ++i) {
+            result.push_back(static_cast<double>(i));
         }
 
         return result;
@@ -335,9 +399,11 @@ template <int N> class DirectSort : public SortBase<N> {
 
         // ctxRank->SetSlots(N * N);
 
-        auto half_comparisons = m_cc->EvalMult(
-            ctxRank, m_cc->MakeCKKSPackedPlaintext(
-                         generateMaskVectorSetUnset(N), 1, 0, nullptr, N * N));
+        auto half_comparisons = m_cc->EvalMult(ctxRank, 0.5);
+        // auto half_comparisons = m_cc->EvalMult(
+        //     ctxRank, m_cc->MakeCKKSPackedPlaintext(
+        //                  generateMaskVectorSetUnset(N), 1, 0, nullptr, N *
+        //                  N));
 
         auto inverted_comparisons = this->getZero()->Clone();
         Ciphertext<DCRTPoly> rotated = ctxRank->Clone();
@@ -386,12 +452,12 @@ template <int N> class DirectSort : public SortBase<N> {
 
         // The repeated rotation is optimized with treeRotate structure by
         // reusing intermediate rotations
-        std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
-        RotationTree<N> rotTree(m_cc, rot.getRotIndices());
-        rotTree.buildTree(1, N / 2 + 1);
-        for (int i = 4; i <= N / 2; i += 4) {
-            rotated_results[i] = rotTree.treeRotate(inputOver255, i);
-        }
+        // std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
+        // RotationTree<N> rotTree(m_cc, rot.getRotIndices());
+        // rotTree.buildTree(1, N / 2 + 1);
+        // for (int i = 4; i <= N / 2; i += 4) {
+        //     rotated_results[i] = rotTree.treeRotate(inputOver255, i);
+        // }
 
         auto max_batch = m_cc->GetRingDimension() / 2;
         auto num_chunk = (N * N) / max_batch; // the number of vectorizations
@@ -406,8 +472,10 @@ template <int N> class DirectSort : public SortBase<N> {
 
 #pragma omp parallel for
             for (int i = start; i <= end; i++) {
-                auto rotated = i % 4 == 0 ? rotated_results[i]
-                                          : rotTree.treeRotate(inputOver255, i);
+                // auto rotated = i % 4 == 0 ? rotated_results[i]
+                //                           : rotTree.treeRotate(inputOver255,
+                //                           i);
+                auto rotated = rot.rotate(inputOver255, i);
                 rotated->SetSlots(max_batch);
 
                 rotated = m_cc->EvalMult(
@@ -434,8 +502,7 @@ template <int N> class DirectSort : public SortBase<N> {
             auto inverted_comparisons = this->getZero()->Clone();
             Ciphertext<DCRTPoly> rotated = comp_result->Clone();
 
-            if (c != 0)
-                rotated = rot.rotate(rotated, -(N / 2 / num_chunk) * c);
+            rotated = rot.rotate(rotated, -(N / 2 / num_chunk) * c);
 
             for (int i = 2; i <= (c == num_chunk - 1) ? (N / num_chunk) - 2
                                                       : (N / num_chunk);
@@ -457,14 +524,14 @@ template <int N> class DirectSort : public SortBase<N> {
                 inverted_comparisons = m_cc->EvalAdd(
                     inverted_comparisons,
                     m_cc->MakeCKKSPackedPlaintext(
-                        generateMaskVectorSetUnset2_generalized1(N, max_batch), 1, 0,
-                        nullptr, max_batch));
+                        generateMaskVectorSetUnset2_generalized1(N, max_batch),
+                        1, 0, nullptr, max_batch));
             } else {
                 inverted_comparisons = m_cc->EvalAdd(
                     inverted_comparisons,
                     m_cc->MakeCKKSPackedPlaintext(
-                        generateMaskVectorSetUnset2_generalized2(N, max_batch), 1, 0,
-                        nullptr, max_batch));
+                        generateMaskVectorSetUnset2_generalized2(N, max_batch),
+                        1, 0, nullptr, max_batch));
             }
 
             inverted_comparisons = m_cc->EvalSub(1, inverted_comparisons);
@@ -490,17 +557,18 @@ template <int N> class DirectSort : public SortBase<N> {
     Ciphertext<DCRTPoly>
     rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
+
         static const auto &sincCoefficients = selectCoefficients<N>();
         auto output_array = this->getZero()->Clone();
-        output_array->SetSlots(2 * N * N);
-        ctx_Rank->SetSlots(2 * N * N);
+        // output_array->SetSlots(2 * N * N);
+
+        Plaintext index_vector = m_cc->MakeCKKSPackedPlaintext(
+            generatedIndexVector(N), 1, ctx_Rank->GetLevel(), nullptr, N);
+
+        auto index_minus_rank = m_cc->EvalSub(index_vector, ctx_Rank);
+
+        index_minus_rank->SetSlots(2 * N * N);
         input_array->SetSlots(2 * N * N);
-
-        Plaintext duplicated_index = m_cc->MakeCKKSPackedPlaintext(
-            generateRepeatedIndex(N), 1, ctx_Rank->GetLevel(), nullptr,
-            2 * N * N);
-
-        auto index_minus_rank = m_cc->EvalSub(duplicated_index, ctx_Rank);
 
         Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
             generateCheckingVector(N), 1, ctx_Rank->GetLevel(), nullptr,
@@ -554,69 +622,79 @@ template <int N> class DirectSort : public SortBase<N> {
 
     Ciphertext<DCRTPoly>
     rotationIndexCheckGeneral(const Ciphertext<DCRTPoly> &ctx_Rank,
-                       const Ciphertext<DCRTPoly> &input_array) {
+                              const Ciphertext<DCRTPoly> &input_array) {
 
         static const auto &sincCoefficients = selectCoefficients<N>();
         auto output_array = this->getZero()->Clone();
 
         auto max_batch = m_cc->GetRingDimension() / 2;
-        auto num_chunk = (2 * N * N) / max_batch; // the number of vectorizations
+        auto num_chunk =
+            (2 * N * N) / max_batch; // the number of vectorizations
 
-        output_array->SetSlots(2 * N * N);
-        ctx_Rank->SetSlots(2 * N * N);
-        input_array->SetSlots(2 * N * N);
+        // output_array->SetSlots(max_batch);
 
-        Plaintext duplicated_index = m_cc->MakeCKKSPackedPlaintext(
-            generateRepeatedIndex(N), 1, ctx_Rank->GetLevel(), nullptr,
-            2 * N * N);
+        Plaintext index_vector = m_cc->MakeCKKSPackedPlaintext(
+            generatedIndexVector(N), 1, ctx_Rank->GetLevel(), nullptr, N);
+        auto index_minus_rank = m_cc->EvalSub(index_vector, ctx_Rank);
 
-        auto index_minus_rank = m_cc->EvalSub(duplicated_index, ctx_Rank);
+        index_minus_rank->SetSlots(max_batch);
+        input_array->SetSlots(max_batch);
 
-        Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
-            generateCheckingVector(N), 1, ctx_Rank->GetLevel(), nullptr,
-            2 * N * N);
+        for (int c = 0; c < num_chunk; c++) {
+            Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
+                generateChunkedCheckingVector(max_batch,
+                                              c * (max_batch / N / 2)),
+                1, ctx_Rank->GetLevel(), nullptr, max_batch);
 
-        auto rotIndex = m_cc->EvalSub(index_minus_rank, rot_checking_vector);
+            auto rotIndex =
+                m_cc->EvalSub(index_minus_rank, rot_checking_vector);
+            m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
 
-        m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
+            rotIndex =
+                m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
 
-        rotIndex =
-            m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
+            auto masked_input = m_cc->EvalMult(rotIndex, input_array);
 
-        auto masked_input = m_cc->EvalMult(rotIndex, input_array);
+            // std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
+            // RotationTree<N> rotTree(m_cc, rot.getRotIndices());
+            // rotTree.buildTree(1, N + 1);
+            // for (int i = 4; i < N; i += 4) {
+            //     rotated_results[i] = rotTree.treeRotate(masked_input, i);
+            // }
 
-        std::vector<Ciphertext<DCRTPoly>> rotated_results(N);
-        RotationTree<N> rotTree(m_cc, rot.getRotIndices());
-        rotTree.buildTree(1, N + 1);
-        for (int i = 4; i < N; i += 4) {
-            rotated_results[i] = rotTree.treeRotate(masked_input, i);
-        }
 #pragma omp parallel for
-        for (int i = 0; i < N; i++) {
-            if (i == 0) {
-                Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
-                    generateMaskVector3(N, i), 1, masked_input->GetLevel(),
-                    nullptr, 2 * N * N);
-                auto rotated = m_cc->EvalMult(masked_input, msk);
+            for (int i = c * (max_batch / N / 2);
+                 i < (c + 1) * (max_batch / N / 2); i++) {
+                if (i == 0) {
+                    Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
+                        generateMaskVector3_flexible(N, max_batch, i), 1,
+                        masked_input->GetLevel(), nullptr, max_batch);
+                    auto rotated = m_cc->EvalMult(masked_input, msk);
 #pragma omp critical
-                { m_cc->EvalAddInPlace(output_array, rotated); }
-            } else {
-                auto rotated = i % 4 == 0 ? rotated_results[i]
-                                          : rotTree.treeRotate(masked_input, i);
-                auto vec = generateMaskVector4(N, i);
-                std::rotate(vec.begin(), vec.begin() + i, vec.end());
-                Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
-                    vec, 1, masked_input->GetLevel(), nullptr, 2 * N * N);
-                rotated = m_cc->EvalMult(rotated, msk);
+                    { m_cc->EvalAddInPlace(output_array, rotated); }
+                } else {
+                    // auto rotated = i % 4 == 0 ? rotated_results[i]
+                    //                         :
+                    //                         rotTree.treeRotate(masked_input,
+                    //                         i);
+                    auto rotated = rot.rotate(masked_input, i);
+
+                    auto vec = generateMaskVector1_2n_flexible(
+                        N, max_batch, i % (max_batch / N / 2));
+                    std::rotate(vec.begin(), vec.begin() + i, vec.end());
+                    Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
+                        vec, 1, masked_input->GetLevel(), nullptr, max_batch);
+                    rotated = m_cc->EvalMult(rotated, msk);
 #pragma omp critical
-                // Add to the output array
-                { m_cc->EvalAddInPlace(output_array, rotated); }
+                    // Add to the output array
+                    { m_cc->EvalAddInPlace(output_array, rotated); }
+                }
             }
         }
 
-        for (int i = 1; i < log2(2 * N) + 1; i++) {
+        for (int i = 1; i < log2(2 * N / num_chunk) + 1; i++) {
             m_cc->EvalAddInPlace(
-                output_array, rot.rotate(output_array, (2 * N * N) / (1 << i)));
+                output_array, rot.rotate(output_array, max_batch / (1 << i)));
         }
         output_array->SetSlots(N);
         return output_array;
@@ -626,7 +704,7 @@ template <int N> class DirectSort : public SortBase<N> {
                               SignFunc SignFunc, SignConfig &Cfg) override {
 
         auto max_batch = m_cc->GetRingDimension() / 2;
-        std::cout << "start: " << " max batch " << max_batch << std::endl;
+
         std::cout << "\n===== Direct Sort Input Array: \n";
         PRINT_PT(m_enc, input_array);
 
@@ -641,13 +719,13 @@ template <int N> class DirectSort : public SortBase<N> {
 
         Ciphertext<DCRTPoly> output_array;
         if (max_batch < 2 * N * N)
-            output_array = rotationIndexCheck(ctx_Rank, input_array);
+            output_array = rotationIndexCheckGeneral(ctx_Rank, input_array);
         else
             output_array = rotationIndexCheck(ctx_Rank, input_array);
 
         std::cout << "\n===== Final Output: \n";
         PRINT_PT(m_enc, output_array);
-        
+
         return output_array;
     }
 };
