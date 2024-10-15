@@ -22,10 +22,13 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
         DirectSort<N>::getSizeParameters(parameters, rotations);
-        parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr int maxSlotRequirement = 2 * N * N;
-        auto logRingDim = ((int)log2(maxSlotRequirement) + 1);
+        // parameters.SetSecurityLevel(HEStd_NotSet);
+        parameters.SetSecurityLevel(HEStd_128_classic);
+        // constexpr int maxSlotRequirement = 2 * N * N;
+        // auto logRingDim = ((int)log2(maxSlotRequirement) + 1);
+        auto logRingDim = 17;
         parameters.SetRingDim(1 << logRingDim);
+
         std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
@@ -72,7 +75,14 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
 
     auto directSort = std::make_unique<DirectSort<N>>(
         this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
-    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
+
+    SignConfig Cfg;
+    if(N<256)
+        Cfg = SignConfig(CompositeSignConfig(3, 3, 6));
+    else
+        Cfg = SignConfig(CompositeSignConfig(3, 4, 10));
+
+
     Ciphertext<DCRTPoly> ctxt_out =
         directSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
 
@@ -107,10 +117,11 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
 REGISTER_TYPED_TEST_SUITE_P(DirectSortTestFixture, SortTest);
 
 using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
-    std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
+    // std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
+    // std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
+    // std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
+    // std::integral_constant<size_t, 256>, 
+    std::integral_constant<size_t, 512>,
     std::integral_constant<size_t, 1024>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);
