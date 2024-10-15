@@ -70,7 +70,7 @@ template <int N> class DirectSort : public SortBase<N> {
     static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
                                   std::vector<int> &rotations) {
         parameters.SetBatchSize(N);
-        parameters.SetScalingModSize(40);
+        parameters.SetScalingModSize(59);
 
         for (int i = 1; i < N / 2; i *= 2) {
             rotations.push_back(-i);
@@ -110,13 +110,16 @@ template <int N> class DirectSort : public SortBase<N> {
             break;
             // TODO correct depths for large sizes
         case 256:
-            multDepth = 44;
+            // multDepth = 44;
+            multDepth = 60;
             break;
         case 512:
-            multDepth = 44;
+            multDepth = 60;
+            // multDepth = 44;
             break;
         case 1024:
-            multDepth = 44;
+            multDepth = 60;
+            // multDepth = 44;
             break;
         }
         // Disabled normalization at constructRank
@@ -143,6 +146,8 @@ template <int N> class DirectSort : public SortBase<N> {
         std::vector<double> result(max_batch, 0.0);
 
         for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
+            if(i>=max_batch)
+                std::cout << "error  k: " << k << std::endl;
             result[i] = 1.0;
         }
 
@@ -204,6 +209,7 @@ template <int N> class DirectSort : public SortBase<N> {
             result.insert(result.end(), array_size, 0.0);
         }
 
+        assert(result.size() == max_batch);
         return result;
     }
 
@@ -219,6 +225,8 @@ template <int N> class DirectSort : public SortBase<N> {
         result.erase(result.end() - array_size, result.end());
         result.insert(result.end(), array_size, 1.0);
 
+
+        assert(result.size() == max_batch);
         return result;
     }
 
@@ -444,7 +452,6 @@ template <int N> class DirectSort : public SortBase<N> {
     constructRankGeneral(const Ciphertext<DCRTPoly> &input_array,
                          SignFunc SignFunc, SignConfig &Cfg) {
 
-        auto shifted_input_array = this->getZero()->Clone();
         // If the input is already normalized, else we should normalize by
         // max-min
         const auto inputOver255 = input_array;
@@ -463,11 +470,12 @@ template <int N> class DirectSort : public SortBase<N> {
         auto num_chunk = (N * N) / max_batch; // the number of vectorizations
 
         auto rank_result = this->getZero()->Clone();
+        rank_result->SetSlots(max_batch);
 
         for (int c = 0; c < num_chunk; c++) {
-            int start = 1 + (N / 2 / num_chunk) *
-                                c; //  (N / 2 / num_chunk) : the number of
-                                   //  covered indices in each chunk
+            auto shifted_input_array = this->getZero()->Clone();
+        //  (N / 2 / num_chunk) : the number of covered indices in each chunk
+            int start = 1 + (N / 2 / num_chunk) * c; 
             int end = (N / 2 / num_chunk) * (c + 1);
 
 #pragma omp parallel for
@@ -503,23 +511,22 @@ template <int N> class DirectSort : public SortBase<N> {
             Ciphertext<DCRTPoly> rotated = comp_result->Clone();
 
             rotated = rot.rotate(rotated, -(N / 2 / num_chunk) * c);
-
-            for (int i = 2; i <= (c == num_chunk - 1) ? (N / num_chunk) - 2
-                                                      : (N / num_chunk);
-                 i += 2) {
+            int loop_end = (c == num_chunk - 1) ? (N / num_chunk) - 2 : (N / num_chunk);
+            std::cout << "loop end: " <<  loop_end << std::endl;
+            for (int i = 2; i <= loop_end; i += 2) {
                 // auto rotated = rotated_results[i];
                 rotated = m_cc->EvalRotate(rotated, -1);
-
                 auto masked = m_cc->EvalMult(
-                    rotated,
+                    rotated, 
                     m_cc->MakeCKKSPackedPlaintext(
                         generateMaskVector1_flexible(N, max_batch, i - 1), 1, 0,
                         nullptr, max_batch));
 
-                // #pragma omp critical
+                // A critical section is required if tree rotation is conducted in parallel.
                 { m_cc->EvalAddInPlace(inverted_comparisons, masked); }
             }
 
+            std::cout << "point 7" << std::endl;
             if (c != num_chunk - 1) {
                 inverted_comparisons = m_cc->EvalAdd(
                     inverted_comparisons,
@@ -534,23 +541,26 @@ template <int N> class DirectSort : public SortBase<N> {
                         1, 0, nullptr, max_batch));
             }
 
+            std::cout << "point 8" << std::endl;
             inverted_comparisons = m_cc->EvalSub(1, inverted_comparisons);
 
-#pragma omp critical
-            {
-                m_cc->EvalAddInPlace(
-                    rank_result,
-                    m_cc->EvalAdd(half_comparisons, inverted_comparisons));
-            }
+            // A critical section is required if the chunk loop is conducted in parallel.
+            m_cc->EvalAddInPlace(
+                rank_result,
+                m_cc->EvalAdd(half_comparisons, inverted_comparisons));    
         }
 
+
+        std::cout << "point 9" << std::endl;
         // This cannot be parallelized
         for (int i = 1; i < log2(N / num_chunk) + 1; i++) {
             m_cc->EvalAddInPlace(rank_result,
                                  rot.rotate(rank_result, max_batch / (1 << i)));
         }
         rank_result->SetSlots(N);
+        std::cout << "point 10" << std::endl;
 
+        std::cout << "result level: " << rank_result->GetLevel() << std::endl;
         return rank_result;
     }
 
@@ -710,7 +720,10 @@ template <int N> class DirectSort : public SortBase<N> {
 
         Ciphertext<DCRTPoly> ctx_Rank;
         if (max_batch < N * N) // vectorization unavailable
+        {
+            std::cout << "general rank construction" << std::endl;
             ctx_Rank = constructRankGeneral(input_array, SignFunc, Cfg);
+        }
         else
             ctx_Rank = constructRank(input_array, SignFunc, Cfg);
 
@@ -718,14 +731,17 @@ template <int N> class DirectSort : public SortBase<N> {
         PRINT_PT(m_enc, ctx_Rank);
 
         Ciphertext<DCRTPoly> output_array;
-        if (max_batch < 2 * N * N)
+        if (max_batch < 2 * N * N){
+            std::cout << "general rotation index checking" << std::endl;
             output_array = rotationIndexCheckGeneral(ctx_Rank, input_array);
+        }
         else
             output_array = rotationIndexCheck(ctx_Rank, input_array);
 
         std::cout << "\n===== Final Output: \n";
         PRINT_PT(m_enc, output_array);
 
+        std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
         return output_array;
     }
 };
