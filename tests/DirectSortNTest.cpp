@@ -177,11 +177,12 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
         this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
 
     SignConfig Cfg;
-    if(N<256)
-        Cfg = SignConfig(CompositeSignConfig(3, 3, 6));
+    if (N < 128)
+        Cfg = SignConfig(CompositeSignConfig(3, 6, 3));
+    else if(N == 128)
+        Cfg = SignConfig(CompositeSignConfig(3, 8, 3));
     else
-        Cfg = SignConfig(CompositeSignConfig(3, 4, 10));
-
+        Cfg = SignConfig(CompositeSignConfig(3, 8, 4));
 
     Ciphertext<DCRTPoly> ctxt_out =
         directSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
@@ -221,8 +222,7 @@ using TestSizes = ::testing::Types<
     // std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
     // std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
     // std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
-    // std::integral_constant<size_t, 256>, 
-    std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>>;
+    // std::integral_constant<size_t, 256>,
+    std::integral_constant<size_t, 512>, std::integral_constant<size_t, 1024>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);

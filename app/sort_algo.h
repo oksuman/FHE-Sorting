@@ -106,19 +106,19 @@ template <int N> class DirectSort : public SortBase<N> {
             multDepth = 43;
             break;
         case 128:
-            multDepth = 44;
+            multDepth = 50;
             break;
             // TODO correct depths for large sizes
         case 256:
             // multDepth = 44;
-            multDepth = 60;
+            multDepth = 54;
             break;
         case 512:
-            multDepth = 60;
+            multDepth = 54;
             // multDepth = 44;
             break;
         case 1024:
-            multDepth = 60;
+            multDepth = 54;
             // multDepth = 44;
             break;
         }
@@ -146,8 +146,6 @@ template <int N> class DirectSort : public SortBase<N> {
         std::vector<double> result(max_batch, 0.0);
 
         for (int i = k * array_size; i < (k + 1) * array_size; ++i) {
-            if(i>=max_batch)
-                std::cout << "error  k: " << k << std::endl;
             result[i] = 1.0;
         }
 
@@ -224,7 +222,6 @@ template <int N> class DirectSort : public SortBase<N> {
 
         result.erase(result.end() - array_size, result.end());
         result.insert(result.end(), array_size, 1.0);
-
 
         assert(result.size() == max_batch);
         return result;
@@ -455,6 +452,71 @@ template <int N> class DirectSort : public SortBase<N> {
         // If the input is already normalized, else we should normalize by
         // max-min
         const auto inputOver255 = input_array;
+
+        auto max_batch = m_cc->GetRingDimension() / 2;
+        auto num_chunk = (N * N) / max_batch; // the number of vectorizations
+
+        auto rank_result = this->getZero()->Clone();
+        rank_result->SetSlots(max_batch);
+
+        for (int c = 0; c < num_chunk; c++) {
+            auto shifted_input_array = this->getZero()->Clone();
+
+            int start = 1 + (N / num_chunk) * c;
+            int end = (N / num_chunk) * (c + 1);
+
+#pragma omp parallel for
+            for (int i = start; i <= end; i++) {
+
+                if (i == N) {
+                    auto padding = m_cc->MakeCKKSPackedPlaintext(
+                        generateMaskVector1_flexible(N, max_batch,  (i - 1) % (N / num_chunk)), 1, 0,
+                        nullptr, max_batch);
+#pragma omp critical
+                    { m_cc->EvalAddInPlace(shifted_input_array, padding); }
+                } else {
+                    auto rotated = rot.rotate(inputOver255, i);
+                    rotated->SetSlots(max_batch);
+
+                    rotated = m_cc->EvalMult(
+                        rotated,
+                        m_cc->MakeCKKSPackedPlaintext(
+                            generateMaskVector1_flexible(
+                                N, max_batch, (i - 1) % (N / num_chunk)),
+                            1, 0, nullptr, max_batch));
+#pragma omp critical
+                    { m_cc->EvalAddInPlace(shifted_input_array, rotated); }
+                }
+            }
+
+            auto duplicated_input_array = inputOver255->Clone();
+            duplicated_input_array->SetSlots(max_batch);
+
+            auto comp_result =
+                comp.compare(m_cc, duplicated_input_array,
+                                shifted_input_array, SignFunc, Cfg);
+
+            // A critical section is required if the chunk loop is conducted
+            // in parallel.
+            m_cc->EvalAddInPlace(rank_result, comp_result);
+        }
+
+        // This cannot be parallelized
+        for (int i = 1; i < log2(N / num_chunk) + 1; i++) {
+            m_cc->EvalAddInPlace(rank_result,
+                                 rot.rotate(rank_result, max_batch / (1 << i)));
+        }
+        rank_result->SetSlots(N);
+        return rank_result;
+    }
+
+    Ciphertext<DCRTPoly>
+    constructRankGeneralOpt(const Ciphertext<DCRTPoly> &input_array,
+                            SignFunc SignFunc, SignConfig &Cfg) {
+
+        // If the input is already normalized, else we should normalize by
+        // max-min
+        const auto inputOver255 = input_array;
         // m_cc->EvalMult(input_array, (double)1.0 / 255);
 
         // The repeated rotation is optimized with treeRotate structure by
@@ -474,8 +536,9 @@ template <int N> class DirectSort : public SortBase<N> {
 
         for (int c = 0; c < num_chunk; c++) {
             auto shifted_input_array = this->getZero()->Clone();
-        //  (N / 2 / num_chunk) : the number of covered indices in each chunk
-            int start = 1 + (N / 2 / num_chunk) * c; 
+            //  (N / 2 / num_chunk) : the number of covered indices in each
+            //  chunk
+            int start = 1 + (N / 2 / num_chunk) * c;
             int end = (N / 2 / num_chunk) * (c + 1);
 
 #pragma omp parallel for
@@ -511,22 +574,22 @@ template <int N> class DirectSort : public SortBase<N> {
             Ciphertext<DCRTPoly> rotated = comp_result->Clone();
 
             rotated = rot.rotate(rotated, -(N / 2 / num_chunk) * c);
-            int loop_end = (c == num_chunk - 1) ? (N / num_chunk) - 2 : (N / num_chunk);
-            std::cout << "loop end: " <<  loop_end << std::endl;
+            int loop_end =
+                (c == num_chunk - 1) ? (N / num_chunk) - 2 : (N / num_chunk);
             for (int i = 2; i <= loop_end; i += 2) {
                 // auto rotated = rotated_results[i];
                 rotated = m_cc->EvalRotate(rotated, -1);
                 auto masked = m_cc->EvalMult(
-                    rotated, 
+                    rotated,
                     m_cc->MakeCKKSPackedPlaintext(
                         generateMaskVector1_flexible(N, max_batch, i - 1), 1, 0,
                         nullptr, max_batch));
 
-                // A critical section is required if tree rotation is conducted in parallel.
+                // A critical section is required if tree rotation is conducted
+                // in parallel.
                 { m_cc->EvalAddInPlace(inverted_comparisons, masked); }
             }
 
-            std::cout << "point 7" << std::endl;
             if (c != num_chunk - 1) {
                 inverted_comparisons = m_cc->EvalAdd(
                     inverted_comparisons,
@@ -541,26 +604,21 @@ template <int N> class DirectSort : public SortBase<N> {
                         1, 0, nullptr, max_batch));
             }
 
-            std::cout << "point 8" << std::endl;
             inverted_comparisons = m_cc->EvalSub(1, inverted_comparisons);
 
-            // A critical section is required if the chunk loop is conducted in parallel.
+            // A critical section is required if the chunk loop is conducted in
+            // parallel.
             m_cc->EvalAddInPlace(
                 rank_result,
-                m_cc->EvalAdd(half_comparisons, inverted_comparisons));    
+                m_cc->EvalAdd(half_comparisons, inverted_comparisons));
         }
 
-
-        std::cout << "point 9" << std::endl;
         // This cannot be parallelized
         for (int i = 1; i < log2(N / num_chunk) + 1; i++) {
             m_cc->EvalAddInPlace(rank_result,
                                  rot.rotate(rank_result, max_batch / (1 << i)));
         }
         rank_result->SetSlots(N);
-        std::cout << "point 10" << std::endl;
-
-        std::cout << "result level: " << rank_result->GetLevel() << std::endl;
         return rank_result;
     }
 
@@ -723,19 +781,17 @@ template <int N> class DirectSort : public SortBase<N> {
         {
             std::cout << "general rank construction" << std::endl;
             ctx_Rank = constructRankGeneral(input_array, SignFunc, Cfg);
-        }
-        else
+        } else
             ctx_Rank = constructRank(input_array, SignFunc, Cfg);
 
         std::cout << "\n===== Constructed Rank: \n";
         PRINT_PT(m_enc, ctx_Rank);
 
         Ciphertext<DCRTPoly> output_array;
-        if (max_batch < 2 * N * N){
+        if (max_batch < 2 * N * N) {
             std::cout << "general rotation index checking" << std::endl;
             output_array = rotationIndexCheckGeneral(ctx_Rank, input_array);
-        }
-        else
+        } else
             output_array = rotationIndexCheck(ctx_Rank, input_array);
 
         std::cout << "\n===== Final Output: \n";
