@@ -179,7 +179,7 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     SignConfig Cfg;
     if (N < 128)
         Cfg = SignConfig(CompositeSignConfig(3, 6, 3));
-    else if(N == 128)
+    else if (N == 128)
         Cfg = SignConfig(CompositeSignConfig(3, 8, 3));
     else
         Cfg = SignConfig(CompositeSignConfig(3, 8, 4));
