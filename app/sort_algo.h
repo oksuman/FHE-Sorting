@@ -470,8 +470,9 @@ template <int N> class DirectSort : public SortBase<N> {
 
                 if (i == N) {
                     auto padding = m_cc->MakeCKKSPackedPlaintext(
-                        generateMaskVector1_flexible(N, max_batch,  (i - 1) % (N / num_chunk)), 1, 0,
-                        nullptr, max_batch);
+                        generateMaskVector1_flexible(N, max_batch,
+                                                     (i - 1) % (N / num_chunk)),
+                        1, 0, nullptr, max_batch);
 #pragma omp critical
                     { m_cc->EvalAddInPlace(shifted_input_array, padding); }
                 } else {
@@ -492,9 +493,8 @@ template <int N> class DirectSort : public SortBase<N> {
             auto duplicated_input_array = inputOver255->Clone();
             duplicated_input_array->SetSlots(max_batch);
 
-            auto comp_result =
-                comp.compare(m_cc, duplicated_input_array,
-                                shifted_input_array, SignFunc, Cfg);
+            auto comp_result = comp.compare(m_cc, duplicated_input_array,
+                                            shifted_input_array, SignFunc, Cfg);
 
             // A critical section is required if the chunk loop is conducted
             // in parallel.
