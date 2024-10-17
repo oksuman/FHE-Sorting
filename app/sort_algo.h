@@ -111,14 +111,14 @@ template <int N> class DirectSort : public SortBase<N> {
             // TODO correct depths for large sizes
         case 256:
             // multDepth = 44;
-            multDepth = 54;
+            multDepth = 56;
             break;
         case 512:
-            multDepth = 54;
+            multDepth = 56;
             // multDepth = 44;
             break;
         case 1024:
-            multDepth = 54;
+            multDepth = 56;
             // multDepth = 44;
             break;
         }
