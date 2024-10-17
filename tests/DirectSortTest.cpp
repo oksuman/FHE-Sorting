@@ -4,7 +4,7 @@
 
 #include "encryption.h"
 #include "sign.h"
-#include "sort_algo.h"
+    #include "sort_algo.h"
 #include "utils.h"
 
 using namespace lbcrypto;
