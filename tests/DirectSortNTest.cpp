@@ -36,15 +36,22 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
         m_cc->Enable(ADVANCEDSHE);
+        m_cc->Enable(FHE);
 
         auto keyPair = m_cc->KeyGen();
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
+
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
         m_cc->EvalMultKeyGen(m_privateKey);
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
         m_multDepth = parameters.GetMultiplicativeDepth();
+        
+        std::vector<uint32_t> levelBudget = {5, 5};
+        std::vector<uint32_t> bsgsDim = {0, 0};
+        m_cc->EvalBootstrapSetup(levelBudget, bsgsDim, N);
+        m_cc->EvalBootstrapKeyGen(keyPair.secretKey, N);
     }
 
     std::vector<int> rotations;
@@ -182,7 +189,7 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     else if (N == 128)
         Cfg = SignConfig(CompositeSignConfig(3, 8, 3));
     else
-        Cfg = SignConfig(CompositeSignConfig(3, 8, 4));
+        Cfg = SignConfig(CompositeSignConfig(3, 9, 4));
 
     Ciphertext<DCRTPoly> ctxt_out =
         directSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
@@ -222,7 +229,7 @@ using TestSizes = ::testing::Types<
     // std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
     // std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
     // std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>,
-    std::integral_constant<size_t, 512>, std::integral_constant<size_t, 1024>>;
+    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);
