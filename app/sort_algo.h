@@ -70,6 +70,7 @@ template <int N> class DirectSort : public SortBase<N> {
     static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
                                   std::vector<int> &rotations) {
         parameters.SetBatchSize(N);
+        parameters.SetFirstModSize(60);
         parameters.SetScalingModSize(59);
 
         for (int i = 1; i < N / 2; i *= 2) {
@@ -79,8 +80,14 @@ template <int N> class DirectSort : public SortBase<N> {
         rotations.push_back(N / 2);
 
         // Pattern for output_array rotations
-        for (int i = 1; i < log2(2 * N) + 1; i++) {
-            rotations.push_back((2 * N * N) / (1 << i));
+        if(2 * N * N > 1<<16){
+            for (int i = 1; i < log2((1<<16) / N) + 1; i++) {
+                rotations.push_back((1<<16) / (1 << i));
+            }
+        }else{
+            for (int i = 1; i < log2(2 * N) + 1; i++) {
+                rotations.push_back((2 * N * N) / (1 << i));
+            }
         }
 
         std::cout << "Rotation indices: "
@@ -111,19 +118,19 @@ template <int N> class DirectSort : public SortBase<N> {
             // TODO correct depths for large sizes
         case 256:
             // multDepth = 44;
-            multDepth = 56;
+            multDepth = 44; // 56
             break;
         case 512:
-            multDepth = 56;
+            multDepth = 44; 
             // multDepth = 44;
             break;
         case 1024:
-            multDepth = 56;
+            multDepth = 44;
             // multDepth = 44;
             break;
         }
         // Disabled normalization at constructRank
-        multDepth--;
+        // multDepth--;
         parameters.SetScalingModSize(modSize);
         parameters.SetMultiplicativeDepth(multDepth);
     }
@@ -785,6 +792,13 @@ template <int N> class DirectSort : public SortBase<N> {
             ctx_Rank = constructRank(input_array, SignFunc, Cfg);
 
         std::cout << "\n===== Constructed Rank: \n";
+        PRINT_PT(m_enc, ctx_Rank);
+
+        m_cc->EvalMultInPlace(ctx_Rank, 1.0/N);
+        ctx_Rank = m_cc->EvalBootstrap(ctx_Rank);
+        m_cc->EvalMultInPlace(ctx_Rank, N);
+        
+        std::cout << "\n===== Bootstrapping Complete: \n";
         PRINT_PT(m_enc, ctx_Rank);
 
         Ciphertext<DCRTPoly> output_array;
