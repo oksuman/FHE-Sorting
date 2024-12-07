@@ -17,10 +17,10 @@ class SignFunctionCharacterizer {
     std::shared_ptr<DebugEncryption> enc;
 
     double precisionThreshold;
-    int maxTestValues;
+    size_t maxTestValues;
 
   public:
-    SignFunctionCharacterizer(double threshold = 0.01, int maxValues = 100)
+    SignFunctionCharacterizer(double threshold = 0.01, size_t maxValues = 100)
         : precisionThreshold(threshold), maxTestValues(maxValues) {
         // Initialize crypto context
         CCParams<CryptoContextCKKSRNS> parameters;
