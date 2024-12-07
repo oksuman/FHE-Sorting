@@ -5,10 +5,14 @@
 // Complexity" https://eprint.iacr.org/2019/1234
 
 template <int n>
-Ciphertext<DCRTPoly> g_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {}
+Ciphertext<DCRTPoly> g_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {
+    return Ciphertext<DCRTPoly>();
+}
 
 template <int n>
-Ciphertext<DCRTPoly> f_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {}
+Ciphertext<DCRTPoly> f_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {
+    return Ciphertext<DCRTPoly>();
+}
 
 template <>
 Ciphertext<DCRTPoly> g_n<4>(Ciphertext<DCRTPoly> x,

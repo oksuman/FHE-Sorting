@@ -26,17 +26,16 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
         parameters.SetSecurityLevel(HEStd_128_classic);
         // constexpr int maxSlotRequirement = 2 * N * N;
         // auto logRingDim = ((int)log2(maxSlotRequirement) + 1);
-        auto logRingDim = 17;
-        parameters.SetRingDim(1 << logRingDim);
+        // auto logRingDim = 17;
+        // parameters.SetRingDim(1 << logRingDim);
 
-        std::cout << "Ring Dimension 2^" << logRingDim << "\n";
+        // std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
         m_cc->Enable(ADVANCEDSHE);
-        m_cc->Enable(FHE);
 
         auto keyPair = m_cc->KeyGen();
         m_publicKey = keyPair.publicKey;
@@ -47,11 +46,6 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
         m_cc->EvalMultKeyGen(m_privateKey);
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
         m_multDepth = parameters.GetMultiplicativeDepth();
-        
-        std::vector<uint32_t> levelBudget = {5, 5};
-        std::vector<uint32_t> bsgsDim = {0, 0};
-        m_cc->EvalBootstrapSetup(levelBudget, bsgsDim, N);
-        m_cc->EvalBootstrapKeyGen(keyPair.secretKey, N);
     }
 
     std::vector<int> rotations;

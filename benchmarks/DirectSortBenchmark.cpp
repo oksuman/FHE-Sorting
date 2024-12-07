@@ -79,7 +79,7 @@ template <int N> static void BM_ConstructRank(benchmark::State &state) {
 
     for (auto _ : state) {
         auto rank =
-            directSort->constructRank(ctxt, SignFunc::CompositeSign, Cfg);
+            directSort->constructRankGeneral(ctxt, SignFunc::CompositeSign, Cfg);
         benchmark::DoNotOptimize(rank);
         benchmark::ClobberMemory();
     }
