@@ -40,7 +40,6 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
         m_cc->EvalMultKeyGen(m_privateKey);
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
@@ -71,7 +70,7 @@ TYPED_TEST_P(DirectSortTestFixture, ConstructRank) {
     // Encrypt the input array
     auto ctxt = this->m_enc->encryptInput(inputArray);
     auto directSort = std::make_unique<DirectSort<N>>(
-        this->m_cc, this->m_publicKey, this->m_privateKey, this->rotations, this->m_enc);
+        this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
 
     SignConfig Cfg;
     Cfg = SignConfig(CompositeSignConfig(3, 3, 6));
@@ -130,7 +129,8 @@ TYPED_TEST_P(DirectSortTestFixture, ConstructRank) {
 //         this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
 
 //     // Call rotationIndexCheck
-//     auto ctxtResult = directSort->rotationIndexCheckGeneral(ctxRank, ctxtInput);
+//     auto ctxtResult = directSort->rotationIndexCheckGeneral(ctxRank,
+//     ctxtInput);
 
 //     // Decrypt the result
 //     Plaintext result;
@@ -160,8 +160,8 @@ TYPED_TEST_P(DirectSortTestFixture, ConstructRank) {
 
 // TYPED_TEST_P(DirectSortTestFixture, SortTest) {
 //     constexpr size_t N = TypeParam::value;
-//     // std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 255, 0.01);
-//     std::vector<double> inputArray(N);
+//     // std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 255,
+//     0.01); std::vector<double> inputArray(N);
 //     std::generate(inputArray.begin(), inputArray.end(), []() {
 //         return static_cast<long double>(std::rand()) / RAND_MAX;
 //     });
@@ -217,7 +217,7 @@ TYPED_TEST_P(DirectSortTestFixture, ConstructRank) {
 //                             RotationIndexCheck);
 
 REGISTER_TYPED_TEST_SUITE_P(DirectSortTestFixture, ConstructRank);
-                        
+
 using TestSizes = ::testing::Types<
     std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
     std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
