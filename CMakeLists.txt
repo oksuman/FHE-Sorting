@@ -1,6 +1,14 @@
 cmake_minimum_required(VERSION 3.5.1)
 
 project(fherma_array_sorting_dev CXX)
+
+set(BENCHMARK_ENABLE_GTEST OFF)
+set(BENCHMARK_ENABLE_TESTING OFF)
+
+enable_testing()
+add_subdirectory(third_party/googletest)
+include(GoogleTest)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 option(BUILD_STATIC "Set to ON to include static versions of the library" OFF)
