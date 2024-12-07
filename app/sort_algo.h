@@ -56,15 +56,17 @@ template <int N> class DirectSort : public SortBase<N> {
   private:
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
+    PrivateKey<DCRTPoly> m_PrivateKey;
     Comparison comp;
     RotationComposer<N> rot;
+
 
     // Belows are needed to handle arrays of arbitrary sizes
     int max_batch; // Maximum number of slots which can be utilized  (=
                    // ringDim/2)
     int s; // The number of arrays to be packed into a single ciphertext (=
            // min(N, max_batch / N))
-    int B; // The number of required batches (= max_batch / s)
+    int B; // The number of required batches (= N / s)
     int num_slots; // The number of slots to be utilized (= N * s)
 
     int np; // The number of precompted rotations, which is used in rank
@@ -73,15 +75,18 @@ template <int N> class DirectSort : public SortBase<N> {
   public:
     std::shared_ptr<Encryption> m_enc;
 
-    DirectSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
+    DirectSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey, PrivateKey<DCRTPoly> privateKey,
                std::vector<int> rotIndices, std::shared_ptr<Encryption> enc)
-        : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), comp(enc),
+        : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), m_PrivateKey(privateKey), comp(enc),
           rot(m_cc, enc, rotIndices), m_enc(enc) {
         // Initializations are currently hard coded
         this->max_batch = m_cc->GetRingDimension() / 2;
         this->s = std::min(N, max_batch / N);
-        this->B = max_batch / s;
+        std::cout << "s: " << s << std::endl;
+        this->B = N / s;
+        std::cout << "B: " << B << std::endl;
         this->num_slots = N * s;
+        std::cout << "num slots: " << num_slots << std::endl;
         switch (N) {
         case 4:
             this->np = 2;
@@ -118,8 +123,6 @@ template <int N> class DirectSort : public SortBase<N> {
     static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
                                   std::vector<int> &rotations) {
         parameters.SetBatchSize(N);
-        parameters.SetFirstModSize(60);
-        parameters.SetScalingModSize(59);
 
         for (int i = 1; i < N / 2; i *= 2) {
             rotations.push_back(-i);
@@ -142,36 +145,36 @@ template <int N> class DirectSort : public SortBase<N> {
                   << "\n";
         std::cout << rotations << "\n";
         int multDepth;
-        int modSize = 59;
+        int modSize = 50;
 
         switch (N) {
         case 4:
-            multDepth = 56;
+            multDepth = 40;
             break;
         case 8:
-            multDepth = 56;
+            multDepth = 40;
             break;
         case 16:
-            multDepth = 56;
+            multDepth = 40;
             break;
         case 32:
-            multDepth = 56;
+            multDepth = 40;
             break;
         case 64:
-            multDepth = 56;
+            multDepth = 40;
             break;
         case 128:
-            multDepth = 56;
+            multDepth = 40;
             break;
             // TODO correct depths for large sizes
         case 256:
-            multDepth = 56; // 56
+            multDepth = 40; // 56
             break;
         case 512:
-            multDepth = 56;
+            multDepth = 40;
             break;
         case 1024:
-            multDepth = 56;
+            multDepth = 40;
             break;
         }
         // Disabled normalization at constructRank
@@ -511,7 +514,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
             rotated->SetSlots(num_slots);
             m_cc->EvalAddInPlace(
-                rotsM, m_cc->EvalMult(input_array,
+                rotsM, m_cc->EvalMult(rotated,
                                       m_cc->MakeCKKSPackedPlaintext(
                                           generateMaskVector(num_slots, j), 1,
                                           0, nullptr, num_slots)));
@@ -523,19 +526,33 @@ template <int N> class DirectSort : public SortBase<N> {
     vecRotsOpt(const std::vector<Ciphertext<DCRTPoly>> &preRotatedArrays,
                int is) {
         auto result = this->getZero()->Clone();
+        Plaintext ptx;
         for (int j = 0; j < s / np; j++) {
 
             auto T = this->getZero()->Clone();
+            T->SetSlots(num_slots);
             for (int i = 0; i < np; i++) {
+
                 auto msk = generateMaskVector(num_slots, np * j + i);
+
                 msk = vectorRotate(msk, -is * s - j * np);
+     
 
                 auto pmsk = m_cc->MakeCKKSPackedPlaintext(msk, 1, 0, nullptr,
                                                           num_slots);
+
+   
+                auto msked = m_cc->EvalMult(preRotatedArrays[i], pmsk);
+
+
                 m_cc->EvalAddInPlace(T,
                                      m_cc->EvalMult(preRotatedArrays[i], pmsk));
+
             }
-            m_cc->EvalAddInPlace(result, rot.rotate(T, is * s + j * np));
+            auto TT = rot.rotate(T, is * s + j * np);
+
+            m_cc->EvalAddInPlace(result, TT);
+
         }
 
         return result;
@@ -548,7 +565,7 @@ template <int N> class DirectSort : public SortBase<N> {
         // If the input is already normalized, else we should normalize by
         // max-min
         const auto inputOver255 = input_array;
-
+        std::cout << "construct rank start" << std::endl;
         // precomputation for VecRotsOpt
         std::vector<Ciphertext<DCRTPoly>> babyStpesofB(np);
 #pragma omp for
@@ -558,18 +575,21 @@ template <int N> class DirectSort : public SortBase<N> {
             t->SetSlots(num_slots);
             babyStpesofB[i] = t;
         }
-
+        Plaintext ptx;
         auto rank_result = this->getZero()->Clone();
         rank_result->SetSlots(num_slots);
+
 
         // Note : B is the number of vectorizations
         for (int i = 0; i < B; i++) {
             // Generate shifted input array
+            // auto shifted_input_array = vecRots(input_array, i);
             auto shifted_input_array = vecRotsOpt(babyStpesofB, i);
-
+ 
             // Generate duplicated input array
             auto duplicated_input_array = inputOver255->Clone();
             duplicated_input_array->SetSlots(num_slots);
+ 
 
             // comp(duplicated, shifted)
             auto comp_result = comp.compare(m_cc, duplicated_input_array,
@@ -579,11 +599,14 @@ template <int N> class DirectSort : public SortBase<N> {
         }
 
         // This cannot be parallelized
-        for (int i = 1; i < log2(N / B) + 1; i++) {
+        for (int i = 1; i < log2(s) + 1; i++) {
             m_cc->EvalAddInPlace(rank_result,
-                                 rot.rotate(rank_result, max_batch / (1 << i)));
+                                 rot.rotate(rank_result, num_slots / (1 << i)));
         }
         rank_result->SetSlots(N);
+
+        // Compensate for the self comprison (input_array - Rot(input_array, 0))
+        rank_result = m_cc->EvalSub(rank_result, 0.5);
         return rank_result;
     }
 
