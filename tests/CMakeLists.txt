@@ -17,6 +17,8 @@ function(add_unit_test TARGET_NAME)
   gtest_discover_tests(${TARGET_NAME})
 endfunction()
 
+add_subdirectory(k-way)
+
 add_unit_test(SincTest 
 	      SincTest.cpp 
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
