@@ -48,8 +48,6 @@ endif()
 if(ENABLE_PRINT_PT)
   add_definitions(-DENABLE_PRINT_PT)
 endif()
-
-# add_subdirectory(k-way)
 ###
 ### EXAMPLE:
 ### add_executable( test demo-simple-example.cpp )
