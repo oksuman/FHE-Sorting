@@ -81,7 +81,7 @@ class EvalUtils {
         m_publicKey = publicKey;
     }
 
-  private:
+  protected:
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
