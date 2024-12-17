@@ -21,3 +21,14 @@ endfunction()
 add_kway_unit_test(EvalUtilsTest 
 	EvalUtilsTest.cpp 
 	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp)
+
+add_kway_unit_test(SortUtilsTest 
+	SortUtilsTest.cpp 
+	${CMAKE_SOURCE_DIR}/app/encryption.cpp
+	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp
+	${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
+	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+
+add_kway_unit_test(MaskingTest 
+	MaskingTest.cpp 
+	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
