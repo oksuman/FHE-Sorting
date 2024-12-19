@@ -257,7 +257,9 @@ template <int N> class RotationTree {
         for (int i = start; i <= end; ++i) {
             auto steps = m_decomposer.decompose(i, end, m_algo);
 #pragma omp critical
-            { addToTree(root.get(), steps, 0, i); }
+            {
+                addToTree(root.get(), steps, 0, i);
+            }
         }
     }
 
