@@ -364,6 +364,36 @@ template <int N> class DirectSort : public SortBase<N> {
         return rank_result;
     }
 
+    /*
+        Rotate the input array using a masked input array.
+        Each chunk of the masked input is rotated by a predefined index, which
+       we use to perform the rotation.
+
+        ib : Index of current batch
+
+    */
+    Ciphertext<DCRTPoly> blindRotation(const Ciphertext<DCRTPoly> &masked_input,
+                                       int num_slots, int ib) {
+        auto result = this->getZero()->Clone();
+
+#pragma omp parallel for
+        for (int i = ib * (num_slots / N / 2);
+             i < (ib + 1) * (num_slots / N / 2); i++) {
+            auto rotated = rot.rotate(masked_input, i);
+
+            auto vec = generateMaskVector2N(num_slots, i % (num_slots / N / 2));
+            std::rotate(vec.begin(), vec.begin() + i, vec.end());
+            Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
+                vec, 1, masked_input->GetLevel(), nullptr, num_slots);
+            rotated = m_cc->EvalMult(rotated, msk);
+#pragma omp critical
+            {
+                m_cc->EvalAddInPlace(result, rotated);
+            }
+        }
+        return result;
+    }
+
     Ciphertext<DCRTPoly>
     rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
@@ -400,34 +430,8 @@ template <int N> class DirectSort : public SortBase<N> {
 
             auto masked_input = m_cc->EvalMult(rotIndex, input_array);
 
-#pragma omp parallel for
-            for (int i = b * (num_slots / N / 2);
-                 i < (b + 1) * (num_slots / N / 2); i++) {
-                if (i == 0) {
-                    Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
-                        generateMaskVector(num_slots, i), 1,
-                        masked_input->GetLevel(), nullptr, num_slots);
-                    auto rotated = m_cc->EvalMult(masked_input, msk);
-#pragma omp critical
-                    {
-                        m_cc->EvalAddInPlace(output_array, rotated);
-                    }
-                } else {
-                    auto rotated = rot.rotate(masked_input, i);
-
-                    auto vec = generateMaskVector2N(num_slots,
-                                                    i % (num_slots / N / 2));
-                    std::rotate(vec.begin(), vec.begin() + i, vec.end());
-                    Plaintext msk = m_cc->MakeCKKSPackedPlaintext(
-                        vec, 1, masked_input->GetLevel(), nullptr, num_slots);
-                    rotated = m_cc->EvalMult(rotated, msk);
-#pragma omp critical
-                    // Add to the output array
-                    {
-                        m_cc->EvalAddInPlace(output_array, rotated);
-                    }
-                }
-            }
+            auto rotated_input = blindRotation(masked_input, num_slots, b);
+            m_cc->EvalAddInPlace(output_array, rotated_input);
         }
 
         for (int i = 1; i < log2(num_partition) + 1; i++) {
