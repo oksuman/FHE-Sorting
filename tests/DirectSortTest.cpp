@@ -71,7 +71,7 @@ TEST_F(DirectSortTest, ConstructRank) {
     auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
     // Construct rank using DirectSort
     auto ctxtRank =
-        directSort->constructRankGeneral(ctxt, SignFunc::CompositeSign, Cfg);
+        directSort->constructRank(ctxt, SignFunc::CompositeSign, Cfg);
 
     // Decrypt the result
     Plaintext result;
