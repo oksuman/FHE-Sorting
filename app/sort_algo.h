@@ -395,6 +395,33 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     Ciphertext<DCRTPoly>
+    blindRotationOpt(const std::vector<Ciphertext<DCRTPoly>> &masked_inputs,
+                     int num_slots, int np, int ib) {
+        auto result = this->getZero()->Clone();
+
+        for (int i = 0; i < (num_slots / N / 2) / np; i++) {
+            auto tmp = this->getZero()->Clone();
+
+#pragma omp parallel for
+            for (int j = 0; j < np; j++) {
+                auto msk = generateMaskVector2N(num_slots, (np * i + j));
+                msk = vectorRotate(msk, j);
+                Plaintext pmsk = m_cc->MakeCKKSPackedPlaintext(
+                    msk, 1, masked_inputs[j]->GetLevel(), nullptr, num_slots);
+
+                auto rotated = m_cc->EvalMult(masked_inputs[j], pmsk);
+#pragma omp critical
+                {
+                    m_cc->EvalAddInPlace(tmp, rotated);
+                }
+            }
+            tmp = rot.rotate(tmp, i * np);
+            m_cc->EvalAddInPlace(result, tmp);
+        }
+        return result;
+    }
+
+    Ciphertext<DCRTPoly>
     rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
 
@@ -406,6 +433,11 @@ template <int N> class DirectSort : public SortBase<N> {
             std::min(2 * N, max_batch / N); // slot usage = num_partition * N
         int num_batch = 2 * N / num_partition;
         int num_slots = num_partition * N;
+
+        int np = 1 << ((31 - __builtin_clz(num_partition / 2)) >> 1);
+        if ((np * np) > (num_partition / 2)) {
+            np >>= 1;
+        }
         /////////////////////////////////////////////////////////////////////
 
         Plaintext index_vector = m_cc->MakeCKKSPackedPlaintext(
@@ -429,8 +461,15 @@ template <int N> class DirectSort : public SortBase<N> {
                 m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
 
             auto masked_input = m_cc->EvalMult(rotIndex, input_array);
-
-            auto rotated_input = blindRotation(masked_input, num_slots, b);
+            std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);
+#pragma omp for
+            for (int i = 0; i < np; i++) {
+                masked_inputs[i] =
+                    rot.rotate(masked_input, b * (num_slots / N / 2) + i);
+            }
+            auto rotated_input =
+                blindRotationOpt(masked_inputs, num_slots, np, b);
+            // auto rotated_input = blindRotation(masked_input, num_slots, b);
             m_cc->EvalAddInPlace(output_array, rotated_input);
         }
 
