@@ -18,17 +18,26 @@ function(add_kway_unit_test TARGET_NAME)
   gtest_discover_tests(${TARGET_NAME})
 endfunction()
 
-add_kway_unit_test(EvalUtilsTest 
+add_kway_unit_test(KWayEvalUtilsTest 
 	EvalUtilsTest.cpp 
+	${CMAKE_SOURCE_DIR}/app/encryption.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp)
 
-add_kway_unit_test(SortUtilsTest 
+add_kway_unit_test(KWaySorterTest 
+	SorterTest.cpp 
+	${CMAKE_SOURCE_DIR}/app/encryption.cpp
+	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp
+	${CMAKE_SOURCE_DIR}/app/k-way/Sorter.cpp
+	${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
+	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+
+add_kway_unit_test(KWaySortUtilsTest 
 	SortUtilsTest.cpp 
 	${CMAKE_SOURCE_DIR}/app/encryption.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
 
-add_kway_unit_test(MaskingTest 
+add_kway_unit_test(KWayMaskingTest 
 	MaskingTest.cpp 
 	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)

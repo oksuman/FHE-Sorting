@@ -27,8 +27,8 @@ class SortUtils : public EvalUtils {
               long numSlots, long k, long M,
               const PrivateKey<DCRTPoly> &privateKey,
               const PublicKey<DCRTPoly> &publicKey)
-        : EvalUtils(cc, publicKey, privateKey), m_numSlots(numSlots), m_k(k),
-          m_M(M), m_enc(enc) {
+        : EvalUtils(cc, enc, publicKey, privateKey), m_numSlots(numSlots),
+          m_k(k), m_M(M), m_enc(enc) {
         initializeLevels();
     }
 
