@@ -19,24 +19,28 @@ add_benchmark(SincBenchmark
               SincBenchmark.cpp 
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp)
+add_dependencies(SincBenchmark generate_coeffs_target)
 
 add_benchmark(BitonicSortBenchmark 
 	      BitonicSortBenchmark.cpp 
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp
               ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
+add_dependencies(BitonicSortBenchmark generate_coeffs_target)
 
 add_benchmark(DirectSortBenchmark 
 	      DirectSortBenchmark.cpp 
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp
               ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
+add_dependencies(DirectSortBenchmark generate_coeffs_target)
 
-      add_benchmark(SortNBenchmark 
+add_benchmark(SortNBenchmark 
 	      SortNBenchmark.cpp 
               ${CMAKE_SOURCE_DIR}/app/sign.cpp
               ${CMAKE_SOURCE_DIR}/app/comparison.cpp
               ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
+add_dependencies(SortNBenchmark generate_coeffs_target)
 
-      add_benchmark(RotationBenchmark 
+add_benchmark(RotationBenchmark 
 	      RotationBenchmark.cpp)

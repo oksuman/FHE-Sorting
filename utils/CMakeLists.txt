@@ -22,11 +22,6 @@ add_custom_target(generate_coeffs_target
   DEPENDS ${GENERATED_COEFFS_PATH}
 )
 
-add_dependencies(app generate_coeffs_target)
-add_dependencies(DirectSortTest generate_coeffs_target)
-add_dependencies(SincTest generate_coeffs_target)
-add_dependencies(DirectSortBenchmark generate_coeffs_target)
-
 set_source_files_properties(${GENERATED_COEFFS_PATH} PROPERTIES GENERATED TRUE)
 
 target_include_directories(app PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
