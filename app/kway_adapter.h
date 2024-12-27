@@ -6,6 +6,19 @@
 #include "sort_algo.h"
 #include <memory>
 
+constexpr int next_power_of_two(int n) {
+    if (n <= 0) return 1;
+    
+    n--;
+    n |= n >> 1;
+    n |= n >> 2;
+    n |= n >> 4;
+    n |= n >> 8;
+    n |= n >> 16;
+    
+    return n + 1;
+}
+
 template <int N> class KWayAdapter : public SortBase<N> {
   private:
     CryptoContext<DCRTPoly> m_cc;
@@ -25,12 +38,12 @@ template <int N> class KWayAdapter : public SortBase<N> {
 
     static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
                                   std::vector<int> &rotations) {
-        parameters.SetBatchSize(N);
+        parameters.SetBatchSize(next_power_of_two(N));
         parameters.SetFirstModSize(60);
         parameters.SetScalingModSize(59);
 
         // Generate rotation indices needed for K-way sorting
-        for (int i = 1; i < N; i++) {
+        for (int i = 1; i < N; i*=2) {
             rotations.push_back(i);
             rotations.push_back(-i);
         }

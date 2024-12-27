@@ -72,3 +72,5 @@ add_unit_test(KWaySortTest
 	      ${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
 	      ${CMAKE_SOURCE_DIR}/app/k-way/Sorter.cpp
 	      ${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+#TODO dependency should be removed by splitting sort_algo.h
+add_dependencies(KWaySortTest generate_coeffs_target)

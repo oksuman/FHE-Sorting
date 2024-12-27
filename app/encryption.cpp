@@ -3,8 +3,8 @@
 #include "lattice/hal/lat-backend.h"
 
 Ciphertext<DCRTPoly> Encryption::encryptInput(std::vector<double> input) {
-    assert(input.size() == m_cc->GetEncodingParams()->GetBatchSize() &&
-           "Batch Size is not equal to input size");
+    assert(input.size() < m_cc->GetRingDimension() / 2  &&
+           "Input size is larger than the maximum available batch size");
     Plaintext plaintext = m_cc->MakeCKKSPackedPlaintext(input);
     auto ciphertext = m_cc->Encrypt(m_PublicKey, plaintext);
     return ciphertext;

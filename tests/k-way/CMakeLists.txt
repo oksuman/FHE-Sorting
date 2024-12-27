@@ -23,13 +23,15 @@ add_kway_unit_test(KWayEvalUtilsTest
 	${CMAKE_SOURCE_DIR}/app/encryption.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp)
 
-add_kway_unit_test(KWaySorterTest 
-	SorterTest.cpp 
+add_kway_unit_test(KWaySort235Test 
+	KWaySort235Test.cpp 
 	${CMAKE_SOURCE_DIR}/app/encryption.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/Sorter.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
 	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+#TODO dependency should be removed by splitting sort_algo.h
+add_dependencies(KWaySort235Test generate_coeffs_target)
 
 add_kway_unit_test(KWaySortUtilsTest 
 	SortUtilsTest.cpp 
