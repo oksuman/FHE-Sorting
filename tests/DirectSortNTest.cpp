@@ -5,15 +5,14 @@
 #include <random>
 #include <vector>
 
+#include "openfhe.h"
+
+#include "comparison.h"
 #include "encryption.h"
 #include "sign.h"
 #include "sort_algo.h"
 #include "utils.h"
 
-#include "comparison.h"
-#include "encryption.h"
-#include "openfhe.h"
-#include "sort_algo.h"
 #include <gtest/gtest.h>
 
 using namespace lbcrypto;

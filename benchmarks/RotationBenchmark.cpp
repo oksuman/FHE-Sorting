@@ -1,6 +1,6 @@
 #include "lattice/stdlatticeparms.h"
 #include "openfhe.h"
-#include "sort_algo.h"
+#include "rotation.h"
 #include <benchmark/benchmark.h>
 
 using namespace lbcrypto;

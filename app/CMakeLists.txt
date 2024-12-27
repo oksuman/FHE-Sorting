@@ -40,6 +40,8 @@ add_executable(app main.cpp
 	           sign.cpp
 		   )
 
+add_dependencies(app generate_coeffs_target)
+
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   # Disable printing for submission
   set(ENABLE_PRINT_PT OFF CACHE BOOL "Enable PRINT_PT macro")
