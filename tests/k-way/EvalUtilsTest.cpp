@@ -34,8 +34,9 @@ class EvalUtilsTest : public ::testing::Test {
         cc->EvalBootstrapSetup({3, 3}, {0, 0}, slots);
         cc->EvalBootstrapKeyGen(keys.secretKey, slots);
 
+        m_enc = std::make_shared<DebugEncryption>(cc, keys);
         // Evaluator class used in kWaySort
-        evaluator = std::make_unique<kwaySort::EvalUtils>(cc, keys.publicKey,
+        evaluator = std::make_unique<kwaySort::EvalUtils>(cc, m_enc, keys.publicKey,
                                                           keys.secretKey);
     }
 
@@ -54,6 +55,7 @@ class EvalUtilsTest : public ::testing::Test {
     CryptoContext<DCRTPoly> cc;
     KeyPair<DCRTPoly> keys;
     std::unique_ptr<kwaySort::EvalUtils> evaluator;
+    std::shared_ptr<DebugEncryption> m_enc;
 };
 
 TEST_F(EvalUtilsTest, MultByIntPositive) {

@@ -105,6 +105,7 @@ void EvalUtils::checkLevelAndBoot2(Ciphertext<DCRTPoly> &ctxt,
 
 void EvalUtils::flipCtxt(Ciphertext<DCRTPoly> &ctxt) {
     m_cc->EvalNegateInPlace(ctxt);
+    m_cc->EvalAddInPlace(ctxt, 1.0);
 }
 
 void EvalUtils::flipCtxt(Ciphertext<DCRTPoly> &ctxt, const Plaintext &mask) {
@@ -168,7 +169,7 @@ void EvalUtils::evalPoly(Ciphertext<DCRTPoly> &ctxt,
 
         Ciphertext<DCRTPoly> ctxt2, ctxt3, ctxt4;
         ctxt2 = m_cc->EvalSquare(ctxt);
-        ctxt3 = m_cc->EvalMult(ctxt, ctxt2);
+        ctxt3 = m_cc->EvalMultAndRelinearize(ctxt, ctxt2);
         ctxt4 = m_cc->EvalSquare(ctxt2);
 
         // A = c1*x + c3*x^3
@@ -181,7 +182,7 @@ void EvalUtils::evalPoly(Ciphertext<DCRTPoly> &ctxt,
         multByInt(ctxt3, coeff[7], tmp);
         multByInt(ctxt, coeff[5], B);
         B = m_cc->EvalAdd(B, tmp);
-        B = m_cc->EvalMult(B, ctxt4);
+        B = m_cc->EvalMultAndRelinearize(B, ctxt4);
 
         // ans = A + B
         ctxt_out = m_cc->EvalAdd(A, B);
@@ -251,7 +252,8 @@ void EvalUtils::approxComp2(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
 
     // Apply G polynomial d_g times
     for (int i = 0; i < d_g; i++) {
-        checkLevelAndBoot2(a, c, 4, 10);
+        checkLevelAndBoot2(a, c, 4, 10, true);
+	std::cout << "\nStarting G aa\n";
         evalG(a, a);
         evalG(c, c);
         debugWithSk(a, 5, "a_g_" + std::to_string(i));

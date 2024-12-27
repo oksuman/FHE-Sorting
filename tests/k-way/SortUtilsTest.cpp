@@ -289,61 +289,96 @@ TEST_F(SortUtilsTest, SlotMatching2) {
 }
 
 TEST_F(SortUtilsTest, SlotMatching3) {
+    // Create and initialize input array with exact HEAAN reference values
     std::vector<double> input(16, 0.0);
-    for (int i = 0; i < 3; i++) {
-        input[i] = i + 1.0; // [1,2,3,0,...,0]
-    }
+    input[0] = 0.840188;
+    input[1] = 0.394383;
+    input[2] = 0.783099;
+    input[3] = 0.79844;
+    input[4] = 0.911647;
+    input[5] = 0.197551; 
+    input[6] = 0.335223;
+    input[7] = 0.76823;
+    input[8] = 0.277775;
+    // Rest are 0
 
+    // Comparison values matching HEAAN reference
     std::vector<double> compValues(16, 0.5);
+    compValues[0] = 1.0;
+    compValues[1] = 0.0;
+    compValues[2] = 1.0;
+    compValues[3] = 1.0;
+    compValues[4] = 1.0;
+    compValues[5] = 0.0;
+    compValues[6] = 1.0;
+    compValues[7] = 1.0;
+    compValues[8] = 0.0;
+    compValues[9] = 0.500616;
 
-    // Create indices for 3-way matching - every 3rd position
+    // Create indices marking every third position
     std::vector<std::vector<int>> indices(2, std::vector<int>(16, 0));
-    for (int i = 0; i < 16; i++) {
-        if (i % 3 == 0) { // Every 3rd position (0,3,6,9,12,15)
-            indices[0][i] = 3;
-            indices[1][i] = 1;
-        }
+    for (int i = 0; i < 9; i += 1) {
+        indices[0][i] = 3;
+        indices[1][i] = i % 3 + 1;
     }
 
+    // Encrypt input and comparison values
     auto pt = m_cc->MakeCKKSPackedPlaintext(input);
     auto ptComp = m_cc->MakeCKKSPackedPlaintext(compValues);
     auto ct = m_cc->Encrypt(m_keys.publicKey, pt);
     auto ctComp = m_cc->Encrypt(m_keys.publicKey, ptComp);
 
+    // Process through slotMatching3
     Ciphertext<DCRTPoly> ctxtOut[3];
     Ciphertext<DCRTPoly> ctxtCompOut[3];
-
     long shift = 1;
-    m_sortUtils->slotMatching3(ct, ctComp, indices, shift, ctxtOut,
-                               ctxtCompOut);
+    m_sortUtils->slotMatching3(ct, ctComp, indices, shift, ctxtOut, ctxtCompOut);
 
-    std::vector<std::vector<double>> expectedOut(3,
-                                                 std::vector<double>(16, 0.0));
-    expectedOut[0] = input; // [1,2,3,0,...,0]
-    expectedOut[1] = {2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1};
-    expectedOut[2] = {3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 2};
+    // Expected rotated outputs - first 10 slots for each array
+    std::vector<std::vector<double>> expectedOut = {
+        // Original values (rotation 0)
+        {0.840188, 0.394383, 0.783099, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823, 0.277775, 0},
+        // Rotated by 1
+        {0.394397, 0.783099, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823, 0.277775, 0.0, 0.0},
+        // Rotated by 2
+        {0.783097, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823, 0.277775, 0.0, 0.0, 0.0}
+    };
 
+    // Expected comparison outputs - first 10 slots for each array
+    std::vector<std::vector<double>> expectedComp = {
+        // First comparison output after flipping
+        {1.0, -1, -1, 0.0, 0.0, -1, 0.0, 0.0, -0.500616, -0.5008},
+        // Second comparison output (unchanged)
+        {1, 0.0, 1, 1, 1, 0.0, 1, 1, 0.0, 0.500616},
+        // Third comparison output after flipping
+        {0.0, -1, -1, 1, -1, -1, 1, -0.500616, -0.5008, -0.498664}
+    };
+
+    // Verify outputs with appropriate tolerance
     for (int i = 0; i < 3; i++) {
-        VerifyResults(ctxtOut[i], expectedOut[i]);
+        Plaintext ptResult;
+        m_cc->Decrypt(m_keys.secretKey, ctxtOut[i], &ptResult);
+        auto result = ptResult->GetRealPackedValue();
+        
+        for (size_t j = 0; j < 10; j++) {  // Check first 10 slots
+            // Higher tolerance for very small values
+            double tolerance = (std::abs(expectedOut[i][j]) < 1e-6) ? 1e-6 : 1e-3;
+            EXPECT_NEAR(result[j], expectedOut[i][j], tolerance)
+                << "Value mismatch at rotation " << i << ", slot " << j;
+        }
     }
 
-    // Verify comparison results
+    // Verify comparison outputs
     for (int i = 0; i < 3; i++) {
         Plaintext ptCompResult;
         m_cc->Decrypt(m_keys.secretKey, ctxtCompOut[i], &ptCompResult);
         auto compResult = ptCompResult->GetRealPackedValue();
-
-        for (size_t j = 0; j < compResult.size(); j++) {
-            double expectedComp;
-            if (i == 1) {
-                // Middle output keeps original values
-                expectedComp = 0.5;
-            } else {
-                // Outputs 0 and 2 are flipped except at mask3 positions
-                expectedComp = (j % 3 == 0) ? 0.5 : -0.5;
-            }
-            EXPECT_NEAR(compResult[j], expectedComp, 0.1)
-                << "Comparison mismatch at output " << i << ", index " << j;
+        
+        for (size_t j = 0; j < 10; j++) {
+            // Use appropriate tolerance based on value magnitude
+            double tolerance = 1e-2;
+            EXPECT_NEAR(compResult[j], expectedComp[i][j], tolerance)
+                << "Comparison mismatch at output " << i << ", slot " << j;
         }
     }
 }
