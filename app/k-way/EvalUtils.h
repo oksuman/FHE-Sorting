@@ -3,6 +3,7 @@
 
 #include "ciphertext-fwd.h"
 #include "openfhe.h"
+#include "encryption.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -17,9 +18,9 @@ class EvalUtils {
   public:
     EvalUtils() = default;
     EvalUtils(CryptoContext<DCRTPoly> cc) : m_cc(cc) {}
-    EvalUtils(CryptoContext<DCRTPoly> cc, const PublicKey<DCRTPoly> &publicKey,
+    EvalUtils(CryptoContext<DCRTPoly> cc, std::shared_ptr<Encryption> enc, const PublicKey<DCRTPoly> &publicKey,
               const PrivateKey<DCRTPoly> &privateKey)
-        : m_cc(cc), m_publicKey(publicKey), m_privateKey(privateKey) {}
+        : m_cc(cc), m_publicKey(publicKey), m_privateKey(privateKey), m_enc(enc) {}
 
     // Continuously adds cipher to reach the target multiplication
     void multByInt(Ciphertext<DCRTPoly> &ctxt, long coeff,
@@ -81,10 +82,11 @@ class EvalUtils {
         m_publicKey = publicKey;
     }
 
-  private:
+  protected:
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
+    std::shared_ptr<Encryption> m_enc;
 };
 } // namespace kwaySort
 
