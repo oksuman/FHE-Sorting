@@ -65,4 +65,12 @@ add_unit_test(DirectSortNTest
 	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp)
 add_dependencies(DirectSortNTest generate_coeffs_target)
 
-
+add_unit_test(KWaySortTest 
+	      KWaySortTest.cpp 
+	      ${CMAKE_SOURCE_DIR}/app/encryption.cpp
+	      ${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp
+	      ${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
+	      ${CMAKE_SOURCE_DIR}/app/k-way/Sorter.cpp
+	      ${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+#TODO dependency should be removed by splitting sort_algo.h
+add_dependencies(KWaySortTest generate_coeffs_target)
