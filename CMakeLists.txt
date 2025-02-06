@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.1)
-project(fherma_array_sorting_dev CXX)
+project(FHE-Sorting CXX)
 
 ################################
 # Added by Seunghu Kim
@@ -57,9 +57,9 @@ set(ENABLE_PRINT_PT ON CACHE BOOL "Enable PRINT_PT macro")
 if(ENABLE_PRINT_PT)
 add_definitions(-DENABLE_PRINT_PT)
 endif()
-include_directories(${CMAKE_SOURCE_DIR}/app)
+include_directories(${CMAKE_SOURCE_DIR}/src)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/utils)
-add_subdirectory(app)
+add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(third_party/benchmark)
 add_subdirectory(benchmarks)

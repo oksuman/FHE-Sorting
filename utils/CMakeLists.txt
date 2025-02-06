@@ -1,5 +1,5 @@
 add_executable(generate_coeffs generate_cheb_coeffs.cpp)
-target_include_directories(generate_coeffs PRIVATE ${CMAKE_SOURCE_DIR}/app)
+target_include_directories(generate_coeffs PRIVATE ${CMAKE_SOURCE_DIR}/src)
 target_link_libraries(generate_coeffs
   PRIVATE
   ${OpenFHE_SHARED_LIBRARIES}
@@ -42,7 +42,7 @@ foreach(CPP_FILE ${CPP_FILES})
     target_include_directories(${FILE_NAME} 
         PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_SOURCE_DIR}/app
+        ${CMAKE_SOURCE_DIR}/src
         ${OpenFHE_INCLUDE_DIRS}
     )
     
@@ -58,6 +58,6 @@ foreach(CPP_FILE ${CPP_FILES})
 endforeach()
 
 target_sources(sign_characterizer PRIVATE
-	${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	${CMAKE_SOURCE_DIR}/app/sign.cpp)
+	${CMAKE_SOURCE_DIR}/src/encryption.cpp
+	${CMAKE_SOURCE_DIR}/src/sign.cpp)
 
