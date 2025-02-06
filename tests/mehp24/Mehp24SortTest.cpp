@@ -65,6 +65,7 @@ protected:
         }
         m_multDepth = 45;
         parameters.SetMultiplicativeDepth(m_multDepth);
+        m_scaleMod = parameters.GetScalingModSize();
         
         m_cc = GenCryptoContext(parameters);
         m_cc->Enable(PKE);
@@ -118,6 +119,7 @@ protected:
     PrivateKey<DCRTPoly> m_privateKey;
     std::shared_ptr<DebugEncryption> m_enc;
     int m_multDepth;
+    int m_scaleMod;
 };
 
 template <typename T>
@@ -184,7 +186,7 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
                      N,
                      17, // logRingDim
                      this->m_multDepth,
-                     this->m_cc->GetEncodingParams()->GetScalingModSize(),
+                     this->m_scaleMod,
                      dg_c, df_c,
                      dg_i, df_i,
                      maxError,

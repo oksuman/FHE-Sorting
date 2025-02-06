@@ -44,6 +44,7 @@ protected:
         m_cc->EvalMultKeyGen(m_privateKey);
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
         m_multDepth = parameters.GetMultiplicativeDepth();
+        m_scaleMod = parameters.GetScalingModSize();
     }
 
     void SaveResults(const std::string& filename, 
@@ -65,7 +66,7 @@ protected:
         outFile << "Multiplicative Depth: " << multDepth << "\n";
         outFile << "Scaling Mod Size: " << scalingModSize << "\n";
         outFile << "Sign Configuration (degree, dg, df): (" 
-               << cfg.degree << ", " << cfg.dg << ", " << cfg.df << ")\n";
+            << cfg.compos.n << ", " << cfg.compos.dg << ", " << cfg.compos.df << ")\n";
         outFile << "Max Error: " << maxError << " (log2: " << std::log2(maxError) << ")\n";
         outFile << "Average Error: " << avgError << " (log2: " << std::log2(avgError) << ")\n";
         outFile << "Execution Time: " << executionTimeMs << " ms\n";
@@ -78,6 +79,7 @@ protected:
     PrivateKey<DCRTPoly> m_privateKey;
     std::shared_ptr<DebugEncryption> m_enc;
     int m_multDepth;
+    int m_scaleMod;
 };
 
 template <typename T>
@@ -158,7 +160,7 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
                      N,
                      17, // logRingDim
                      this->m_multDepth,
-                     this->m_cc->GetEncodingParams()->GetScalingModSize(),
+                     this->m_scaleMod,
                      Cfg,
                      maxError,
                      avgError,
