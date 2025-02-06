@@ -11,12 +11,20 @@
 constexpr double COEFFICIENT_THRESHOLD = 1e-15;
 constexpr double EVEN_COEFFICIENT_THRESHOLD =
     1e-6; // New threshold for even coefficients
-constexpr int sincPolyDegree = 3011;
+constexpr int sincPolyDegree = 13011; 
 
 template <int N> std::vector<double> generateTruncatedCoefficients() {
     auto coeffs = lbcrypto::EvalChebyshevCoefficients(
         [](double x) { return Sinc<2 * N>::scaled_sinc(x); }, -1.0, 1.0,
         sincPolyDegree);
+
+    // auto coeffs = lbcrypto::EvalChebyshevCoefficients(
+    //     [](double x) { return Sinc<2 * N>::sinc(x); }, -2*(double)N, 2*(double)N,
+    //     sincPolyDegree);
+
+    // auto coeffs = lbcrypto::EvalChebyshevCoefficients(
+    //     [](double x) { return Sinc<2 * N>::simple_sinc(x); }, -1.0, 1.0,
+    //     sincPolyDegree);
 
     std::vector<double> filteredCoeffs;
     filteredCoeffs.reserve(coeffs.size());

@@ -10,6 +10,22 @@ using namespace lbcrypto;
 
 template <int N> struct Sinc {
 
+    static double simple_sinc(double x) {
+        if (std::abs(x) < 0.5) {
+            return 1.0;
+        } else {
+            return 0.0;
+        }
+    }
+
+    static double sinc(double x) {
+        if (std::abs(x) < 1e-10) {
+            return 1.0;
+        } else {
+            return std::sin(M_PI *x) / M_PI *x;
+        }
+    }
+
     static double scaled_sinc(double x) {
         if (std::abs(x) < 1e-10) {
             return 1.0;
@@ -18,6 +34,7 @@ template <int N> struct Sinc {
             return std::sin(M_PI * N * x) / (M_PI * N * x);
         }
     }
+
     static double scaled_sinc_j(double x, int j) {
         constexpr double epsilon = 1e-10;
         constexpr double factor = N * M_PI;
@@ -53,4 +70,13 @@ class Comparison {
     Ciphertext<DCRTPoly> max(const CryptoContext<DCRTPoly> &cc,
                              const Ciphertext<DCRTPoly> &a,
                              const Ciphertext<DCRTPoly> &b);
+
+    // implementation from MEHP24
+    // outputs 1 if x == 0
+    // outputs 0 otherwise
+    Ciphertext<DCRTPoly> indicator(const CryptoContext<DCRTPoly> &cc,
+                                 const Ciphertext<DCRTPoly> &x,
+                                 const double c,
+                                 SignFunc SignFunc, SignConfig &Cfg);
+
 };

@@ -132,7 +132,7 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     double maxError = 0.0;
     int largeErrorCount = 0;
     int effectiveOutputSize = std::pow(k, M);
-    for (size_t i = 0; i < effectiveOutputSize; ++i) {
+    for (int i = 0; i < effectiveOutputSize; ++i) {
         double error = std::abs(outputArray[i] - expected[i]);
         maxError = std::max(maxError, error);
         if (error >= 0.01) {

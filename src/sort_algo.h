@@ -103,31 +103,34 @@ template <int N> class DirectSort : public SortBase<N> {
 
         switch (N) {
         case 4:
-            multDepth = 38;
+            multDepth = 23;
             break;
         case 8:
-            multDepth = 39;
+            multDepth = 24;
             break;
         case 16:
-            multDepth = 39;
+            multDepth = 24;
             break;
         case 32:
-            multDepth = 40;
+            multDepth = 28;
             break;
         case 64:
-            multDepth = 41;
+            multDepth = 29;
             break;
-        case 128: // require stronger precision in comparison
-            multDepth = 48;
+        case 128: 
+            multDepth = 30;
             break;
         case 256:
-            multDepth = 49;
+            multDepth = 34;
             break;
         case 512:
-            multDepth = 49;
+            multDepth = 35;
             break;
         case 1024:
-            multDepth = 50;
+            multDepth = 36;
+            break;
+        case 2048:
+            multDepth = 37;
             break;
         }
         parameters.SetScalingModSize(modSize);
@@ -438,6 +441,11 @@ template <int N> class DirectSort : public SortBase<N> {
         if ((np * np) > (num_partition / 2)) {
             np >>= 1;
         }
+        // np values for different N (when max_batch = 65536 = 2^16)
+        // N=[8]      -> np=2  (num_partition=16)
+        // N=[16,32]  -> np=4  (num_partition=32,64)
+        // N=[64-512] -> np=8  (num_partition=128,256,256,128)
+        // N=[1024,2048] -> np=4  (num_partition=64,32)
         /////////////////////////////////////////////////////////////////////
 
         Plaintext index_vector = m_cc->MakeCKKSPackedPlaintext(
@@ -459,6 +467,7 @@ template <int N> class DirectSort : public SortBase<N> {
             m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
             rotIndex =
                 m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
+                // m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -2*N, 2*N);
 
             auto masked_input = m_cc->EvalMult(rotIndex, input_array);
             std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);
@@ -483,21 +492,20 @@ template <int N> class DirectSort : public SortBase<N> {
 
     Ciphertext<DCRTPoly> sort(const Ciphertext<DCRTPoly> &input_array,
                               SignFunc SignFunc, SignConfig &Cfg) override {
-        std::cout << "\n===== Direct Sort Input Array: \n";
-        PRINT_PT(m_enc, input_array);
+        // std::cout << "\n===== Direct Sort Input Array: \n";
+        // PRINT_PT(m_enc, input_array);
 
         Ciphertext<DCRTPoly> ctx_Rank;
         ctx_Rank = constructRank(input_array, SignFunc, Cfg);
 
-        std::cout << "\n===== Constructed Rank: \n";
-        PRINT_PT(m_enc, ctx_Rank);
+        // std::cout << "\n===== Constructed Rank: \n";
+        // PRINT_PT(m_enc, ctx_Rank);
 
         Ciphertext<DCRTPoly> output_array;
-        std::cout << "general rotation index checking" << std::endl;
         output_array = rotationIndexCheck(ctx_Rank, input_array);
 
-        std::cout << "\n===== Final Output: \n";
-        PRINT_PT(m_enc, output_array);
+        // std::cout << "\n===== Final Output: \n";
+        // PRINT_PT(m_enc, output_array);
 
         std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
         return output_array;

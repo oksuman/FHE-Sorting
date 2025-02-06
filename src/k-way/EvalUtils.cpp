@@ -58,7 +58,7 @@ void EvalUtils::checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, long level,
     auto currentLevel = ctxt->GetLevel();
 
     // Bootstrap if level is too high
-    if (currentLevel > level) {
+    if (static_cast<long>(currentLevel) > level) {
         if (verbose) {
             std::cout << "Starting bootstrap at level " << currentLevel
                       << std::endl;
@@ -94,10 +94,10 @@ void EvalUtils::checkLevelAndBoot2(Ciphertext<DCRTPoly> &ctxt,
 
         // Bring both ciphertexts to the same level (the lower of the two)
         int targetLevel = std::min(ctxtLevel, ctxt2Level);
-        if (ctxtLevel > targetLevel) {
+        if (static_cast<long>(ctxtLevel) > targetLevel) {
             m_cc->LevelReduceInPlace(ctxt, nullptr, ctxtLevel - targetLevel);
         }
-        if (ctxt2Level > targetLevel) {
+        if (static_cast<long>(ctxt2Level) > targetLevel) {
             m_cc->LevelReduceInPlace(ctxt2, nullptr, ctxt2Level - targetLevel);
         }
     }
@@ -340,7 +340,7 @@ void EvalUtils::debugWithSk(Ciphertext<DCRTPoly> &ctxt, long length,
     }
 
     // Print last 20 values
-    for (int i = std::max(0L, (long)result.size() - 20); i < result.size();
+    for (size_t i = std::max(static_cast<size_t>(0), result.size() - 20); i < result.size();
          i++) {
         std::cout << "(" << i << ", " << result[i] << "), ";
     }

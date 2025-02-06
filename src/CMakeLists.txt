@@ -34,13 +34,13 @@ else ()
 endif ()
 
 ### ADD YOUR EXECUTABLE(s) HERE
-add_executable(app main.cpp 
-		   comparison.cpp
+add_executable(src main.cpp 
+		         comparison.cpp
 	           encryption.cpp
 	           sign.cpp
 		   )
 
-add_dependencies(app generate_coeffs_target)
+add_dependencies(src generate_coeffs_target)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
   # Disable printing for submission

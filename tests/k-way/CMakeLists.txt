@@ -6,7 +6,7 @@ function(add_kway_unit_test TARGET_NAME)
   
   add_executable(${TARGET_NAME} ${SOURCE_FILES})
   target_include_directories(${TARGET_NAME} PRIVATE
-	  ${CMAKE_SOURCE_DIR}/app/k-way)
+	  ${CMAKE_SOURCE_DIR}/src/k-way)
 
   target_link_libraries(${TARGET_NAME}
     PRIVATE
@@ -20,26 +20,26 @@ endfunction()
 
 add_kway_unit_test(KWayEvalUtilsTest 
 	EvalUtilsTest.cpp 
-	${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp)
+	${CMAKE_SOURCE_DIR}/src/encryption.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/EvalUtils.cpp)
 
 add_kway_unit_test(KWaySort235Test 
 	KWaySort235Test.cpp 
-	${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/Sorter.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+	${CMAKE_SOURCE_DIR}/src/encryption.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/EvalUtils.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/Sorter.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/SortUtils.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/Masking.cpp)
 #TODO dependency should be removed by splitting sort_algo.h
 add_dependencies(KWaySort235Test generate_coeffs_target)
 
 add_kway_unit_test(KWaySortUtilsTest 
 	SortUtilsTest.cpp 
-	${CMAKE_SOURCE_DIR}/app/encryption.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/EvalUtils.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/SortUtils.cpp
-	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+	${CMAKE_SOURCE_DIR}/src/encryption.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/EvalUtils.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/SortUtils.cpp
+	${CMAKE_SOURCE_DIR}/src/k-way/Masking.cpp)
 
 add_kway_unit_test(KWayMaskingTest 
 	MaskingTest.cpp 
-	${CMAKE_SOURCE_DIR}/app/k-way/Masking.cpp)
+	${CMAKE_SOURCE_DIR}/src/k-way/Masking.cpp)
