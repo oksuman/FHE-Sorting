@@ -309,5 +309,48 @@ Ciphertext<DCRTPoly> signAdv(
     return c;
 }
 
+//added 
+// Split a ciphertext into multiple ciphertexts, each containing subLength elements
+std::vector<Ciphertext<DCRTPoly>> splitCiphertext(
+    const Ciphertext<DCRTPoly>& c,
+    const size_t totalLength,
+    const size_t subLength,
+    CryptoContext<DCRTPoly>& cc) 
+{
+    size_t numParts = totalLength / subLength; // e.g., 512/256 = 2 parts
+    std::vector<Ciphertext<DCRTPoly>> result(numParts);
+    
+    for(size_t i = 0; i < numParts; i++) {
+        // Create mask: 1's for the current part, 0's elsewhere
+        std::vector<double> mask(totalLength, 0.0);
+        for(size_t j = 0; j < subLength; j++) {
+            mask[i * subLength + j] = 1.0;
+        }
+        
+        // Apply mask and rotate
+        Plaintext maskPlain = cc->MakeCKKSPackedPlaintext(mask);
+        auto part = cc->EvalMult(c, maskPlain);
+        part = cc->EvalRotate(part, i * subLength);
+        result[i] = part;
+    }
+    return result;
+}
+
+// Combine multiple ciphertexts back into a single ciphertext
+Ciphertext<DCRTPoly> combineCiphertext(
+    const std::vector<Ciphertext<DCRTPoly>>& parts,
+    const size_t subLength,
+    CryptoContext<DCRTPoly>& cc) 
+{
+    auto result = parts[0];
+    
+    for(size_t i = 1; i < parts.size(); i++) {
+        // Rotate each part back to its original position and add
+        auto rotated = cc->EvalRotate(parts[i],-i * subLength);
+        result = cc->EvalAdd(result, rotated);
+    }
+    return result;
+}
+
 } // namespace utils
 } // namespace mehp24

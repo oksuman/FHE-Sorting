@@ -77,4 +77,37 @@ std::vector<Ciphertext<DCRTPoly>> sortFG(
     uint32_t df_i
 );
 
+std::vector<Ciphertext<DCRTPoly>> sortFG(
+    const std::vector<Ciphertext<DCRTPoly>> &c,
+    const size_t subVectorLength,
+    SignFunc SignFunc, 
+    SignConfig &Cfg,
+    std::unique_ptr<Comparison> &comp,
+    uint32_t dg_i,
+    uint32_t df_i
+);
+
+Ciphertext<DCRTPoly> sortLargeArrayFG(
+    Ciphertext<DCRTPoly> c,
+    const size_t totalLength,    
+    const size_t subLength,      
+    uint32_t dg_c,
+    uint32_t df_c,
+    uint32_t dg_i,
+    uint32_t df_i,
+    CryptoContext<DCRTPoly> cc
+);
+
+Ciphertext<DCRTPoly> sortLargeArrayFG(
+    Ciphertext<DCRTPoly> c,
+    const size_t totalLength,    
+    const size_t subLength,      
+    SignFunc SignFunc, 
+    SignConfig &Cfg,
+    std::unique_ptr<Comparison> &comp,
+    uint32_t dg_i,
+    uint32_t df_i,
+    CryptoContext<DCRTPoly> cc
+);
+
 } // namespace mehp24

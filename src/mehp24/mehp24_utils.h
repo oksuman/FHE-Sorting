@@ -206,5 +206,18 @@ Ciphertext<DCRTPoly> signAdv(
     const size_t df
 );
 
+std::vector<Ciphertext<DCRTPoly>> splitCiphertext(
+    const Ciphertext<DCRTPoly>& c,
+    const size_t totalLength,
+    const size_t subLength,
+    CryptoContext<DCRTPoly>& cc
+); 
+
+Ciphertext<DCRTPoly> combineCiphertext(
+    const std::vector<Ciphertext<DCRTPoly>>& parts,
+    const size_t subLength,
+    CryptoContext<DCRTPoly>& cc
+); 
+
 } // namespace utils
 } // namespace mehp24

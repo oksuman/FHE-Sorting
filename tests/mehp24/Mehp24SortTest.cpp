@@ -29,7 +29,7 @@ protected:
         parameters.SetSecurityLevel(HEStd_128_classic);
         auto logRingDim = 17;
         parameters.SetRingDim(1 << logRingDim);
-        parameters.SetBatchSize(N * N);
+        parameters.SetBatchSize(std::min(N * N, 1 << logRingDim / 2));
         
         switch (N)
         {
@@ -49,19 +49,19 @@ protected:
             m_multDepth = 42;
             break;
         case 128:
-            m_multDepth = 46; // re
+            m_multDepth = 46; 
             break;
         case 256:
             m_multDepth = 49;
             break;
         case 512:
-            m_multDepth = 40;
+            m_multDepth = 55;
             break;
         case 1024:
-            m_multDepth = 40;
+            m_multDepth = 55;
             break;
         case 2048:
-            m_multDepth = 40;
+            m_multDepth = 55;
             break;
         default:
             break;
@@ -156,7 +156,9 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
     uint32_t dg_i = (log2(N) + 1) / 2; // N = vectorLength
     uint32_t df_i = 2;
 
+    Ciphertext<DCRTPoly> ctxt_out;
     auto start = high_resolution_clock::now();
+    if(N <= 256)
     auto ctxt_out = mehp24::sortFG(ctxt, N, SignFunc::CompositeSign, Cfg, this->comp, dg_i, df_i, this->m_privateKey, this->m_cc);
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end - start).count();

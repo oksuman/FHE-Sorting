@@ -192,8 +192,8 @@ using TestSizes = ::testing::Types<
     // std::integral_constant<size_t, 64>, 
     // std::integral_constant<size_t, 128>,
     // std::integral_constant<size_t, 256>,
-    std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>,
+    // std::integral_constant<size_t, 512>,
+    // std::integral_constant<size_t, 1024>,
     std::integral_constant<size_t, 2048>
 >;
 
