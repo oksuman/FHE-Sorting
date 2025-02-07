@@ -642,7 +642,6 @@ std::vector<Ciphertext<DCRTPoly>> sortFG(
     for (size_t j = 0; j < numCiphertext; j++) {
         result[j] = sumColumns(subSorted[j], subVectorLength, true);
     }
-    std::cout << "result levels: " << result[0]->GetLevel() << std::endl;
 
     for (size_t j = 0; j < numCiphertext; j++) {
         result[j] = transposeColumn(result[j], subVectorLength, true);
@@ -684,10 +683,13 @@ Ciphertext<DCRTPoly> sortLargeArrayFG(
     CryptoContext<DCRTPoly> cc)
 {
     // 1. Split the input ciphertext into parts
+    std::cout << "split start" << std::endl;
     std::vector<Ciphertext<DCRTPoly>> parts = splitCiphertext(c, totalLength, subLength, cc);
+    std::cout << "split end" << std::endl;
     
     // 2. Sort the parts using multi-ciphertext sortFG
     std::vector<Ciphertext<DCRTPoly>> sortedParts = sortFG(parts, subLength, SignFunc, Cfg, comp, dg_i, df_i, cc);
+    std::cout << "sort end" << std::endl;
     
     // 3. Combine the sorted parts back into a single ciphertext
     return combineCiphertext(sortedParts, subLength, cc);

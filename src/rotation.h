@@ -196,25 +196,31 @@ template <int N> class RotationComposer {
     std::shared_ptr<Encryption> m_enc;
     Decomposer<N> m_decomposer;
     DecomposeAlgo m_algo;
-    ///////////////
+
     std::set<int> rotation_calls; 
+    std::set<int> available_indices; 
     // uint32_t M;
 
   public:
     RotationComposer(CryptoContext<DCRTPoly> cc,
                      std::shared_ptr<Encryption> enc,
                      std::vector<int> rotIndices,
-                     DecomposeAlgo algo = DecomposeAlgo::NAF)
+                     DecomposeAlgo algo = DecomposeAlgo::BINARY)
         : m_cc(cc), m_enc(enc), m_decomposer(rotIndices), m_algo(algo) {
         // M = cc->GetCyclotomicOrder();
+        available_indices = std::set<int>(rotIndices.begin(), rotIndices.end());
     }
 
-    std::vector<int> getRotIndices() { return m_decomposer.getRotIndices(); }
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
-        
-        rotation_calls.insert(rotation); 
+        if (rotation == 0 || rotation % input->GetSlots() == 0) {
+            return input->Clone();
+        }
+
+        if (available_indices.find(rotation) != available_indices.end()) {
+            return m_cc->EvalRotate(input, rotation);
+        }
 
         auto steps =
             m_decomposer.decompose(rotation, input->GetSlots(), m_algo);
@@ -223,17 +229,6 @@ template <int N> class RotationComposer {
             result = m_cc->EvalRotate(result, step.stepSize);
         return result;
     }
-
-    const std::set<int>& getRotationCalls() const { 
-        return rotation_calls; 
-    }
-
-    void clearRotationCalls() { 
-        rotation_calls.clear(); 
-    }
-
-
-
 };
 
 template <int N> class RotationTree {
@@ -357,3 +352,4 @@ template <int N> class RotationTree {
         return traverseAndRotate(rotated, child, steps, stepIndex + 1);
     }
 };
+

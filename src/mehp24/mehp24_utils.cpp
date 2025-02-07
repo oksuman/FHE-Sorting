@@ -251,18 +251,27 @@ std::vector<int32_t> getRotationIndices(
     const size_t matrixSize
 )
 {
+    int sz = matrixSize;
+
     std::vector<int32_t> indices;
+    if(matrixSize>256){
+        for(size_t i=0; i < matrixSize / 256; i++){
+            indices.push_back(i * 256);
+            indices.push_back(-i * 256);
+        }
+        sz = 256;
+    }
 
     int32_t index;
-    for (size_t i = 0; i < LOG2(matrixSize); i++) {
+    for (size_t i = 0; i < LOG2(sz); i++) {
         index = 1 << i;
         indices.push_back(index);
         indices.push_back(-index);
 
-        index = 1 << (LOG2(matrixSize) + i);
+        index = 1 << (LOG2(sz) + i);
         indices.push_back(-index);
 
-        index = (matrixSize * (matrixSize - 1) / (1 << (i + 1)));
+        index = (sz * (sz - 1) / (1 << (i + 1)));
         indices.push_back(index);
         indices.push_back(-index);
     }
@@ -330,7 +339,8 @@ std::vector<Ciphertext<DCRTPoly>> splitCiphertext(
         // Apply mask and rotate
         Plaintext maskPlain = cc->MakeCKKSPackedPlaintext(mask);
         auto part = cc->EvalMult(c, maskPlain);
-        part = cc->EvalRotate(part, i * subLength);
+        if(i>0)
+            part = cc->EvalRotate(part, i * subLength);
         result[i] = part;
     }
     return result;

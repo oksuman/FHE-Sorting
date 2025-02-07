@@ -25,11 +25,13 @@ protected:
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
         
-        // parameters.SetSecurityLevel(HEStd_NotSet);
-        parameters.SetSecurityLevel(HEStd_128_classic);
+        parameters.SetSecurityLevel(HEStd_NotSet);
+        // parameters.SetSecurityLevel(HEStd_128_classic);
         auto logRingDim = 17;
         parameters.SetRingDim(1 << logRingDim);
-        parameters.SetBatchSize(std::min(N * N, 1 << logRingDim / 2));
+        auto batchSize = std::min(N * N, (1 << logRingDim )/ 2);
+        std::cout << "batch size: " << batchSize << std::endl;
+        parameters.SetBatchSize(batchSize);
         
         switch (N)
         {
@@ -55,13 +57,13 @@ protected:
             m_multDepth = 49;
             break;
         case 512:
-            m_multDepth = 55;
+            m_multDepth = 57;
             break;
         case 1024:
-            m_multDepth = 55;
+            m_multDepth = 70;
             break;
         case 2048:
-            m_multDepth = 55;
+            m_multDepth = 70;
             break;
         default:
             break;
@@ -159,7 +161,12 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
     Ciphertext<DCRTPoly> ctxt_out;
     auto start = high_resolution_clock::now();
     if(N <= 256)
-    auto ctxt_out = mehp24::sortFG(ctxt, N, SignFunc::CompositeSign, Cfg, this->comp, dg_i, df_i, this->m_privateKey, this->m_cc);
+        ctxt_out = mehp24::sortFG(ctxt, N, SignFunc::CompositeSign, Cfg, this->comp, dg_i, df_i, this->m_privateKey, this->m_cc);
+    else{
+        const size_t subLength = 256; 
+        ctxt_out = mehp24::sortLargeArrayFG(ctxt, N, subLength, SignFunc::CompositeSign, Cfg, this->comp, dg_i, df_i, this->m_cc);
+    } 
+
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end - start).count();
 
@@ -169,7 +176,7 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 
     std::vector<double> expectedArray = inputArray;
     std::sort(expectedArray.begin(), expectedArray.end());
-
+    
     // Calculate errors
     double maxError = 0.0;
     double totalError = 0.0;
@@ -212,13 +219,16 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 REGISTER_TYPED_TEST_SUITE_P(MEHPSortTestFixture, SortFGTest);
 
 using TestSizes = ::testing::Types<
-    // std::integral_constant<size_t, 4>,
-    // std::integral_constant<size_t, 8>,
-    // std::integral_constant<size_t, 16>,
-    // std::integral_constant<size_t, 32>,
-    // std::integral_constant<size_t, 64>,
+    std::integral_constant<size_t, 4>,
+    std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 16>,
+    std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>,
     std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>
+    std::integral_constant<size_t, 256>,
+    std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>,
+    std::integral_constant<size_t, 2048>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(MEHPSort, MEHPSortTestFixture, TestSizes);

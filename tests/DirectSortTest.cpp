@@ -121,15 +121,6 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-    /////
-    const auto& requested_rotations = directSort->rot.getRotationCalls();
-    std::cout << "\nRequested Rotation Indices (" << requested_rotations.size() << " unique rotations):\n";
-    for (int index : requested_rotations) {
-        std::cout << index << " ";
-    }
-    std::cout << "\n";
-    /////
-
     EXPECT_EQ(ctxt_out->GetLevel(), this->m_multDepth)
         << "Use the level returned by the result for best performance";
 
