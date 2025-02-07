@@ -57,12 +57,14 @@ template <int N> class DirectSort : public SortBase<N> {
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_PublicKey;
     Comparison comp;
-    RotationComposer<N> rot;
 
     int max_batch; // Maximum number of slots which can be utilized  (=
                    // ringDim/2)
 
   public:
+  //
+    RotationComposer<N> rot;
+    //
     std::shared_ptr<Encryption> m_enc;
 
     DirectSort(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
@@ -99,7 +101,7 @@ template <int N> class DirectSort : public SortBase<N> {
                   << "\n";
         std::cout << rotations << "\n";
         int multDepth;
-        int modSize = 50;
+        int modSize = 48;
 
         switch (N) {
         case 4:
@@ -122,15 +124,16 @@ template <int N> class DirectSort : public SortBase<N> {
             break;
         case 256:
             multDepth = 34;
+            // multDepth = 46;
             break;
         case 512:
-            multDepth = 35;
+            multDepth = 46; 
             break;
         case 1024:
-            multDepth = 36;
+            multDepth = 52;
             break;
         case 2048:
-            multDepth = 37;
+            multDepth = 53;
             break;
         }
         parameters.SetScalingModSize(modSize);
@@ -428,7 +431,7 @@ template <int N> class DirectSort : public SortBase<N> {
     rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
                        const Ciphertext<DCRTPoly> &input_array) {
 
-        static const auto &sincCoefficients = selectCoefficients<N>();
+       
         auto output_array = this->getZero()->Clone();
 
         /////////////// Meta Data for Rotation Index Checking ///////////////
@@ -448,6 +451,7 @@ template <int N> class DirectSort : public SortBase<N> {
         // N=[1024,2048] -> np=4  (num_partition=64,32)
         /////////////////////////////////////////////////////////////////////
 
+
         Plaintext index_vector = m_cc->MakeCKKSPackedPlaintext(
             generateIndexVector(), 1, ctx_Rank->GetLevel(), nullptr, N);
         auto index_minus_rank = m_cc->EvalSub(index_vector, ctx_Rank);
@@ -465,9 +469,17 @@ template <int N> class DirectSort : public SortBase<N> {
 
             // approximate just sinc(x) in range (-2N, 2N)
             m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
-            rotIndex =
-                m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
-                // m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -2*N, 2*N);
+            if(N < 512){
+                static const auto &sincCoefficients = selectCoefficients<N>();
+                rotIndex =
+                    m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
+            }else if(N == 512){
+                SignConfig Cfg =SignConfig(CompositeSignConfig(3, 5, 2));
+                rotIndex = comp.indicator(m_cc, rotIndex,  0.5 / (2*N), SignFunc::CompositeSign, Cfg);
+            }else {
+                SignConfig Cfg =SignConfig(CompositeSignConfig(3, 6, 2));
+                rotIndex = comp.indicator(m_cc, rotIndex,  0.5 / (2*N), SignFunc::CompositeSign, Cfg);
+            }
 
             auto masked_input = m_cc->EvalMult(rotIndex, input_array);
             std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);

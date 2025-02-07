@@ -93,6 +93,7 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
 
     std::cout << "Input array size: " << N << std::endl;
     std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
+    std::cout << "Scaling Mod: " << this->m_scaleMod << std::endl;
 
     auto ctxt = this->m_enc->encryptInput(inputArray);
 
@@ -104,8 +105,10 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
         Cfg = SignConfig(CompositeSignConfig(3, 2, 2));
     else if(N <= 128)
         Cfg = SignConfig(CompositeSignConfig(3, 3, 2));
-    else
+    else if(N<=512)
         Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
+    else
+        Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
 
     // Start timing
     auto start = std::chrono::high_resolution_clock::now();
@@ -117,6 +120,15 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     // End timing
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    /////
+    const auto& requested_rotations = directSort->rot.getRotationCalls();
+    std::cout << "\nRequested Rotation Indices (" << requested_rotations.size() << " unique rotations):\n";
+    for (int index : requested_rotations) {
+        std::cout << index << " ";
+    }
+    std::cout << "\n";
+    /////
 
     EXPECT_EQ(ctxt_out->GetLevel(), this->m_multDepth)
         << "Use the level returned by the result for best performance";
@@ -179,7 +191,7 @@ using TestSizes = ::testing::Types<
     // std::integral_constant<size_t, 32>,
     // std::integral_constant<size_t, 64>, 
     // std::integral_constant<size_t, 128>,
-    // std::integral_constant<size_t, 256>, 
+    // std::integral_constant<size_t, 256>,
     std::integral_constant<size_t, 512>,
     std::integral_constant<size_t, 1024>,
     std::integral_constant<size_t, 2048>

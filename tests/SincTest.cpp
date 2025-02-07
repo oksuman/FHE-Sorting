@@ -56,15 +56,15 @@ protected:
 
         m_cc->EvalMultKeyGen(m_privateKey);
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
-
         comp = std::make_unique<Comparison>(m_enc);
+
     }
 
-    std::unique_ptr<Comparison> comp;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
     std::shared_ptr<DebugEncryption> m_enc;
+    std::unique_ptr<Comparison> comp;
     int m_multDepth;
 };
 

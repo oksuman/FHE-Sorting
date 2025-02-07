@@ -17,6 +17,7 @@
 #include "openfhe.h"
 #include "mehp24_utils.h"
 #include "sign.h"
+#include "comparison.h"
 
 using namespace lbcrypto;
 
@@ -48,6 +49,18 @@ Ciphertext<DCRTPoly> sortFG(
     const size_t vectorLength,
     uint32_t dg_c,
     uint32_t df_c,
+    uint32_t dg_i,
+    uint32_t df_i,
+    PrivateKey<DCRTPoly> sk,
+    CryptoContext<DCRTPoly> m_cc
+);
+
+Ciphertext<DCRTPoly> sortFG(
+    Ciphertext<DCRTPoly> c,
+    const size_t vectorLength,
+    SignFunc SignFunc, 
+    SignConfig &Cfg,
+    std::unique_ptr<Comparison> &comp,
     uint32_t dg_i,
     uint32_t df_i,
     PrivateKey<DCRTPoly> sk,

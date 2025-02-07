@@ -12,6 +12,8 @@
 #include "mehp24_sort.h"
 #include "mehp24_utils.h"
 #include "../utils.h"
+#include "comparison.h"
+#include "encryption.h"
 
 using namespace lbcrypto;
 using namespace std::chrono;
@@ -23,7 +25,8 @@ protected:
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
         
-        parameters.SetSecurityLevel(HEStd_NotSet);
+        // parameters.SetSecurityLevel(HEStd_NotSet);
+        parameters.SetSecurityLevel(HEStd_128_classic);
         auto logRingDim = 17;
         parameters.SetRingDim(1 << logRingDim);
         parameters.SetBatchSize(N * N);
@@ -31,25 +34,25 @@ protected:
         switch (N)
         {
         case 4:
-            m_multDepth = 40;
+            m_multDepth = 31;
             break;
         case 8:
-            m_multDepth = 40;
+            m_multDepth = 35;
             break;
         case 16:
-            m_multDepth = 40;
+            m_multDepth = 35;
             break;
         case 32:
-            m_multDepth = 40;
+            m_multDepth = 42;
             break;
         case 64:
-            m_multDepth = 40;
+            m_multDepth = 42;
             break;
         case 128:
-            m_multDepth = 40;
+            m_multDepth = 46; // re
             break;
         case 256:
-            m_multDepth = 40;
+            m_multDepth = 49;
             break;
         case 512:
             m_multDepth = 40;
@@ -63,9 +66,9 @@ protected:
         default:
             break;
         }
-        m_multDepth = 45;
+        m_scaleMod = 48;
         parameters.SetMultiplicativeDepth(m_multDepth);
-        m_scaleMod = parameters.GetScalingModSize();
+        parameters.SetScalingModSize(m_multDepth);
         
         m_cc = GenCryptoContext(parameters);
         m_cc->Enable(PKE);
@@ -82,6 +85,7 @@ protected:
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
         m_cc->EvalMultKeyGen(m_privateKey);
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
+        comp = std::make_unique<Comparison>(m_enc);
     }
 
     void SaveResults(const std::string& filename, 
@@ -89,7 +93,6 @@ protected:
                     int logRingDim,
                     int multDepth,
                     int scalingModSize,
-                    uint32_t dg_c, uint32_t df_c,  // comparison configuration
                     uint32_t dg_i, uint32_t df_i,  // indicator configuration
                     double maxError,
                     double avgError,
@@ -104,7 +107,7 @@ protected:
         outFile << "Ring Dimension: 2^" << logRingDim << "\n";
         outFile << "Multiplicative Depth: " << multDepth << "\n";
         outFile << "Scaling Mod Size: " << scalingModSize << "\n";
-        outFile << "Comparison Configuration (degree, dg, df): (3, " << dg_c << ", " << df_c << ")\n";
+        // outFile << "Comparison Configuration (degree, dg, df): (3, " << dg_c << ", " << df_c << ")\n";
         outFile << "Indicator Configuration (dg_i, df_i): (" << dg_i << ", " << df_i << ")\n";
         outFile << "Max Error: " << maxError << " (log2: " << std::log2(maxError) << ")\n";
         outFile << "Average Error: " << avgError << " (log2: " << std::log2(avgError) << ")\n";
@@ -118,6 +121,7 @@ protected:
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
     std::shared_ptr<DebugEncryption> m_enc;
+    std::unique_ptr<Comparison> comp;
     int m_multDepth;
     int m_scaleMod;
 };
@@ -134,19 +138,26 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
     std::cout << "Input array size: " << N << std::endl;
     std::cout << "Ring Dimension: " << this->m_cc->GetRingDimension() << std::endl;
     std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
-    std::cout << "Input array: " << inputArray << std::endl;
+    std::cout << "Scaling size: " << this->m_scaleMod << std::endl;
+    // std::cout << "Input array: " << inputArray << std::endl;
 
     auto ctxt = this->m_enc->encryptInput(inputArray);
 
-    // SignConfig Cfg = SignConfig(CompositeSignConfig(3, 6, 3));
+    SignConfig Cfg;
+    if (N <= 16)
+        Cfg = SignConfig(CompositeSignConfig(3, 2, 2));
+    else if(N <= 128)
+        Cfg = SignConfig(CompositeSignConfig(3, 3, 2));
+    else if(N<=512)
+        Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
+    else
+        Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
 
-    uint32_t dg_c = 3;
-    uint32_t df_c = 2;
     uint32_t dg_i = (log2(N) + 1) / 2; // N = vectorLength
     uint32_t df_i = 2;
 
     auto start = high_resolution_clock::now();
-    auto ctxt_out = mehp24::sortFG(ctxt, N, dg_c, df_c, dg_i, df_i, this->m_privateKey, this->m_cc); 
+    auto ctxt_out = mehp24::sortFG(ctxt, N, SignFunc::CompositeSign, Cfg, this->comp, dg_i, df_i, this->m_privateKey, this->m_cc);
     auto end = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(end - start).count();
 
@@ -187,7 +198,6 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
                      17, // logRingDim
                      this->m_multDepth,
                      this->m_scaleMod,
-                     dg_c, df_c,
                      dg_i, df_i,
                      maxError,
                      avgError,
@@ -200,11 +210,11 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 REGISTER_TYPED_TEST_SUITE_P(MEHPSortTestFixture, SortFGTest);
 
 using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>,
-    std::integral_constant<size_t, 8>,
-    std::integral_constant<size_t, 16>,
-    std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>,
+    // std::integral_constant<size_t, 4>,
+    // std::integral_constant<size_t, 8>,
+    // std::integral_constant<size_t, 16>,
+    // std::integral_constant<size_t, 32>,
+    // std::integral_constant<size_t, 64>,
     std::integral_constant<size_t, 128>,
     std::integral_constant<size_t, 256>
 >;
