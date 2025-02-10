@@ -7,7 +7,7 @@ using namespace lbcrypto;
 using namespace kwaySort;
 
 class SorterTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
         parameters.SetMultiplicativeDepth(59);
@@ -43,9 +43,9 @@ protected:
         m_enc = std::make_shared<DebugEncryption>(m_cc, m_keys);
     }
 
-    void VerifyResults(const Ciphertext<DCRTPoly>& result,
-                      const std::vector<double>& expected,
-                      double tolerance = 0.1) {
+    void VerifyResults(const Ciphertext<DCRTPoly> &result,
+                       const std::vector<double> &expected,
+                       double tolerance = 0.1) {
         Plaintext ptResult;
         m_cc->Decrypt(m_keys.secretKey, result, &ptResult);
         auto resultValues = ptResult->GetRealPackedValue();
@@ -67,9 +67,9 @@ TEST_F(SorterTest, RunTwoSorter) {
     long d_f = 2;
     long d_g = 5;
     auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-    
-    std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
-        m_cc, m_enc, slots, k, M, d_f, d_g);
+
+    std::unique_ptr<Sorter> sorter =
+        std::make_unique<Sorter>(m_cc, m_enc, slots, k, M, d_f, d_g);
 
     // Create test data [5,2, 8,1, 3,6, 4,7] - Four pairs to be sorted
     std::vector<double> input = {5.0, 2.0, 8.0, 1.0, 3.0, 6.0, 4.0, 7.0};
@@ -83,7 +83,7 @@ TEST_F(SorterTest, RunTwoSorter) {
 
     // Create indices for two-way sorting
     std::vector<std::vector<int>> indices(2, std::vector<int>(slots, 0));
-    for(int i = 0; i < 8; i += 2) {
+    for (int i = 0; i < 8; i += 2) {
         indices[0][i] = 2;
         indices[1][i] = 1;
     }
@@ -102,9 +102,9 @@ TEST_F(SorterTest, RunThreeSorter) {
     long d_f = 2;
     long d_g = 5;
     auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-    
-    std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
-        m_cc, m_enc, slots, k, M, d_f, d_g);
+
+    std::unique_ptr<Sorter> sorter =
+        std::make_unique<Sorter>(m_cc, m_enc, slots, k, M, d_f, d_g);
 
     // Test data matching HEAAN example
     std::vector<double> input(slots, 0.0);
@@ -123,14 +123,14 @@ TEST_F(SorterTest, RunThreeSorter) {
 
     std::vector<double> compData(slots, 0.5);
     compData[0] = 1.0;
-    compData[1] = 0.0;  // -4.54951e-06 in HEAAN
+    compData[1] = 0.0; // -4.54951e-06 in HEAAN
     compData[2] = 1.0;
     compData[3] = 1.0;
     compData[4] = 1.0;
-    compData[5] = 0.0;  // 1.86265e-09 in HEAAN
+    compData[5] = 0.0; // 1.86265e-09 in HEAAN
     compData[6] = 1.0;
     compData[7] = 1.0;
-    compData[8] = 0.0;  // 1.30385e-08 in HEAAN
+    compData[8] = 0.0; // 1.30385e-08 in HEAAN
 
     auto ptxtComp = m_cc->MakeCKKSPackedPlaintext(compData);
     auto ctxtComp = m_cc->Encrypt(m_keys.publicKey, ptxtComp);
@@ -142,10 +142,8 @@ TEST_F(SorterTest, RunThreeSorter) {
         indices[1][i] = (i % 3) + 1;
     }
 
-    
     Ciphertext<DCRTPoly> result;
     sorter->runThreeSorter(ctxt, indices, 1, ctxtComp, result);
-    
 
     // Expected results matching HEAAN example's output pattern
     std::vector<double> expected(slots, 0.0);
@@ -168,9 +166,9 @@ TEST_F(SorterTest, RunFourSorter) {
     long d_f = 2;
     long d_g = 5;
     auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-    
-    std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
-        m_cc, m_enc, slots, k, M, d_f, d_g);
+
+    std::unique_ptr<Sorter> sorter =
+        std::make_unique<Sorter>(m_cc, m_enc, slots, k, M, d_f, d_g);
 
     // Test data: group of four numbers
     std::vector<double> input = {5.0, 2.0, 8.0, 1.0};
@@ -180,17 +178,17 @@ TEST_F(SorterTest, RunFourSorter) {
     std::vector<double> compData1(slots, 0.5);
     std::vector<double> compData2(slots, 0.5);
     // Two sets of comparison data needed for four-way sorting
-	//{1.0, 0.0, 1.0, 0.0}
+    //{1.0, 0.0, 1.0, 0.0}
     compData1[0] = 1.0; // First set of comparisons a>b
-    compData1[1] = 0.0;  
-    compData1[2] = 1.0;  
-    compData1[3] = 0.0;  
-	// {0.0, 1.0, 1.0, 0.0}
-    compData2[0] = 0.0; 
-    compData2[1] = 1.0; 
-    compData2[2] = 1.0; 
-    compData2[3] = 0.0; 
-    
+    compData1[1] = 0.0;
+    compData1[2] = 1.0;
+    compData1[3] = 0.0;
+    // {0.0, 1.0, 1.0, 0.0}
+    compData2[0] = 0.0;
+    compData2[1] = 1.0;
+    compData2[2] = 1.0;
+    compData2[3] = 0.0;
+
     auto ptxtComp1 = m_cc->MakeCKKSPackedPlaintext(compData1);
     auto ptxtComp2 = m_cc->MakeCKKSPackedPlaintext(compData2);
     auto ctxtComp1 = m_cc->Encrypt(m_keys.publicKey, ptxtComp1);
@@ -206,7 +204,6 @@ TEST_F(SorterTest, RunFourSorter) {
     indices[1][2] = 3;
     indices[1][3] = 4;
 
-
     Ciphertext<DCRTPoly> result;
     sorter->runFourSorter(ctxt, indices, 1, ctxtComp1, ctxtComp2, result);
 
@@ -217,12 +214,12 @@ TEST_F(SorterTest, RunFourSorter) {
 TEST_F(SorterTest, RunFiveSorter) {
     long k = 5;
     long M = 2;
-    long d_f = 2; 
+    long d_f = 2;
     long d_g = 5;
     auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-    
-    std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
-        m_cc, m_enc, slots, k, M, d_f, d_g);
+
+    std::unique_ptr<Sorter> sorter =
+        std::make_unique<Sorter>(m_cc, m_enc, slots, k, M, d_f, d_g);
 
     std::vector<double> input = {5.0, 2.0, 8.0, 1.0, 3.0};
     auto ptxt = m_cc->MakeCKKSPackedPlaintext(input);
@@ -232,18 +229,18 @@ TEST_F(SorterTest, RunFiveSorter) {
     std::vector<double> compData2(slots, 0.5);
 
     // ctxt_comp1 = (a > e, b > a, c > b, d > c, e > d)
-    compData1[0] = 1.0;  // 5>3
-    compData1[1] = 0.0;  // 2<5
-    compData1[2] = 1.0;  // 8>2
-    compData1[3] = 0.0;  // 1<8
-    compData1[4] = 1.0;  // 3>1
+    compData1[0] = 1.0; // 5>3
+    compData1[1] = 0.0; // 2<5
+    compData1[2] = 1.0; // 8>2
+    compData1[3] = 0.0; // 1<8
+    compData1[4] = 1.0; // 3>1
 
     // ctxt_comp2 = (a > d, b > e, c > a, d > b, e > c)
-    compData2[0] = 1.0;  // 5>1
-    compData2[1] = 0.0;  // 2<3
-    compData2[2] = 1.0;  // 8>5
-    compData2[3] = 0.0;  // 1<2
-    compData2[4] = 0.0;  // 3<8
+    compData2[0] = 1.0; // 5>1
+    compData2[1] = 0.0; // 2<3
+    compData2[2] = 1.0; // 8>5
+    compData2[3] = 0.0; // 1<2
+    compData2[4] = 0.0; // 3<8
 
     auto ptxtComp1 = m_cc->MakeCKKSPackedPlaintext(compData1);
     auto ptxtComp2 = m_cc->MakeCKKSPackedPlaintext(compData2);
@@ -251,7 +248,7 @@ TEST_F(SorterTest, RunFiveSorter) {
     auto ctxtComp2 = m_cc->Encrypt(m_keys.publicKey, ptxtComp2);
 
     std::vector<std::vector<int>> indices(2, std::vector<int>(slots, 0));
-    for(int i = 0; i < 5; i++) {
+    for (int i = 0; i < 5; i++) {
         indices[0][i] = 5;
         indices[1][i] = i + 1;
     }
@@ -263,60 +260,59 @@ TEST_F(SorterTest, RunFiveSorter) {
     VerifyResults(result, expected);
 }
 
-//TODO inputs/outputs need to be considered
+// TODO inputs/outputs need to be considered
 TEST_F(SorterTest, DISABLED_Run2345Sorter) {
-   long k = 5;
-   long M = 1; 
-   long d_f = 2;
-   long d_g = 5;
-   auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-   
-   std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
-       m_cc, m_enc, slots, k, M, d_f, d_g);
+    long k = 5;
+    long M = 1;
+    long d_f = 2;
+    long d_g = 5;
+    auto slots = m_cc->GetEncodingParams()->GetBatchSize();
 
-   std::vector<double> input = {0.5, 0.2, 0.8, 0.1, 0.3}; 
-   auto ptxt = m_cc->MakeCKKSPackedPlaintext(input);
-   auto ctxt = m_cc->Encrypt(m_keys.publicKey, ptxt);
+    std::unique_ptr<Sorter> sorter =
+        std::make_unique<Sorter>(m_cc, m_enc, slots, k, M, d_f, d_g);
 
-   std::vector<double> compData1(slots, 0.5);
-   std::vector<double> compData2(slots, 0.5);
+    std::vector<double> input = {0.5, 0.2, 0.8, 0.1, 0.3};
+    auto ptxt = m_cc->MakeCKKSPackedPlaintext(input);
+    auto ctxt = m_cc->Encrypt(m_keys.publicKey, ptxt);
 
-   // ctxt_comp1 = (a > e, b > a, c > b, d > c, e > d)
-   compData1[0] = 1.0;  // 5>3
-   compData1[1] = 0.0;  // 2<5 
-   compData1[2] = 1.0;  // 8>2
-   compData1[3] = 0.0;  // 1<8
-   compData1[4] = 1.0;  // 3>1
+    std::vector<double> compData1(slots, 0.5);
+    std::vector<double> compData2(slots, 0.5);
 
-   // ctxt_comp2 = (a > d, b > e, c > a, d > b, e > c) 
-   compData2[0] = 1.0;  // 5>1
-   compData2[1] = 0.0;  // 2<3
-   compData2[2] = 1.0;  // 8>5
-   compData2[3] = 0.0;  // 1<2
-   compData2[4] = 0.0;  // 3<8
+    // ctxt_comp1 = (a > e, b > a, c > b, d > c, e > d)
+    compData1[0] = 1.0; // 5>3
+    compData1[1] = 0.0; // 2<5
+    compData1[2] = 1.0; // 8>2
+    compData1[3] = 0.0; // 1<8
+    compData1[4] = 1.0; // 3>1
 
-   auto ptxtComp1 = m_cc->MakeCKKSPackedPlaintext(compData1);
-   auto ptxtComp2 = m_cc->MakeCKKSPackedPlaintext(compData2);
-   auto ctxtComp1 = m_cc->Encrypt(m_keys.publicKey, ptxtComp1);
-   auto ctxtComp2 = m_cc->Encrypt(m_keys.publicKey, ptxtComp2);
+    // ctxt_comp2 = (a > d, b > e, c > a, d > b, e > c)
+    compData2[0] = 1.0; // 5>1
+    compData2[1] = 0.0; // 2<3
+    compData2[2] = 1.0; // 8>5
+    compData2[3] = 0.0; // 1<2
+    compData2[4] = 0.0; // 3<8
 
-   std::vector<std::vector<int>> indices(2, std::vector<int>(slots, 0));
-   // Set indices for all possible sorter sizes (2,3,4,5)
-   for(int i = 0; i < 5; i++) {
-       indices[0][i] = i + 2;  // Size of each group 
-       indices[1][i] = 1;      // First position
-   }
+    auto ptxtComp1 = m_cc->MakeCKKSPackedPlaintext(compData1);
+    auto ptxtComp2 = m_cc->MakeCKKSPackedPlaintext(compData2);
+    auto ctxtComp1 = m_cc->Encrypt(m_keys.publicKey, ptxtComp1);
+    auto ctxtComp2 = m_cc->Encrypt(m_keys.publicKey, ptxtComp2);
 
-   PRINT_PT(m_enc,ctxt);
-   Ciphertext<DCRTPoly> result;
-   sorter->run2345Sorter(ctxt, indices, 1, ctxtComp1, ctxtComp2, result);
-   PRINT_PT(m_enc,result);
+    std::vector<std::vector<int>> indices(2, std::vector<int>(slots, 0));
+    // Set indices for all possible sorter sizes (2,3,4,5)
+    for (int i = 0; i < 5; i++) {
+        indices[0][i] = i + 2; // Size of each group
+        indices[1][i] = 1;     // First position
+    }
 
-   // Verify first elements are properly sorted
-   std::vector<double> expected = {0.1, 0.2, 0.3, 0.5, 0.8};
-   VerifyResults(result, expected);
+    PRINT_PT(m_enc, ctxt);
+    Ciphertext<DCRTPoly> result;
+    sorter->run2345Sorter(ctxt, indices, 1, ctxtComp1, ctxtComp2, result);
+    PRINT_PT(m_enc, result);
+
+    // Verify first elements are properly sorted
+    std::vector<double> expected = {0.1, 0.2, 0.3, 0.5, 0.8};
+    VerifyResults(result, expected);
 }
-
 
 TEST_F(SorterTest, TwoWaySorting) {
     long k = 2;
@@ -324,7 +320,7 @@ TEST_F(SorterTest, TwoWaySorting) {
     long d_f = 2;
     long d_g = 5;
     auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-    
+
     std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
         m_cc, m_enc, slots, k, M, d_f, d_g, m_keys.secretKey, m_keys.publicKey);
 
@@ -336,7 +332,7 @@ TEST_F(SorterTest, TwoWaySorting) {
 
     Ciphertext<DCRTPoly> result;
     sorter->sorter(ctxt, result);
-    
+
     VerifyResults(result, expected);
 }
 
@@ -346,7 +342,7 @@ TEST_F(SorterTest, ThreeWaySorting) {
     long d_f = 2;
     long d_g = 5;
     auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-    
+
     std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
         m_cc, m_enc, slots, k, M, d_f, d_g, m_keys.secretKey, m_keys.publicKey);
 
@@ -358,7 +354,7 @@ TEST_F(SorterTest, ThreeWaySorting) {
 
     Ciphertext<DCRTPoly> result;
     sorter->sorter(ctxt, result);
-    
+
     VerifyResults(result, expected);
 }
 
@@ -368,7 +364,7 @@ TEST_F(SorterTest, FiveWaySorting) {
     long d_f = 2;
     long d_g = 5;
     auto slots = m_cc->GetEncodingParams()->GetBatchSize();
-    
+
     std::unique_ptr<Sorter> sorter = std::make_unique<Sorter>(
         m_cc, m_enc, slots, k, M, d_f, d_g, m_keys.secretKey, m_keys.publicKey);
 
@@ -382,10 +378,9 @@ TEST_F(SorterTest, FiveWaySorting) {
     Ciphertext<DCRTPoly> result;
     PRINT_PT(m_enc, ctxt);
     sorter->sorter(ctxt, result);
-    
+
     VerifyResults(result, expected);
 }
-
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);

@@ -253,7 +253,7 @@ void EvalUtils::approxComp2(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
     // Apply G polynomial d_g times
     for (int i = 0; i < d_g; i++) {
         checkLevelAndBoot2(a, c, 4, 10, true);
-	std::cout << "\nStarting G aa\n";
+        std::cout << "\nStarting G aa\n";
         evalG(a, a);
         evalG(c, c);
         debugWithSk(a, 5, "a_g_" + std::to_string(i));
@@ -340,8 +340,8 @@ void EvalUtils::debugWithSk(Ciphertext<DCRTPoly> &ctxt, long length,
     }
 
     // Print last 20 values
-    for (size_t i = std::max(static_cast<size_t>(0), result.size() - 20); i < result.size();
-         i++) {
+    for (size_t i = std::max(static_cast<size_t>(0), result.size() - 20);
+         i < result.size(); i++) {
         std::cout << "(" << i << ", " << result[i] << "), ";
     }
 

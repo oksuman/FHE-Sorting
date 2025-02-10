@@ -1,6 +1,6 @@
+#include "sign.h"
 #include "comparison.h"
 #include "encryption.h"
-#include "sign.h"
 #include "openfhe.h"
 #include <gtest/gtest.h>
 

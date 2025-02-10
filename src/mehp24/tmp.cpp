@@ -9,5 +9,5 @@
  * Copyright (c) 2024 Federico Mazzone
  * Licensed under BSD 2-Clause License
  *
- * Modified and adapted by oksuman 
+ * Modified and adapted by oksuman
  */

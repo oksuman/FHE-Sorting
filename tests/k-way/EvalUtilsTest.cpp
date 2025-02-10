@@ -36,8 +36,8 @@ class EvalUtilsTest : public ::testing::Test {
 
         m_enc = std::make_shared<DebugEncryption>(cc, keys);
         // Evaluator class used in kWaySort
-        evaluator = std::make_unique<kwaySort::EvalUtils>(cc, m_enc, keys.publicKey,
-                                                          keys.secretKey);
+        evaluator = std::make_unique<kwaySort::EvalUtils>(
+            cc, m_enc, keys.publicKey, keys.secretKey);
     }
 
     void VerifyResults(const Ciphertext<DCRTPoly> &result,

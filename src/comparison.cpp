@@ -39,19 +39,19 @@ Ciphertext<DCRTPoly> Comparison::max(const CryptoContext<DCRTPoly> &cc,
 }
 
 Ciphertext<DCRTPoly> Comparison::indicator(const CryptoContext<DCRTPoly> &cc,
-                                         const Ciphertext<DCRTPoly> &x,
-                                         const double c,
-                                         SignFunc SignFunc, SignConfig &Cfg) {
+                                           const Ciphertext<DCRTPoly> &x,
+                                           const double c, SignFunc SignFunc,
+                                           SignConfig &Cfg) {
 
-        auto diff1 = cc->EvalAdd(x, c);
-        auto diff2 = cc->EvalSub(x, c);
+    auto diff1 = cc->EvalAdd(x, c);
+    auto diff2 = cc->EvalSub(x, c);
 
-        auto sign1 = sign(diff1, cc, SignFunc, Cfg);
-        auto sign2 = sign(diff2, cc, SignFunc, Cfg);
+    auto sign1 = sign(diff1, cc, SignFunc, Cfg);
+    auto sign2 = sign(diff2, cc, SignFunc, Cfg);
 
-        auto comp1 = cc->EvalMult(cc->EvalAdd(sign1, 1.0), 0.5);
-        auto comp2 = cc->EvalMult(cc->EvalAdd(sign2, 1.0), 0.5);
+    auto comp1 = cc->EvalMult(cc->EvalAdd(sign1, 1.0), 0.5);
+    auto comp2 = cc->EvalMult(cc->EvalAdd(sign2, 1.0), 0.5);
 
-        auto result = cc->EvalMultAndRelinearize(comp1, cc->EvalSub(1.0, comp2));
-        return result;
+    auto result = cc->EvalMultAndRelinearize(comp1, cc->EvalSub(1.0, comp2));
+    return result;
 }

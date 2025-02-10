@@ -1,12 +1,12 @@
-#include <algorithm>   
+#include <algorithm>
+#include <chrono>
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
 #include <iomanip>
 #include <random>
 #include <vector>
-#include <chrono>
-#include <filesystem>
-#include <fstream>
 
 #include "openfhe.h"
 
@@ -20,7 +20,7 @@ using namespace lbcrypto;
 namespace fs = std::filesystem;
 
 template <size_t N> class DirectSortTest : public ::testing::Test {
-protected:
+  protected:
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
         DirectSort<N>::getSizeParameters(parameters, rotations);
@@ -32,7 +32,8 @@ protected:
         // std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
-        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension() << std::endl;
+        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension()
+                  << std::endl;
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
@@ -49,28 +50,25 @@ protected:
         m_scaleMod = parameters.GetScalingModSize();
     }
 
-    void SaveResults(const std::string& filename, 
-                    size_t arraySize,
-                    int logRingDim,
-                    int multDepth,
-                    int scalingModSize,
-                    const SignConfig& cfg,
-                    double maxError,
-                    double avgError,
-                    double executionTimeMs) {
+    void SaveResults(const std::string &filename, size_t arraySize,
+                     int logRingDim, int multDepth, int scalingModSize,
+                     const SignConfig &cfg, double maxError, double avgError,
+                     double executionTimeMs) {
         // Create directory if it doesn't exist
         fs::create_directories("ours_results");
-        
+
         std::ofstream outFile("ours_results/" + filename, std::ios::app);
         outFile << std::fixed << std::setprecision(6);
         outFile << "Array Size (N): " << arraySize << "\n";
         outFile << "Ring Dimension: 2^" << logRingDim << "\n";
         outFile << "Multiplicative Depth: " << multDepth << "\n";
         outFile << "Scaling Mod Size: " << scalingModSize << "\n";
-        outFile << "Sign Configuration (degree, dg, df): (" 
-            << cfg.compos.n << ", " << cfg.compos.dg << ", " << cfg.compos.df << ")\n";
-        outFile << "Max Error: " << maxError << " (log2: " << std::log2(maxError) << ")\n";
-        outFile << "Average Error: " << avgError << " (log2: " << std::log2(avgError) << ")\n";
+        outFile << "Sign Configuration (degree, dg, df): (" << cfg.compos.n
+                << ", " << cfg.compos.dg << ", " << cfg.compos.df << ")\n";
+        outFile << "Max Error: " << maxError
+                << " (log2: " << std::log2(maxError) << ")\n";
+        outFile << "Average Error: " << avgError
+                << " (log2: " << std::log2(avgError) << ")\n";
         outFile << "Execution Time: " << executionTimeMs << " ms\n";
         outFile << "----------------------------------------\n";
     }
@@ -91,7 +89,8 @@ TYPED_TEST_SUITE_P(DirectSortTestFixture);
 
 TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     constexpr size_t N = TypeParam::value;
-    std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 1, 1 / (double)N);
+    std::vector<double> inputArray =
+        getVectorWithMinDiff(N, 0, 1, 1 / (double)N);
 
     std::cout << "Input array size: " << N << std::endl;
     std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
@@ -105,9 +104,9 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     SignConfig Cfg;
     if (N <= 16)
         Cfg = SignConfig(CompositeSignConfig(3, 2, 2));
-    else if(N <= 128)
+    else if (N <= 128)
         Cfg = SignConfig(CompositeSignConfig(3, 3, 2));
-    else if(N<=512)
+    else if (N <= 512)
         Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
     else
         Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
@@ -121,7 +120,8 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
 
     // End timing
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
     EXPECT_EQ(ctxt_out->GetLevel(), this->m_multDepth)
         << "Use the level returned by the result for best performance";
@@ -153,41 +153,35 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     std::cout << "\nPerformance Analysis:" << std::endl;
     std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
     std::cout << "\nError Analysis:" << std::endl;
-    std::cout << "Maximum error: " << maxError 
+    std::cout << "Maximum error: " << maxError
               << " (log2: " << std::log2(maxError) << ")" << std::endl;
-    std::cout << "Average error: " << avgError 
+    std::cout << "Average error: " << avgError
               << " (log2: " << std::log2(avgError) << ")" << std::endl;
-    std::cout << "Number of errors larger than 0.01: " << largeErrorCount << std::endl;
+    std::cout << "Number of errors larger than 0.01: " << largeErrorCount
+              << std::endl;
 
     // Save results to file
     std::string filename = "sort_results_N" + std::to_string(N) + ".txt";
-    this->SaveResults(filename, 
-                     N,
-                     17, // logRingDim
-                     this->m_multDepth,
-                     this->m_scaleMod,
-                     Cfg,
-                     maxError,
-                     avgError,
-                     duration.count());
+    this->SaveResults(filename, N,
+                      17, // logRingDim
+                      this->m_multDepth, this->m_scaleMod, Cfg, maxError,
+                      avgError, duration.count());
 
     ASSERT_LT(maxError, 0.01);
 }
 
-
 REGISTER_TYPED_TEST_SUITE_P(DirectSortTestFixture, SortTest);
 
 using TestSizes = ::testing::Types<
-    // std::integral_constant<size_t, 4>, 
+    // std::integral_constant<size_t, 4>,
     // std::integral_constant<size_t, 8>,
-    // std::integral_constant<size_t, 16>, 
+    // std::integral_constant<size_t, 16>,
     // std::integral_constant<size_t, 32>,
-    // std::integral_constant<size_t, 64>, 
+    // std::integral_constant<size_t, 64>,
     // std::integral_constant<size_t, 128>,
     // std::integral_constant<size_t, 256>,
     // std::integral_constant<size_t, 512>,
     // std::integral_constant<size_t, 1024>,
-    std::integral_constant<size_t, 2048>
->;
+    std::integral_constant<size_t, 2048>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);

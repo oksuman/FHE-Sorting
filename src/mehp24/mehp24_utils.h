@@ -9,7 +9,7 @@
  * Copyright (c) 2024 Federico Mazzone
  * Licensed under BSD 2-Clause License
  *
- * Modified and adapted by oksuman 
+ * Modified and adapted by oksuman
  */
 #pragma once
 
@@ -45,7 +45,8 @@ Ciphertext<Element> operator+(const Ciphertext<Element> &a, const double &b) {
 }
 
 template <typename Element>
-Ciphertext<Element> operator+(const Ciphertext<Element> &a, const std::vector<double> &b) {
+Ciphertext<Element> operator+(const Ciphertext<Element> &a,
+                              const std::vector<double> &b) {
     CryptoContext<Element> cc = a->GetCryptoContext();
     auto plaintext = cc->MakeCKKSPackedPlaintext(b);
     return cc->EvalAdd(a, plaintext);
@@ -62,14 +63,16 @@ Ciphertext<Element> operator-(const Ciphertext<Element> &a, const double &b) {
 }
 
 template <typename Element>
-Ciphertext<Element> operator*(const Ciphertext<Element> &a, const std::vector<double> &b) {
+Ciphertext<Element> operator*(const Ciphertext<Element> &a,
+                              const std::vector<double> &b) {
     CryptoContext<Element> cc = a->GetCryptoContext();
     auto plaintext = cc->MakeCKKSPackedPlaintext(b);
     return cc->EvalMult(a, plaintext);
 }
 
 template <typename Element>
-Ciphertext<Element> operator*(const std::vector<double> &a, const Ciphertext<Element> &b) {
+Ciphertext<Element> operator*(const std::vector<double> &a,
+                              const Ciphertext<Element> &b) {
     return b * a;
 }
 
@@ -85,139 +88,81 @@ Ciphertext<Element> operator*(const double a, const Ciphertext<Element> &b) {
 }
 
 // Matrix operations for sorting
-Ciphertext<DCRTPoly> maskRow(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize,
-    const size_t rowIndex
-);
+Ciphertext<DCRTPoly> maskRow(Ciphertext<DCRTPoly> c, const size_t matrixSize,
+                             const size_t rowIndex);
 
-Ciphertext<DCRTPoly> maskColumn(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize,
-    const size_t columnIndex
-);
+Ciphertext<DCRTPoly> maskColumn(Ciphertext<DCRTPoly> c, const size_t matrixSize,
+                                const size_t columnIndex);
 
-Ciphertext<DCRTPoly> replicateRow(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize
-);
+Ciphertext<DCRTPoly> replicateRow(Ciphertext<DCRTPoly> c,
+                                  const size_t matrixSize);
 
-Ciphertext<DCRTPoly> replicateColumn(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize
-);
+Ciphertext<DCRTPoly> replicateColumn(Ciphertext<DCRTPoly> c,
+                                     const size_t matrixSize);
 
-Ciphertext<DCRTPoly> sumRows(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize,
-    bool maskOutput=false,
-    const size_t outputRow=0
-);
+Ciphertext<DCRTPoly> sumRows(Ciphertext<DCRTPoly> c, const size_t matrixSize,
+                             bool maskOutput = false,
+                             const size_t outputRow = 0);
 
-Ciphertext<DCRTPoly> sumColumns(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize,
-    bool maskOutput=false
-);
+Ciphertext<DCRTPoly> sumColumns(Ciphertext<DCRTPoly> c, const size_t matrixSize,
+                                bool maskOutput = false);
 
-Ciphertext<DCRTPoly> transposeRow(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize,
-    bool maskOutput=false
-);
+Ciphertext<DCRTPoly> transposeRow(Ciphertext<DCRTPoly> c,
+                                  const size_t matrixSize,
+                                  bool maskOutput = false);
 
-Ciphertext<DCRTPoly> transposeColumn(
-    Ciphertext<DCRTPoly> c,
-    const size_t matrixSize,
-    bool maskOutput=false
-);
+Ciphertext<DCRTPoly> transposeColumn(Ciphertext<DCRTPoly> c,
+                                     const size_t matrixSize,
+                                     bool maskOutput = false);
 
 // Comparison operations
-Ciphertext<DCRTPoly> equal(
-    const Ciphertext<DCRTPoly> &c1,
-    const Ciphertext<DCRTPoly> &c2,
-    const double a,
-    const double b,
-    const uint32_t degree,
-    const double error = 0.00001
-);
+Ciphertext<DCRTPoly> equal(const Ciphertext<DCRTPoly> &c1,
+                           const Ciphertext<DCRTPoly> &c2, const double a,
+                           const double b, const uint32_t degree,
+                           const double error = 0.00001);
 
-Ciphertext<DCRTPoly> compare(
-    const Ciphertext<DCRTPoly> &c1,
-    const Ciphertext<DCRTPoly> &c2,
-    const double a,
-    const double b,
-    const uint32_t degree,
-    const double error = 0.00001
-);
+Ciphertext<DCRTPoly> compare(const Ciphertext<DCRTPoly> &c1,
+                             const Ciphertext<DCRTPoly> &c2, const double a,
+                             const double b, const uint32_t degree,
+                             const double error = 0.00001);
 
-Ciphertext<DCRTPoly> compareAdv(
-    const Ciphertext<DCRTPoly> &c1,
-    const Ciphertext<DCRTPoly> &c2,
-    const size_t dg,
-    const size_t df
-);
+Ciphertext<DCRTPoly> compareAdv(const Ciphertext<DCRTPoly> &c1,
+                                const Ciphertext<DCRTPoly> &c2, const size_t dg,
+                                const size_t df);
 
-Ciphertext<DCRTPoly> compareGt(
-    const Ciphertext<DCRTPoly> &c1,
-    const Ciphertext<DCRTPoly> &c2,
-    const double a,
-    const double b,
-    const uint32_t degree,
-    const double error = 0.00001
-);
+Ciphertext<DCRTPoly> compareGt(const Ciphertext<DCRTPoly> &c1,
+                               const Ciphertext<DCRTPoly> &c2, const double a,
+                               const double b, const uint32_t degree,
+                               const double error = 0.00001);
 
 // Indicator functions
-Ciphertext<DCRTPoly> indicator(
-    const Ciphertext<DCRTPoly> &c,
-    const double a1,
-    const double b1,
-    const double a,
-    const double b,
-    const uint32_t degree
-);
+Ciphertext<DCRTPoly> indicator(const Ciphertext<DCRTPoly> &c, const double a1,
+                               const double b1, const double a, const double b,
+                               const uint32_t degree);
 
-Ciphertext<DCRTPoly> indicatorAdv(
-    const Ciphertext<DCRTPoly> &c,
-    const double b,
-    const size_t dg,
-    const size_t df
-);
+Ciphertext<DCRTPoly> indicatorAdv(const Ciphertext<DCRTPoly> &c, const double b,
+                                  const size_t dg, const size_t df);
 
-Ciphertext<DCRTPoly> indicatorAdvShifted(
-    const Ciphertext<DCRTPoly> &c,
-    const double b,
-    const size_t dg,
-    const size_t df
-);
+Ciphertext<DCRTPoly> indicatorAdvShifted(const Ciphertext<DCRTPoly> &c,
+                                         const double b, const size_t dg,
+                                         const size_t df);
 
 // Helper functions
-std::vector<int32_t> getRotationIndices(
-    const size_t matrixSize
-);
+std::vector<int32_t> getRotationIndices(const size_t matrixSize);
 
-usint depth2degree(
-    const usint depth
-);
+usint depth2degree(const usint depth);
 
-Ciphertext<DCRTPoly> signAdv(
-    Ciphertext<DCRTPoly> &c,
-    const size_t dg,
-    const size_t df
-);
+Ciphertext<DCRTPoly> signAdv(Ciphertext<DCRTPoly> &c, const size_t dg,
+                             const size_t df);
 
-std::vector<Ciphertext<DCRTPoly>> splitCiphertext(
-    const Ciphertext<DCRTPoly>& c,
-    const size_t totalLength,
-    const size_t subLength,
-    CryptoContext<DCRTPoly>& cc
-); 
+std::vector<Ciphertext<DCRTPoly>> splitCiphertext(const Ciphertext<DCRTPoly> &c,
+                                                  const size_t totalLength,
+                                                  const size_t subLength,
+                                                  CryptoContext<DCRTPoly> &cc);
 
-Ciphertext<DCRTPoly> combineCiphertext(
-    const std::vector<Ciphertext<DCRTPoly>>& parts,
-    const size_t subLength,
-    CryptoContext<DCRTPoly>& cc
-); 
+Ciphertext<DCRTPoly>
+combineCiphertext(const std::vector<Ciphertext<DCRTPoly>> &parts,
+                  const size_t subLength, CryptoContext<DCRTPoly> &cc);
 
 } // namespace utils
 } // namespace mehp24

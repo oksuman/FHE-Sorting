@@ -6,7 +6,7 @@ Ciphertext<DCRTPoly> Encryption::encryptInput(std::vector<double> input) {
     // std::cout << "max batch: " <<  m_cc->GetRingDimension() / 2 << std::endl;
     // std::cout << "input size: " << input.size() << std::endl;
 
-    assert(input.size() <= m_cc->GetRingDimension() / 2  &&
+    assert(input.size() <= m_cc->GetRingDimension() / 2 &&
            "Input size is larger than the maximum available batch size");
 
     Plaintext plaintext = m_cc->MakeCKKSPackedPlaintext(input);

@@ -22,7 +22,7 @@ template <int N> struct Sinc {
         if (std::abs(x) < 1e-10) {
             return 1.0;
         } else {
-            return std::sin(M_PI *x) / M_PI *x;
+            return std::sin(M_PI * x) / M_PI * x;
         }
     }
 
@@ -75,8 +75,7 @@ class Comparison {
     // outputs 1 if x == 0
     // outputs 0 otherwise
     Ciphertext<DCRTPoly> indicator(const CryptoContext<DCRTPoly> &cc,
-                                 const Ciphertext<DCRTPoly> &x,
-                                 const double c,
-                                 SignFunc SignFunc, SignConfig &Cfg);
-
+                                   const Ciphertext<DCRTPoly> &x,
+                                   const double c, SignFunc SignFunc,
+                                   SignConfig &Cfg);
 };

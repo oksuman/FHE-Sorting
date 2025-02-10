@@ -1,4 +1,4 @@
-#include <algorithm>   
+#include <algorithm>
 #include <cmath>
 #include <gtest/gtest.h>
 #include <iomanip>
@@ -12,7 +12,6 @@
 #include "sign.h"
 #include "sort_algo.h"
 #include "utils.h"
-
 
 using namespace lbcrypto;
 
@@ -29,7 +28,8 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
         std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
-        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension() << std::endl;
+        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension()
+                  << std::endl;
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
@@ -202,7 +202,6 @@ TYPED_TEST_P(DirectSortTestFixture, RotationIndexCheck) {
     }
 }
 
-
 TYPED_TEST_P(DirectSortTestFixture, RotationIndexCheckWithNoise) {
     constexpr size_t N = TypeParam::value;
     constexpr double NOISE_TOLERANCE = 0.001;
@@ -287,7 +286,8 @@ TYPED_TEST_P(DirectSortTestFixture, RotationIndexCheckWithNoise) {
 
 TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     constexpr size_t N = TypeParam::value;
-    std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 1, 1 / (double)N);
+    std::vector<double> inputArray =
+        getVectorWithMinDiff(N, 0, 1, 1 / (double)N);
 
     std::cout << "Input array size: " << N << std::endl;
     std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
@@ -301,25 +301,27 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     SignConfig Cfg = SignConfig(CompositeSignConfig(3, 6, 3));
 
     // Get intermediate rank result
-    auto ctxt_rank = directSort->constructRank(ctxt, SignFunc::CompositeSign, Cfg);
-    
+    auto ctxt_rank =
+        directSort->constructRank(ctxt, SignFunc::CompositeSign, Cfg);
+
     // Decrypt and analyze rank precision
     Plaintext rank_result;
     this->m_cc->Decrypt(this->m_privateKey, ctxt_rank, &rank_result);
     std::vector<double> rank_array = rank_result->GetRealPackedValue();
-    
+
     // Calculate expected ranks for comparison
     std::vector<double> expected_ranks(N);
     for (size_t i = 0; i < N; ++i) {
-        expected_ranks[i] = std::count_if(inputArray.begin(), inputArray.end(),
-                                        [&](double val) { return val < inputArray[i]; });
+        expected_ranks[i] =
+            std::count_if(inputArray.begin(), inputArray.end(),
+                          [&](double val) { return val < inputArray[i]; });
     }
-    
+
     // Calculate rank precision
     double max_rank_error = 0.0;
     double sum_log_rank_error = 0.0;
     int rank_error_count = 0;
-    
+
     for (size_t i = 0; i < N; ++i) {
         double error = std::abs(rank_array[i] - expected_ranks[i]);
         if (error > 0) {
@@ -328,12 +330,12 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
             rank_error_count++;
         }
     }
-    
+
     std::cout << "\nRank Calculation Analysis:" << std::endl;
     std::cout << "Maximum rank error: " << max_rank_error
               << " (log2: " << std::log2(max_rank_error) << ")" << std::endl;
     if (rank_error_count > 0) {
-        std::cout << "Average log2 rank error: " 
+        std::cout << "Average log2 rank error: "
                   << sum_log_rank_error / rank_error_count << std::endl;
     }
 
@@ -377,16 +379,11 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
 REGISTER_TYPED_TEST_SUITE_P(DirectSortTestFixture, SortTest, ConstructRank,
                             RotationIndexCheck, RotationIndexCheckWithNoise);
 
-
 using TestSizes = ::testing::Types<
     std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
     std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>, 
-    std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>, 
-    std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>,
-    std::integral_constant<size_t, 2048>
->;
+    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>, std::integral_constant<size_t, 2048>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);

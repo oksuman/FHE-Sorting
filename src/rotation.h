@@ -197,8 +197,8 @@ template <int N> class RotationComposer {
     Decomposer<N> m_decomposer;
     DecomposeAlgo m_algo;
 
-    std::set<int> rotation_calls; 
-    std::set<int> available_indices; 
+    std::set<int> rotation_calls;
+    std::set<int> available_indices;
     // uint32_t M;
 
   public:
@@ -210,7 +210,6 @@ template <int N> class RotationComposer {
         // M = cc->GetCyclotomicOrder();
         available_indices = std::set<int>(rotIndices.begin(), rotIndices.end());
     }
-
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
@@ -266,9 +265,7 @@ template <int N> class RotationTree {
         for (int i = start; i <= end; ++i) {
             auto steps = m_decomposer.decompose(i, end, m_algo);
 #pragma omp critical
-            {
-                addToTree(root.get(), steps, 0, i);
-            }
+            { addToTree(root.get(), steps, 0, i); }
         }
     }
 
@@ -352,4 +349,3 @@ template <int N> class RotationTree {
         return traverseAndRotate(rotated, child, steps, stepIndex + 1);
     }
 };
-

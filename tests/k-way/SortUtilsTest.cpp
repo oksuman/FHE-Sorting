@@ -296,7 +296,7 @@ TEST_F(SortUtilsTest, SlotMatching3) {
     input[2] = 0.783099;
     input[3] = 0.79844;
     input[4] = 0.911647;
-    input[5] = 0.197551; 
+    input[5] = 0.197551;
     input[6] = 0.335223;
     input[7] = 0.76823;
     input[8] = 0.277775;
@@ -332,17 +332,20 @@ TEST_F(SortUtilsTest, SlotMatching3) {
     Ciphertext<DCRTPoly> ctxtOut[3];
     Ciphertext<DCRTPoly> ctxtCompOut[3];
     long shift = 1;
-    m_sortUtils->slotMatching3(ct, ctComp, indices, shift, ctxtOut, ctxtCompOut);
+    m_sortUtils->slotMatching3(ct, ctComp, indices, shift, ctxtOut,
+                               ctxtCompOut);
 
     // Expected rotated outputs - first 10 slots for each array
     std::vector<std::vector<double>> expectedOut = {
         // Original values (rotation 0)
-        {0.840188, 0.394383, 0.783099, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823, 0.277775, 0},
+        {0.840188, 0.394383, 0.783099, 0.79844, 0.911647, 0.197551, 0.335223,
+         0.76823, 0.277775, 0},
         // Rotated by 1
-        {0.394397, 0.783099, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823, 0.277775, 0.0, 0.0},
+        {0.394397, 0.783099, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823,
+         0.277775, 0.0, 0.0},
         // Rotated by 2
-        {0.783097, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823, 0.277775, 0.0, 0.0, 0.0}
-    };
+        {0.783097, 0.79844, 0.911647, 0.197551, 0.335223, 0.76823, 0.277775,
+         0.0, 0.0, 0.0}};
 
     // Expected comparison outputs - first 10 slots for each array
     std::vector<std::vector<double>> expectedComp = {
@@ -351,18 +354,18 @@ TEST_F(SortUtilsTest, SlotMatching3) {
         // Second comparison output (unchanged)
         {1, 0.0, 1, 1, 1, 0.0, 1, 1, 0.0, 0.500616},
         // Third comparison output after flipping
-        {0.0, -1, -1, 1, -1, -1, 1, -0.500616, -0.5008, -0.498664}
-    };
+        {0.0, -1, -1, 1, -1, -1, 1, -0.500616, -0.5008, -0.498664}};
 
     // Verify outputs with appropriate tolerance
     for (int i = 0; i < 3; i++) {
         Plaintext ptResult;
         m_cc->Decrypt(m_keys.secretKey, ctxtOut[i], &ptResult);
         auto result = ptResult->GetRealPackedValue();
-        
-        for (size_t j = 0; j < 10; j++) {  // Check first 10 slots
+
+        for (size_t j = 0; j < 10; j++) { // Check first 10 slots
             // Higher tolerance for very small values
-            double tolerance = (std::abs(expectedOut[i][j]) < 1e-6) ? 1e-6 : 1e-3;
+            double tolerance =
+                (std::abs(expectedOut[i][j]) < 1e-6) ? 1e-6 : 1e-3;
             EXPECT_NEAR(result[j], expectedOut[i][j], tolerance)
                 << "Value mismatch at rotation " << i << ", slot " << j;
         }
@@ -373,7 +376,7 @@ TEST_F(SortUtilsTest, SlotMatching3) {
         Plaintext ptCompResult;
         m_cc->Decrypt(m_keys.secretKey, ctxtCompOut[i], &ptCompResult);
         auto compResult = ptCompResult->GetRealPackedValue();
-        
+
         for (size_t j = 0; j < 10; j++) {
             // Use appropriate tolerance based on value magnitude
             double tolerance = 1e-2;

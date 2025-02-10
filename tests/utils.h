@@ -1,9 +1,9 @@
 #pragma once
 
-#include <vector>
+#include <algorithm>
 #include <cassert>
 #include <random>
-#include <algorithm>
+#include <vector>
 
 inline std::vector<double> getVectorWithMinDiff(int N) {
     assert(N < 255 * 100 &&
@@ -25,24 +25,27 @@ inline std::vector<double> getVectorWithMinDiff(int N) {
     return result;
 }
 
-inline std::vector<double> getVectorWithMinDiff(int N, double minValue, double maxValue, double minDiff) {
+inline std::vector<double>
+getVectorWithMinDiff(int N, double minValue, double maxValue, double minDiff) {
     assert(minValue < maxValue && "minValue must be less than maxValue");
     assert(minDiff > 0 && "minDiff must be greater than 0");
-    
+
     double range = maxValue - minValue;
     int numSteps = static_cast<int>(std::floor(range / minDiff));
-    
-    assert(N <= numSteps && "N is too large for the given range and minimum difference");
-    
+
+    assert(N <= numSteps &&
+           "N is too large for the given range and minimum difference");
+
     std::vector<int> integers(numSteps);
     std::iota(integers.begin(), integers.end(), 0);
-    std::shuffle(integers.begin(), integers.end(), std::mt19937{std::random_device{}()});
-    
+    std::shuffle(integers.begin(), integers.end(),
+                 std::mt19937{std::random_device{}()});
+
     std::vector<double> result(N);
-    
+
     for (int i = 0; i < N; ++i) {
         result[i] = minValue + integers[i] * minDiff;
     }
-    
+
     return result;
 }

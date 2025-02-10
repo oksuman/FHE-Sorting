@@ -2,8 +2,8 @@
 #define EVALUTILS_H_
 
 #include "ciphertext-fwd.h"
-#include "openfhe.h"
 #include "encryption.h"
+#include "openfhe.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -18,9 +18,11 @@ class EvalUtils {
   public:
     EvalUtils() = default;
     EvalUtils(CryptoContext<DCRTPoly> cc) : m_cc(cc) {}
-    EvalUtils(CryptoContext<DCRTPoly> cc, std::shared_ptr<Encryption> enc, const PublicKey<DCRTPoly> &publicKey,
+    EvalUtils(CryptoContext<DCRTPoly> cc, std::shared_ptr<Encryption> enc,
+              const PublicKey<DCRTPoly> &publicKey,
               const PrivateKey<DCRTPoly> &privateKey)
-        : m_cc(cc), m_publicKey(publicKey), m_privateKey(privateKey), m_enc(enc) {}
+        : m_cc(cc), m_publicKey(publicKey), m_privateKey(privateKey),
+          m_enc(enc) {}
 
     // Continuously adds cipher to reach the target multiplication
     void multByInt(Ciphertext<DCRTPoly> &ctxt, long coeff,
