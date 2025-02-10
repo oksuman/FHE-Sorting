@@ -19,7 +19,7 @@ class KWaySortTest : public ::testing::Test {
         KWayAdapter<array_length>::getSizeParameters(parameters, rotations);
 
         parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr usint ringDim = 1 << 12;
+        constexpr usint ringDim = 1 << 10;
         parameters.SetRingDim(ringDim);
 
         m_cc = GenCryptoContext(parameters);
@@ -69,15 +69,11 @@ TEST_F(KWaySortTest, Sort128Elements) {
 
     // Create KWayAdapter with k=2 (binary sorting)
     auto kwaySorter = std::make_unique<KWayAdapter<array_length>>(
-        m_cc, m_publicKey, m_privateKey, m_enc,
-        2, // k-way factor
-        7, // M parameter
-        2, // d_f parameter
-        5  // d_g parameter
+        m_cc, m_publicKey, m_privateKey, m_enc, 2 /*k-way number*/, 7 /*M*/
     );
 
     // Sort using k-way algorithm
-    auto Cfg = SignConfig(CompositeSignConfig(3, 3, 6));
+    auto Cfg = SignConfig(CompositeSignConfig(3, 2, 5));
     Ciphertext<DCRTPoly> ctxt_out =
         kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
 

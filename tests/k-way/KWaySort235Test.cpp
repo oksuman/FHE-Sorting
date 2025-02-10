@@ -231,13 +231,11 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     auto kwaySorter = std::make_unique<KWayAdapter<N>>(
         this->m_cc, this->m_publicKey, this->m_privateKey, this->m_enc,
         k,   // k-way factor
-        M,   // M parameter
-        d_f, // d_f parameter
-        d_g  // d_g parameter
+        M   // M parameter
     );
 
     // Sort using k-way algorithm
-    auto Cfg = SignConfig(CompositeSignConfig(3, 3, 6));
+    auto Cfg = SignConfig(CompositeSignConfig(3, d_f, d_g));
     Ciphertext<DCRTPoly> ctxt_out =
         kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
 

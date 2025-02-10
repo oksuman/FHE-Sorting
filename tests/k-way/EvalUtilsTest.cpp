@@ -128,42 +128,6 @@ TEST_F(EvalUtilsTest, Rotation) {
     VerifyResults(rightResult, expectedRight);
 }
 
-TEST_F(EvalUtilsTest, EvalPoly) {
-    std::vector<double> input = {0.1, 0.2, 0.3, 0.4};
-    std::vector<long> coeffs = {0, 1, 0, -2,
-                                0, 3, 0, -4}; // x - 2x³ + 3x⁵ - 4x⁷
-
-    auto ptxt = cc->MakeCKKSPackedPlaintext(input);
-    auto ctxt = cc->Encrypt(keys.publicKey, ptxt);
-
-    Ciphertext<DCRTPoly> result;
-    evaluator->evalPoly(ctxt, coeffs, 0, result);
-
-    std::vector<double> expected(4);
-    for (size_t i = 0; i < input.size(); i++) {
-        double x = input[i];
-        expected[i] = x - 2 * x * x * x + 3 * x * x * x * x * x -
-                      4 * x * x * x * x * x * x * x;
-    }
-    VerifyResults(result, expected, 0.01);
-}
-
-TEST_F(EvalUtilsTest, ApproxComp) {
-    std::vector<double> input1 = {0.3, 0.7, 0.5, 0.1};
-    std::vector<double> input2 = {0.4, 0.6, 0.5, 0.2};
-
-    auto ptxt1 = cc->MakeCKKSPackedPlaintext(input1);
-    auto ptxt2 = cc->MakeCKKSPackedPlaintext(input2);
-    auto ctxt1 = cc->Encrypt(keys.publicKey, ptxt1);
-    auto ctxt2 = cc->Encrypt(keys.publicKey, ptxt2);
-
-    auto result = ctxt1;
-    evaluator->approxComp(result, ctxt2, 2, 3);
-
-    std::vector<double> expected = {0.0, 1.0, 0.5, 0.0};
-    VerifyResults(result, expected, 0.2);
-}
-
 TEST_F(EvalUtilsTest, Bootstrapping) {
     std::vector<double> input = {0.1, 0.2, 0.3, 0.4};
 

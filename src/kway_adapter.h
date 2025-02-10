@@ -30,11 +30,11 @@ template <int N> class KWayAdapter : public SortBase<N> {
   public:
     KWayAdapter(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
                 PrivateKey<DCRTPoly> privateKey,
-                std::shared_ptr<Encryption> enc, int k, int M, int d_f, int d_g)
+                std::shared_ptr<Encryption> enc, int k, int M)
         : SortBase<N>(enc), m_cc(cc), m_PublicKey(publicKey), m_enc(enc) {
         assert(std::pow(k, M) == N && "k^M should be equal to input length N");
-        m_sorter = std::make_unique<kwaySort::Sorter>(
-            cc, enc, N, k, M, d_f, d_g, privateKey, publicKey);
+        m_sorter = std::make_unique<kwaySort::Sorter>(cc, enc, N, k, M,
+                                                      privateKey, publicKey);
     }
 
     static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
@@ -63,10 +63,10 @@ template <int N> class KWayAdapter : public SortBase<N> {
     }
 
     Ciphertext<DCRTPoly> sort(const Ciphertext<DCRTPoly> &input_array,
-                              SignFunc signFunc, SignConfig &cfg) override {
+                              SignFunc signFunc, SignConfig &Cfg) override {
         Ciphertext<DCRTPoly> result;
         Ciphertext<DCRTPoly> input_copy = input_array->Clone();
-        m_sorter->sorter(input_copy, result);
+        m_sorter->sorter(input_copy, result, Cfg);
         return result;
     }
 };
