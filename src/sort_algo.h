@@ -659,7 +659,8 @@ template <int N> class DirectSort : public SortBase<N> {
             rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N, SignFunc::CompositeSign, Cfg);
             auto masked_input = m_cc->EvalMult(rotationMask, input_array);
 
-            result = mehp24::utils::sumColumns(masked_input, N, true);
+            result = mehp24::utils::sumColumnsH(masked_input, N, true);
+            result = mehp24::utils::transposeColumnH(result, N, true);
         }else{
 
         }
@@ -689,7 +690,7 @@ template <int N> class DirectSort : public SortBase<N> {
         Ciphertext<DCRTPoly> ctx_Rank;
         ctx_Rank = constructRank(input_array, SignFunc, Cfg);
 
-        Ciphertext<DCRTPoly> output_array = rotationIndexCheck(ctx_Rank, input_array);
+        Ciphertext<DCRTPoly> output_array = rotationIndexCheckH(ctx_Rank, input_array);
 
         std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
         return output_array;

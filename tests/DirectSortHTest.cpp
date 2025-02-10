@@ -30,7 +30,8 @@ protected:
         case 4:
             m_multDepth = 45;
             m_scaleMod = 48;
-            rotations = {1, 2, 4, 8, 16};
+            // rotations = {0, 1, 2, 4, 8, 16};
+            rotations = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16};
             break;
         case 8:
             m_multDepth = 45;
@@ -205,8 +206,8 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
 REGISTER_TYPED_TEST_SUITE_P(HybridSortTestFixture, SortHybridTest);
 
 using TestSizes = ::testing::Types<
-    // std::integral_constant<size_t, 4>,
-    // std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 4>,
+    std::integral_constant<size_t, 8>,
     std::integral_constant<size_t, 16>,
     std::integral_constant<size_t, 32>,
     std::integral_constant<size_t, 64>,

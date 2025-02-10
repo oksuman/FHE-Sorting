@@ -209,10 +209,13 @@ template <int N> class RotationComposer {
         : m_cc(cc), m_enc(enc), m_decomposer(rotIndices), m_algo(algo) {
         // M = cc->GetCyclotomicOrder();
         available_indices = std::set<int>(rotIndices.begin(), rotIndices.end());
+        std::set<int> rotation_calls;
     }
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
+        rotation_calls.insert(rotation); 
+
         if (rotation % input->GetSlots() == 0) {
             return input->Clone();
         }
@@ -228,6 +231,15 @@ template <int N> class RotationComposer {
             result = m_cc->EvalRotate(result, step.stepSize);
         return result;
     }
+
+    const std::set<int>& getRotationCalls() const { 
+        return rotation_calls; 
+    }
+
+    void clearRotationCalls() { 
+        rotation_calls.clear(); 
+    }
+
 };
 
 template <int N> class RotationTree {

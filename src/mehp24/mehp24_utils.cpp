@@ -92,8 +92,10 @@ Ciphertext<DCRTPoly> transposeRow(Ciphertext<DCRTPoly> c,
 
 Ciphertext<DCRTPoly> transposeColumn(Ciphertext<DCRTPoly> c,
                                      const size_t matrixSize, bool maskOutput) {
-    for (size_t i = 1; i <= LOG2(matrixSize); i++)
+    for (size_t i = 1; i <= LOG2(matrixSize); i++){
+        std::cout << "required: " << i << std::endl;
         c += c << (matrixSize * (matrixSize - 1) / (1 << i));
+    }
 
     if (maskOutput)
         c = maskRow(c, matrixSize, 0);
@@ -315,7 +317,7 @@ std::vector<bool> getBinaryPath(size_t columnIndex, size_t matrixSize) {
 Ciphertext<DCRTPoly> sumColumnsToTarget(Ciphertext<DCRTPoly> c, 
                                        const size_t matrixSize,
                                        const size_t columnIndex,
-                                       bool maskOutput = false) {
+                                       bool maskOutput) {
     assert(columnIndex < matrixSize && "Invalid column index");
     
     // Get binary path to target column
@@ -342,6 +344,48 @@ Ciphertext<DCRTPoly> sumColumnsToTarget(Ciphertext<DCRTPoly> c,
     return c;
 }
 
+Ciphertext<DCRTPoly> sumColumnsH(Ciphertext<DCRTPoly> c, const size_t matrixSize,
+                                bool maskOutput) {
+    for (size_t i = 0; i < LOG2(matrixSize); i++){
+        std::cout << "required: " << i << std::endl;
+        std::cout << "in column" << std::endl;
+        c += c << (1 << i);
+    }
+
+    if (maskOutput){
+        std::vector<double> mask(matrixSize * matrixSize, 0.0);
+
+        for (size_t i = 0; i < matrixSize; i++)
+            mask[matrixSize * i] = 1.0;
+
+        auto cc = c->GetCryptoContext();
+        Plaintext pmask = cc->MakeCKKSPackedPlaintext(mask, 1, c->GetLevel(), nullptr, matrixSize*matrixSize);
+        c = cc->EvalMult(c, pmask);
+    }
+    return c;
+}
+
+Ciphertext<DCRTPoly> transposeColumnH(Ciphertext<DCRTPoly> c,
+                                     const size_t matrixSize, bool maskOutput) {
+    for (size_t i = 1; i <= LOG2(matrixSize); i++){
+        std::cout << "required: " << i << std::endl;
+        std::cout << "in transpose" << std::endl;
+        c += c << (matrixSize * (matrixSize - 1) / (1 << i));
+    }
+
+    if (maskOutput){
+        std::vector<double> mask(matrixSize * matrixSize, 0.0);
+        for (size_t i = 0; i < matrixSize; i++)
+            mask[i] = 1.0;
+
+        auto cc = c->GetCryptoContext();
+        Plaintext pmask = cc->MakeCKKSPackedPlaintext(mask, 1, c->GetLevel(), nullptr, matrixSize*matrixSize);
+        c = cc->EvalMult(c, pmask);
+    }
+    return c;
+}
+
+
 Ciphertext<DCRTPoly> transposeColumnTarget(Ciphertext<DCRTPoly> c,
                                      const size_t matrixSize, const size_t rowIndex, bool maskOutput) {
     for (size_t i = 1; i <= LOG2(matrixSize); i++)
@@ -352,6 +396,7 @@ Ciphertext<DCRTPoly> transposeColumnTarget(Ciphertext<DCRTPoly> c,
 
     return c;
 }
+
 
 
 
