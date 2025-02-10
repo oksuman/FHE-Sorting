@@ -589,8 +589,6 @@ template <int N> class DirectSort : public SortBase<N> {
             rotIndex = m_cc->EvalChebyshevSeriesPS(rotIndex,
                                                     sincCoefficients, -1, 1);
 
-
-
             auto masked_input = m_cc->EvalMult(rotIndex, input_array);
             std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);
 #pragma omp parallel for

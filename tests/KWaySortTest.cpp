@@ -48,7 +48,7 @@ class KWaySortTest : public ::testing::Test {
         m_multDepth = parameters.GetMultiplicativeDepth();
     }
 
-    static constexpr int array_length = 128;
+    static constexpr int array_length = 512;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
@@ -69,11 +69,11 @@ TEST_F(KWaySortTest, Sort128Elements) {
 
     // Create KWayAdapter with k=2 (binary sorting)
     auto kwaySorter = std::make_unique<KWayAdapter<array_length>>(
-        m_cc, m_publicKey, m_privateKey, m_enc, 2 /*k-way number*/, 7 /*M*/
+        m_cc, m_publicKey, m_privateKey, m_enc, 2 /*k-way number*/, 9 /*M*/
     );
 
     // Sort using k-way algorithm
-    auto Cfg = SignConfig(CompositeSignConfig(3, 2, 5));
+    auto Cfg = SignConfig(CompositeSignConfig(3, 2, 5), m_multDepth);
     Ciphertext<DCRTPoly> ctxt_out =
         kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
 

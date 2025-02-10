@@ -67,9 +67,6 @@ class Comparison {
                                  const Ciphertext<DCRTPoly> &a,
                                  const Ciphertext<DCRTPoly> &b,
                                  SignFunc SignFunc, SignConfig &Cfg);
-    Ciphertext<DCRTPoly> max(const CryptoContext<DCRTPoly> &cc,
-                             const Ciphertext<DCRTPoly> &a,
-                             const Ciphertext<DCRTPoly> &b);
 
     // implementation from MEHP24
     // outputs 1 if x == 0
