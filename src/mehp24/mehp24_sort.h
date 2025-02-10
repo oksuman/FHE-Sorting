@@ -36,14 +36,13 @@ sort(const std::vector<Ciphertext<DCRTPoly>> &c, const size_t subVectorLength,
 // Sort using FG approximation
 Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
                             uint32_t dg_c, uint32_t df_c, uint32_t dg_i,
-                            uint32_t df_i, PrivateKey<DCRTPoly> sk,
+
                             CryptoContext<DCRTPoly> m_cc);
 
 Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
                             SignFunc SignFunc, SignConfig &Cfg,
                             std::unique_ptr<Comparison> &comp, uint32_t dg_i,
-                            uint32_t df_i, PrivateKey<DCRTPoly> sk,
-                            CryptoContext<DCRTPoly> m_cc);
+                            uint32_t df_i, CryptoContext<DCRTPoly> m_cc);
 
 // Sort using FG approximation for multiple ciphertexts
 std::vector<Ciphertext<DCRTPoly>>
@@ -66,4 +65,4 @@ sortLargeArrayFG(Ciphertext<DCRTPoly> c, const size_t totalLength,
                  std::unique_ptr<Comparison> &comp, uint32_t dg_i,
                  uint32_t df_i, CryptoContext<DCRTPoly> cc);
 
-} // namespace mehp24
+} // namespace mehp24 

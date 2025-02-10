@@ -217,32 +217,19 @@ sort(const std::vector<Ciphertext<DCRTPoly>> &c, const size_t subVectorLength,
 }
 
 Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
-                            uint32_t dg_c, uint32_t df_c, uint32_t dg_i,
-                            uint32_t df_i, PrivateKey<DCRTPoly> sk,
+                            uint32_t dg_c, uint32_t df_c, uint32_t dg_i, uint32_t df_i,
                             CryptoContext<DCRTPoly> m_cc) {
     Plaintext ptx;
 
     Ciphertext<DCRTPoly> VR = replicateRow(c, vectorLength);
-    // m_cc->Decrypt(VR, sk, &ptx);
-    // std::cout << "VR: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     Ciphertext<DCRTPoly> VC =
         replicateColumn(transposeRow(c, vectorLength, true), vectorLength);
-    // m_cc->Decrypt(VC, sk, &ptx);
-    // std::cout << "VC: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     Ciphertext<DCRTPoly> C = compareAdv(VR, VC, dg_c, df_c);
     std::cout << "C levels: " << C->GetLevel() << std::endl;
-    // m_cc->Decrypt(C, sk, &ptx);
-    // std::cout << "C: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     Ciphertext<DCRTPoly> R = sumRows(C, vectorLength);
-    // m_cc->Decrypt(R, sk, &ptx);
-    // std::cout << "R: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     std::vector<double> subMask(vectorLength * vectorLength);
     for (size_t i = 0; i < vectorLength; i++)
@@ -251,25 +238,13 @@ Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
     Ciphertext<DCRTPoly> M =
         indicatorAdv(R + subMask, vectorLength, dg_i, df_i);
     std::cout << "M levels: " << M->GetLevel() << std::endl;
-    // m_cc->Decrypt(M, sk, &ptx);
-    // std::cout << "M: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     auto tmp = M * VR;
-    // m_cc->Decrypt(tmp, sk, &ptx);
-    // std::cout << "M*VR: " << std::endl;
-    // std::cout << ptx << std::endl;
-
     Ciphertext<DCRTPoly> S = sumColumns(M * VR, vectorLength, true);
     std::cout << "S levels: " << S->GetLevel() << std::endl;
-    // m_cc->Decrypt(S, sk, &ptx);
-    // std::cout << "S: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     auto result = transposeColumn(S, vectorLength, true);
-    // m_cc->Decrypt(result, sk, &ptx);
-    // std::cout << "result: " << std::endl;
-    // std::cout << ptx << std::endl;
+
 
     return result;
 }
@@ -277,32 +252,18 @@ Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
 Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
                             SignFunc SignFunc, SignConfig &Cfg,
                             std::unique_ptr<Comparison> &comp, uint32_t dg_i,
-                            uint32_t df_i, PrivateKey<DCRTPoly> sk,
-                            CryptoContext<DCRTPoly> m_cc) {
+                            uint32_t df_i, CryptoContext<DCRTPoly> m_cc) {
     Plaintext ptx;
 
     Ciphertext<DCRTPoly> VR = replicateRow(c, vectorLength);
-    // m_cc->Decrypt(VR, sk, &ptx);
-    // std::cout << "VR: " << std::endl;
-    // std::cout << ptx << std::endl;
-
     Ciphertext<DCRTPoly> VC =
         replicateColumn(transposeRow(c, vectorLength, true), vectorLength);
-    // m_cc->Decrypt(VC, sk, &ptx);
-    // std::cout << "VC: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     Ciphertext<DCRTPoly> C = comp->compare(m_cc, VR, VC, SignFunc, Cfg);
 
     std::cout << "C levels: " << C->GetLevel() << std::endl;
-    // m_cc->Decrypt(C, sk, &ptx);
-    // std::cout << "C: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     Ciphertext<DCRTPoly> R = sumRows(C, vectorLength);
-    // m_cc->Decrypt(R, sk, &ptx);
-    // std::cout << "R: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     std::vector<double> subMask(vectorLength * vectorLength);
     for (size_t i = 0; i < vectorLength; i++)
@@ -311,26 +272,13 @@ Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
     Ciphertext<DCRTPoly> M =
         indicatorAdv(R + subMask, vectorLength, dg_i, df_i);
     std::cout << "M levels: " << M->GetLevel() << std::endl;
-    // m_cc->Decrypt(M, sk, &ptx);
-    // std::cout << "M: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     auto tmp = M * VR;
-    // m_cc->Decrypt(tmp, sk, &ptx);
-    // std::cout << "M*VR: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     Ciphertext<DCRTPoly> S = sumColumns(M * VR, vectorLength, true);
     std::cout << "S levels: " << S->GetLevel() << std::endl;
-    // m_cc->Decrypt(S, sk, &ptx);
-    // std::cout << "S: " << std::endl;
-    // std::cout << ptx << std::endl;
 
     auto result = transposeColumn(S, vectorLength, true);
-    // m_cc->Decrypt(result, sk, &ptx);
-    // std::cout << "result: " << std::endl;
-    // std::cout << ptx << std::endl;
-
     return result;
 }
 

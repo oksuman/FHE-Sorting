@@ -12,6 +12,8 @@
 using namespace lbcrypto;
 
 #include "generated_coeffs.h"
+#include "mehp24/mehp24_utils.h"
+
 
 enum class SortAlgo { DirectSort, BitonicSort };
 
@@ -362,9 +364,6 @@ template <int N> class DirectSort : public SortBase<N> {
 
 #pragma omp parallel for num_threads(32) schedule(dynamic)
         for (int j = 0; j < num_partition / np; j++) {
-            auto T = this->getZero()->Clone();
-            T->SetSlots(num_slots);
-
             std::vector<Ciphertext<DCRTPoly>> inner_results(np);
 
 #pragma omp parallel for if (N >= 64) num_threads(2)
@@ -375,11 +374,9 @@ template <int N> class DirectSort : public SortBase<N> {
                                                           num_slots);
                 inner_results[i] = m_cc->EvalMult(preRotatedArrays[i], pmsk);
             }
-
-            for (const auto &masked : inner_results) {
-                m_cc->EvalAddInPlace(T, masked);
-            }
-
+            
+            auto T = m_cc->EvalAddMany(inner_results);
+            T->SetSlots(num_slots);
             outer_results[j] = rot.rotate(T, is * num_partition + j * np);
         }
 
@@ -587,19 +584,12 @@ template <int N> class DirectSort : public SortBase<N> {
 
             // approximate just sinc(x) in range (-2N, 2N)
             m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
-            if (N < 512) {
-                static const auto &sincCoefficients = selectCoefficients<N>();
-                rotIndex = m_cc->EvalChebyshevSeriesPS(rotIndex,
-                                                       sincCoefficients, -1, 1);
-            } else if (N == 512) {
-                SignConfig Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
-                rotIndex = comp.indicator(m_cc, rotIndex, 0.5 / (2 * N),
-                                          SignFunc::CompositeSign, Cfg);
-            } else {
-                SignConfig Cfg = SignConfig(CompositeSignConfig(3, 6, 2));
-                rotIndex = comp.indicator(m_cc, rotIndex, 0.5 / (2 * N),
-                                          SignFunc::CompositeSign, Cfg);
-            }
+
+            static const auto &sincCoefficients = selectCoefficients<N>();
+            rotIndex = m_cc->EvalChebyshevSeriesPS(rotIndex,
+                                                    sincCoefficients, -1, 1);
+
+
 
             auto masked_input = m_cc->EvalMult(rotIndex, input_array);
             std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);
@@ -644,6 +634,62 @@ template <int N> class DirectSort : public SortBase<N> {
 
         // std::cout << "\n===== Final Output: \n";
         // PRINT_PT(m_enc, output_array);
+
+        std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
+        return output_array;
+    }
+
+    Ciphertext<DCRTPoly>
+    rotationIndexCheckH(const Ciphertext<DCRTPoly> &ctx_Rank,
+                       const Ciphertext<DCRTPoly> &input_array) {
+    
+
+        Ciphertext<DCRTPoly> result;
+        if(N <= 256){
+            std::vector<double> subMask(N * N);
+#pragma omp parallel for collapse(2) 
+            for (size_t i = 0; i < N; i++)
+                    for (size_t j = 0; j < N; j++)
+                        subMask[i * N + j] = i;
+
+            Plaintext subMaskPtx = m_cc->MakeCKKSPackedPlaintext(subMask, 1, ctx_Rank->GetLevel(), nullptr, N*N);
+            auto rotationMask = m_cc->EvalSub(subMaskPtx, ctx_Rank);
+
+            SignConfig Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
+            rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N, SignFunc::CompositeSign, Cfg);
+            auto masked_input = m_cc->EvalMult(rotationMask, input_array);
+
+            result = mehp24::utils::sumColumns(masked_input, N, true);
+        }else{
+
+        }
+
+        // if (N < 512) {
+        //     static const auto &sincCoefficients = selectCoefficients<N>();
+        //     rotIndex = m_cc->EvalChebyshevSeriesPS(rotIndex,
+        //                                             sincCoefficients, -1, 1);
+        // } else if (N == 512) {
+        //     SignConfig Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
+        //     rotIndex = comp.indicator(m_cc, rotIndex, 0.5 / (2 * N),
+        //                                 SignFunc::CompositeSign, Cfg);
+        // } else {
+        //     SignConfig Cfg = SignConfig(CompositeSignConfig(3, 6, 2));
+        //     rotIndex = comp.indicator(m_cc, rotIndex, 0.5 / (2 * N),
+        //                                 SignFunc::CompositeSign, Cfg);
+        // }
+
+
+        return result;
+    }
+
+    
+    // Employing rotation index checking method from MEHP24
+    Ciphertext<DCRTPoly> sort_hybrid(const Ciphertext<DCRTPoly> &input_array,
+                              SignFunc SignFunc, SignConfig &Cfg) {
+        Ciphertext<DCRTPoly> ctx_Rank;
+        ctx_Rank = constructRank(input_array, SignFunc, Cfg);
+
+        Ciphertext<DCRTPoly> output_array = rotationIndexCheck(ctx_Rank, input_array);
 
         std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
         return output_array;

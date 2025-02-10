@@ -164,7 +164,7 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
     if (N <= 256)
         ctxt_out =
             mehp24::sortFG(ctxt, N, SignFunc::CompositeSign, Cfg, this->comp,
-                           dg_i, df_i, this->m_privateKey, this->m_cc);
+                           dg_i, df_i, this->m_cc);
     else {
         const size_t subLength = 256;
         ctxt_out = mehp24::sortLargeArrayFG(ctxt, N, subLength,

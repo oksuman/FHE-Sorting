@@ -300,5 +300,63 @@ combineCiphertext(const std::vector<Ciphertext<DCRTPoly>> &parts,
     return result;
 }
 
+
+//added by oksuman
+// Helper function to get binary path for target column
+std::vector<bool> getBinaryPath(size_t columnIndex, size_t matrixSize) {
+    std::vector<bool> path(LOG2(matrixSize));
+    for(int i = LOG2(matrixSize)-1; i >= 0; i--) {
+        path[LOG2(matrixSize)-1-i] = (columnIndex >> i) & 1;
+    }
+    return path;
+}
+
+// Extended version of sumColumns that allows specifying target column
+Ciphertext<DCRTPoly> sumColumnsToTarget(Ciphertext<DCRTPoly> c, 
+                                       const size_t matrixSize,
+                                       const size_t columnIndex,
+                                       bool maskOutput = false) {
+    assert(columnIndex < matrixSize && "Invalid column index");
+    
+    // Get binary path to target column
+    auto path = getBinaryPath(columnIndex, matrixSize);
+    
+    // Start with matrixSize/2 and divide by 2 in each step
+    size_t step = matrixSize >> 1;
+    
+    for (size_t i = 0; i < LOG2(matrixSize); i++) {
+        // path[i] == 1 means we want right child in binary tree
+        // path[i] == 0 means we want left child in binary tree
+        if(path[i]) {
+            c += c << step;  // left rotation
+        } else {
+            c += c >> step;  // right rotation
+        }
+        step >>= 1;  // divide step by 2
+    }
+
+    if (maskOutput) {
+        c = maskColumn(c, matrixSize, columnIndex);
+    }
+
+    return c;
+}
+
+Ciphertext<DCRTPoly> transposeColumnTarget(Ciphertext<DCRTPoly> c,
+                                     const size_t matrixSize, const size_t rowIndex, bool maskOutput) {
+    for (size_t i = 1; i <= LOG2(matrixSize); i++)
+        c += c << (matrixSize * (matrixSize - 1) / (1 << i));
+
+    if (maskOutput)
+        c = maskRow(c, matrixSize, rowIndex);
+
+    return c;
+}
+
+
+
 } // namespace utils
 } // namespace mehp24
+
+
+

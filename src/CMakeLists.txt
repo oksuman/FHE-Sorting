@@ -38,6 +38,8 @@ add_executable(src main.cpp
 		         comparison.cpp
 	           encryption.cpp
 	           sign.cpp
+             mehp24/mehp24_sort.cpp
+             mehp24/mehp24_utils.cpp      
 		   )
 
 add_dependencies(src generate_coeffs_target)
