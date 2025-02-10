@@ -3,6 +3,7 @@
 
 #include "SortUtils.h"
 #include "openfhe.h"
+#include "sign.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -14,17 +15,16 @@ class Sorter : public SortUtils {
     Sorter() = default;
 
     Sorter(CryptoContext<DCRTPoly> cc, std::shared_ptr<Encryption> enc,
-           long numSlots, long k, long M, long d_f, long d_g)
-        : SortUtils(cc, enc, numSlots, k, M), m_d_f(d_f), m_d_g(d_g) {
+           long numSlots, long k, long M)
+        : SortUtils(cc, enc, numSlots, k, M) {
         initLevels();
     }
 
     Sorter(CryptoContext<DCRTPoly> cc, std::shared_ptr<Encryption> enc,
-           long numSlots, long k, long M, long d_f, long d_g,
+           long numSlots, long k, long M,
            const PrivateKey<DCRTPoly> &privateKey,
            const PublicKey<DCRTPoly> &publicKey)
-        : SortUtils(cc, enc, numSlots, k, M, privateKey, publicKey), m_d_f(d_f),
-          m_d_g(d_g) {
+        : SortUtils(cc, enc, numSlots, k, M, privateKey, publicKey) {
         initLevels();
     }
 
@@ -67,17 +67,18 @@ class Sorter : public SortUtils {
     void comparisonForSort(Ciphertext<DCRTPoly> &ctxt,
                            std::vector<std::vector<int>> &indices, long logDist,
                            long slope, Ciphertext<DCRTPoly> &ctxt_comp,
-                           Ciphertext<DCRTPoly> &ctxt_fix);
+                           Ciphertext<DCRTPoly> &ctxt_fix, SignConfig &Cfg);
 
     void comparisonForSort2(Ciphertext<DCRTPoly> &ctxt,
                             std::vector<std::vector<int>> &indices,
                             long logDist, long slope,
                             Ciphertext<DCRTPoly> &ctxt_comp1,
                             Ciphertext<DCRTPoly> &ctxt_comp2,
-                            Ciphertext<DCRTPoly> &ctxt_fix);
+                            Ciphertext<DCRTPoly> &ctxt_fix, SignConfig &Cfg);
 
     // Main sorting function
-    void sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out);
+    void sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
+                SignConfig &Cfg);
 
   protected:
     void initLevels() {
@@ -89,9 +90,6 @@ class Sorter : public SortUtils {
         m_level[4] = 6;
         m_level[5] = 7;
     }
-
-    long m_d_f; // Depth parameter for F function
-    long m_d_g; // Depth parameter for G function
 };
 
 } // namespace kwaySort

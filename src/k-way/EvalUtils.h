@@ -4,6 +4,7 @@
 #include "ciphertext-fwd.h"
 #include "encryption.h"
 #include "openfhe.h"
+#include "sign.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -58,12 +59,12 @@ class EvalUtils {
 
     void evalG(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out);
 
-    void approxComp(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b, long d_f,
-                    long d_g);
+    void approxComp(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
+                    SignConfig &Cfg);
 
     void approxComp2(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
-                     Ciphertext<DCRTPoly> &c, Ciphertext<DCRTPoly> &d, long d_f,
-                     long d_g);
+                     Ciphertext<DCRTPoly> &c, Ciphertext<DCRTPoly> &d,
+                     SignConfig &Cfg);
 
     void leftRotate(Ciphertext<DCRTPoly> &ctxt, long r,
                     Ciphertext<DCRTPoly> &ctxt_out);

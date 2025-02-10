@@ -1,6 +1,7 @@
 #include "EvalUtils.h"
 #include "lattice/hal/lat-backend.h"
 #include "scheme/ckksrns/ckksrns-fhe.h"
+#include "sign.h"
 
 namespace kwaySort {
 
@@ -214,19 +215,19 @@ void EvalUtils::evalG(Ciphertext<DCRTPoly> &ctxt,
 }
 
 void EvalUtils::approxComp(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
-                           long d_f, long d_g) {
+                           SignConfig &Cfg) {
     // a = a - b
     a = m_cc->EvalSub(a, b);
 
     // Apply G polynomial d_g times
-    for (int i = 0; i < d_g; i++) {
+    for (int i = 0; i < Cfg.compos.dg; i++) {
         checkLevelAndBoot(a, 4, 10);
         evalG(a, a);
         // debugWithSk(a, 5, "a");
     }
 
     // Apply F polynomial d_f times
-    for (int i = 0; i < d_f; i++) {
+    for (int i = 0; i < Cfg.compos.df; i++) {
         checkLevelAndBoot(a, 4, 7);
         evalF(a, a);
         // debugWithSk(a, 5, "a");
@@ -245,13 +246,13 @@ void EvalUtils::approxComp(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
 
 void EvalUtils::approxComp2(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
                             Ciphertext<DCRTPoly> &c, Ciphertext<DCRTPoly> &d,
-                            long d_f, long d_g) {
+                            SignConfig &Cfg) {
     // Initial subtractions
     a = m_cc->EvalSub(a, b);
     c = m_cc->EvalSub(c, d);
 
     // Apply G polynomial d_g times
-    for (int i = 0; i < d_g; i++) {
+    for (int i = 0; i < Cfg.compos.dg; i++) {
         checkLevelAndBoot2(a, c, 4, 10, true);
         std::cout << "\nStarting G aa\n";
         evalG(a, a);
@@ -261,7 +262,7 @@ void EvalUtils::approxComp2(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
     }
 
     // Apply F polynomial d_f times
-    for (int i = 0; i < d_f; i++) {
+    for (int i = 0; i < Cfg.compos.df; i++) {
         checkLevelAndBoot2(a, c, 4, 4);
         evalF(a, a);
         evalF(c, c);
