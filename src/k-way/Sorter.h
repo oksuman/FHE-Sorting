@@ -4,6 +4,7 @@
 #include "SortUtils.h"
 #include "openfhe.h"
 #include "sign.h"
+#include "comparison.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -90,6 +91,8 @@ class Sorter : public SortUtils {
         m_level[4] = 6;
         m_level[5] = 7;
     }
+
+    Comparison comp;
 };
 
 } // namespace kwaySort

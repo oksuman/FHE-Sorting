@@ -256,7 +256,7 @@ void Sorter::comparisonForSort(Ciphertext<DCRTPoly> &ctxt,
     Ciphertext<DCRTPoly> ctxt_rot;
     rightRotateForSort(ctxt, indices, logDist, slope, ctxt_rot, ctxt_fix);
     ctxt_comp = ctxt->Clone();
-    approxComp(ctxt_comp, ctxt_rot, Cfg);
+    ctxt_comp = comp.compare(m_cc, ctxt_comp, ctxt_rot, SignFunc::CompositeSign, Cfg);
 }
 
 void Sorter::comparisonForSort2(Ciphertext<DCRTPoly> &ctxt,
@@ -273,7 +273,8 @@ void Sorter::comparisonForSort2(Ciphertext<DCRTPoly> &ctxt,
 
     ctxt_comp1 = ctxt->Clone();
     ctxt_comp2 = ctxt_comp1->Clone();
-    approxComp2(ctxt_comp1, ctxt_rot1, ctxt_comp2, ctxt_rot2, Cfg);
+    ctxt_comp1 = comp.compare(m_cc, ctxt_comp1, ctxt_rot1, SignFunc::CompositeSign, Cfg);
+    ctxt_comp2 = comp.compare(m_cc, ctxt_comp2, ctxt_rot2, SignFunc::CompositeSign, Cfg);
 }
 
 void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,

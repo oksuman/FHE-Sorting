@@ -70,6 +70,8 @@ add_dependencies(DirectSortNTest generate_coeffs_target)
 add_unit_test(KWaySortTest 
 	      KWaySortTest.cpp 
 	      ${CMAKE_SOURCE_DIR}/src/encryption.cpp
+              ${CMAKE_SOURCE_DIR}/src/sign.cpp
+              ${CMAKE_SOURCE_DIR}/src/comparison.cpp
 	      ${CMAKE_SOURCE_DIR}/src/k-way/EvalUtils.cpp
 	      ${CMAKE_SOURCE_DIR}/src/k-way/SortUtils.cpp
 	      ${CMAKE_SOURCE_DIR}/src/k-way/Sorter.cpp

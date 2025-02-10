@@ -26,6 +26,8 @@ add_kway_unit_test(KWayEvalUtilsTest
 add_kway_unit_test(KWaySort235Test 
 	KWaySort235Test.cpp 
 	${CMAKE_SOURCE_DIR}/src/encryption.cpp
+	${CMAKE_SOURCE_DIR}/src/sign.cpp
+	${CMAKE_SOURCE_DIR}/src/comparison.cpp
 	${CMAKE_SOURCE_DIR}/src/k-way/EvalUtils.cpp
 	${CMAKE_SOURCE_DIR}/src/k-way/Sorter.cpp
 	${CMAKE_SOURCE_DIR}/src/k-way/SortUtils.cpp
@@ -36,6 +38,8 @@ add_dependencies(KWaySort235Test generate_coeffs_target)
 add_kway_unit_test(KWaySortUtilsTest 
 	SortUtilsTest.cpp 
 	${CMAKE_SOURCE_DIR}/src/encryption.cpp
+	${CMAKE_SOURCE_DIR}/src/sign.cpp
+	${CMAKE_SOURCE_DIR}/src/comparison.cpp
 	${CMAKE_SOURCE_DIR}/src/k-way/EvalUtils.cpp
 	${CMAKE_SOURCE_DIR}/src/k-way/SortUtils.cpp
 	${CMAKE_SOURCE_DIR}/src/k-way/Masking.cpp)
