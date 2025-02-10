@@ -64,10 +64,28 @@ template <typename T>
 class KWaySortTestFixture : public KWaySortTest<T::value> {};
 
 using TestSizes =
-    ::testing::Types<std::integral_constant<size_t, 81>,  // For k=3, M=4
-                     std::integral_constant<size_t, 125>, // For k=5, M=3
-                     std::integral_constant<size_t, 128>  // For k=2, M=7
-                     >;
+    ::testing::Types<
+        std::integral_constant<size_t, 4>,  // For k=2, M=2
+        std::integral_constant<size_t, 8>,  // For k=2, M=3
+        std::integral_constant<size_t, 9>,  // For k=3, M=2
+        std::integral_constant<size_t, 16>,  // For k=2, M=4
+        std::integral_constant<size_t, 25>,  // For k=5, M=2
+        std::integral_constant<size_t, 27>,  // For k=3, M=3
+        std::integral_constant<size_t, 32>,  // For k=2, M=5
+        std::integral_constant<size_t, 64>,  // For k=2, M=6
+        std::integral_constant<size_t, 81>,  // For k=3, M=4
+        std::integral_constant<size_t, 125>, // For k=5, M=3
+        std::integral_constant<size_t, 128>,  // For k=2, M=7
+        std::integral_constant<size_t, 243>,  // For k=3, M=5
+        std::integral_constant<size_t, 256>,  // For k=2, M=8
+        std::integral_constant<size_t, 512>,  // For k=2, M=9
+        std::integral_constant<size_t, 625>,  // For k=5, M=4
+        std::integral_constant<size_t, 729>,  // For k=3, M=6
+        std::integral_constant<size_t, 1024>,  // For k=2, M=10
+        std::integral_constant<size_t, 2048>,  // For k=2, M=11
+        std::integral_constant<size_t, 2187>,  // For k=3, M=7
+        std::integral_constant<size_t, 3125>  // For k=5, M=5
+    >;
 
 TYPED_TEST_SUITE(KWaySortTestFixture, TestSizes);
 
@@ -76,26 +94,132 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
 
     // Configure k and M based on array size
     int k, M, d_f, d_g;
-    if constexpr (N == 128) {
+
+    switch (N)
+    {
+    case 4:
         k = 2;
-        M = 7;
+        M = 2;
         d_f = 2;
         d_g = 5;
-        std::cout << "Testing configuration: k=2, M=7, N=128" << std::endl;
-    } else if constexpr (N == 81) {
+        break;
+    case 8:
+        k = 2;
+        M = 3;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 9:
+        k = 3;
+        M = 2;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 16:
+        k = 2;
+        M = 4;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 25:
+        k = 5;
+        M = 2;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 27:
+        k = 3;
+        M = 3;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 32:
+        k = 2;
+        M = 5;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 64:
+        k = 2;
+        M = 6;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 81:
         k = 3;
         M = 4;
         d_f = 2;
         d_g = 5;
-        std::cout << "Testing configuration: k=3, M=4, N=81" << std::endl;
-    } else if constexpr (N == 125) {
+        break;
+    case 125:
         k = 5;
         M = 3;
         d_f = 2;
         d_g = 5;
-        std::cout << "Testing configuration: k=5, M=3, N=125" << std::endl;
-    } else {
+        break;
+    case 128:
+        k = 2;
+        M = 7;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 243:
+        k = 3;
+        M = 5;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 256:
+        k = 2;
+        M = 8;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 512:
+        k = 2;
+        M = 9;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 625:
+        k = 5;
+        M = 4;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 729:
+        k = 3;
+        M = 6;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 1024:
+        k = 2;
+        M = 10;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 2048:
+        k = 2;
+        M = 11;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 2187:
+        k = 3;
+        M = 7;
+        d_f = 2;
+        d_g = 5;
+        break;
+    case 3125:
+        k = 5;
+        M = 5;
+        d_f = 2;
+        d_g = 5;
+        break; 
+    default:
         FAIL() << "Unsupported array size: " << N;
+        break;
     }
 
     // Generate random input array with minimum difference

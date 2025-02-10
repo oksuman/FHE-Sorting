@@ -29,6 +29,7 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
         std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
+        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension() << std::endl;
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);

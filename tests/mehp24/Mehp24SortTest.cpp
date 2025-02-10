@@ -25,10 +25,10 @@ protected:
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
         
-        parameters.SetSecurityLevel(HEStd_NotSet);
-        // parameters.SetSecurityLevel(HEStd_128_classic);
+        // parameters.SetSecurityLevel(HEStd_NotSet);
+        parameters.SetSecurityLevel(HEStd_128_classic);
         auto logRingDim = 17;
-        parameters.SetRingDim(1 << logRingDim);
+        // parameters.SetRingDim(1 << logRingDim);
         auto batchSize = std::min(N * N, (1 << logRingDim )/ 2);
         std::cout << "batch size: " << batchSize << std::endl;
         parameters.SetBatchSize(batchSize);
@@ -60,19 +60,20 @@ protected:
             m_multDepth = 57;
             break;
         case 1024:
-            m_multDepth = 70;
+            m_multDepth = 60;
             break;
         case 2048:
-            m_multDepth = 70;
+            m_multDepth = 64;
             break;
         default:
             break;
         }
-        m_scaleMod = 48;
+        m_scaleMod = 40;
         parameters.SetMultiplicativeDepth(m_multDepth);
-        parameters.SetScalingModSize(m_multDepth);
+        parameters.SetScalingModSize(m_scaleMod);
         
         m_cc = GenCryptoContext(parameters);
+        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension() << std::endl;
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);

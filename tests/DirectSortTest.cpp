@@ -25,12 +25,14 @@ protected:
         CCParams<CryptoContextCKKSRNS> parameters;
         DirectSort<N>::getSizeParameters(parameters, rotations);
 
-        parameters.SetSecurityLevel(HEStd_NotSet);
-        auto logRingDim = 17;
-        parameters.SetRingDim(1 << logRingDim);
-        std::cout << "Ring Dimension 2^" << logRingDim << "\n";
+        // parameters.SetSecurityLevel(HEStd_NotSet);
+        parameters.SetSecurityLevel(HEStd_128_classic);
+        // auto logRingDim = 17;
+        // parameters.SetRingDim(1 << logRingDim);
+        // std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
+        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension() << std::endl;
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
