@@ -230,8 +230,8 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     // Create KWayAdapter with specified parameters
     auto kwaySorter = std::make_unique<KWayAdapter<N>>(
         this->m_cc, this->m_publicKey, this->m_privateKey, this->m_enc,
-        k,   // k-way factor
-        M   // M parameter
+        k, // k-way factor
+        M  // M parameter
     );
 
     // Sort using k-way algorithm

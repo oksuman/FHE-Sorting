@@ -65,4 +65,4 @@ sortLargeArrayFG(Ciphertext<DCRTPoly> c, const size_t totalLength,
                  std::unique_ptr<Comparison> &comp, uint32_t dg_i,
                  uint32_t df_i, CryptoContext<DCRTPoly> cc);
 
-} // namespace mehp24 
+} // namespace mehp24

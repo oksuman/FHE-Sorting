@@ -27,8 +27,8 @@ template <size_t N> class DirectSortTest : public ::testing::Test {
 
         // parameters.SetSecurityLevel(HEStd_NotSet);
         parameters.SetSecurityLevel(HEStd_128_classic);
-        // auto logRingDim = 17;
-        // parameters.SetRingDim(1 << logRingDim);
+        auto logRingDim = 17;
+        parameters.SetRingDim(1 << logRingDim);
         // std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
@@ -173,15 +173,10 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
 REGISTER_TYPED_TEST_SUITE_P(DirectSortTestFixture, SortTest);
 
 using TestSizes = ::testing::Types<
-    // std::integral_constant<size_t, 4>,
-    // std::integral_constant<size_t, 8>,
-    // std::integral_constant<size_t, 16>,
-    // std::integral_constant<size_t, 32>,
-    // std::integral_constant<size_t, 64>,
-    // std::integral_constant<size_t, 128>,
-    // std::integral_constant<size_t, 256>,
-    // std::integral_constant<size_t, 512>,
-    // std::integral_constant<size_t, 1024>,
-    std::integral_constant<size_t, 2048>>;
+    std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>, std::integral_constant<size_t, 2048>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);

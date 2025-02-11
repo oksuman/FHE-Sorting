@@ -217,8 +217,8 @@ sort(const std::vector<Ciphertext<DCRTPoly>> &c, const size_t subVectorLength,
 }
 
 Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
-                            uint32_t dg_c, uint32_t df_c, uint32_t dg_i, uint32_t df_i,
-                            CryptoContext<DCRTPoly> m_cc) {
+                            uint32_t dg_c, uint32_t df_c, uint32_t dg_i,
+                            uint32_t df_i, CryptoContext<DCRTPoly> m_cc) {
     Plaintext ptx;
 
     Ciphertext<DCRTPoly> VR = replicateRow(c, vectorLength);
@@ -244,7 +244,6 @@ Ciphertext<DCRTPoly> sortFG(Ciphertext<DCRTPoly> c, const size_t vectorLength,
     std::cout << "S levels: " << S->GetLevel() << std::endl;
 
     auto result = transposeColumn(S, vectorLength, true);
-
 
     return result;
 }

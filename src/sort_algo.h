@@ -14,7 +14,6 @@ using namespace lbcrypto;
 #include "generated_coeffs.h"
 #include "mehp24/mehp24_utils.h"
 
-
 enum class SortAlgo { DirectSort, BitonicSort };
 
 inline void
@@ -76,6 +75,10 @@ template <int N> class DirectSort : public SortBase<N> {
         this->max_batch = m_cc->GetRingDimension() / 2;
     }
 
+    const std::set<int> &getRotationCalls() const {
+        return rot.getRotationCalls();
+    }
+
     static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
                                   std::vector<int> &rotations) {
         parameters.SetBatchSize(N);
@@ -98,7 +101,7 @@ template <int N> class DirectSort : public SortBase<N> {
         // }
 
         int multDepth;
-        int modSize = 48;
+        int modSize = 40;
 
         switch (N) {
         case 4:
@@ -374,7 +377,7 @@ template <int N> class DirectSort : public SortBase<N> {
                                                           num_slots);
                 inner_results[i] = m_cc->EvalMult(preRotatedArrays[i], pmsk);
             }
-            
+
             auto T = m_cc->EvalAddMany(inner_results);
             T->SetSlots(num_slots);
             outer_results[j] = rot.rotate(T, is * num_partition + j * np);
@@ -586,10 +589,8 @@ template <int N> class DirectSort : public SortBase<N> {
             m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
 
             static const auto &sincCoefficients = selectCoefficients<N>();
-            rotIndex = m_cc->EvalChebyshevSeriesPS(rotIndex,
-                                                    sincCoefficients, -1, 1);
-
-
+            rotIndex =
+                m_cc->EvalChebyshevSeriesPS(rotIndex, sincCoefficients, -1, 1);
 
             auto masked_input = m_cc->EvalMult(rotIndex, input_array);
             std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);
@@ -639,58 +640,214 @@ template <int N> class DirectSort : public SortBase<N> {
         return output_array;
     }
 
-    Ciphertext<DCRTPoly>
-    rotationIndexCheckH(const Ciphertext<DCRTPoly> &ctx_Rank,
-                       const Ciphertext<DCRTPoly> &input_array) {
-    
+    Ciphertext<DCRTPoly> sumColumnsHybrid(Ciphertext<DCRTPoly> c,
+                                          const size_t matrixSize,
+                                          bool maskOutput) {
+        for (size_t i = 0; i < LOG2(matrixSize); i++)
+            c = m_cc->EvalAdd(c, rot.rotate(c, 1 << i));
 
-        Ciphertext<DCRTPoly> result;
-        if(N <= 256){
-            std::vector<double> subMask(N * N);
-#pragma omp parallel for collapse(2) 
-            for (size_t i = 0; i < N; i++)
-                    for (size_t j = 0; j < N; j++)
-                        subMask[i * N + j] = i;
+        if (maskOutput) {
+            std::vector<double> msk(matrixSize * matrixSize, 0.0);
 
-            Plaintext subMaskPtx = m_cc->MakeCKKSPackedPlaintext(subMask, 1, ctx_Rank->GetLevel(), nullptr, N*N);
-            auto rotationMask = m_cc->EvalSub(subMaskPtx, ctx_Rank);
+            for (size_t i = 0; i < matrixSize; i++)
+                msk[matrixSize * i] = 1.0;
 
-            SignConfig Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
-            rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N, SignFunc::CompositeSign, Cfg);
-            auto masked_input = m_cc->EvalMult(rotationMask, input_array);
+            Plaintext pmsk = m_cc->MakeCKKSPackedPlaintext(
+                msk, 1, c->GetLevel(), nullptr, matrixSize * matrixSize);
+            c = m_cc->EvalMult(c, pmsk);
+        }
+        return c;
+    }
 
-            result = mehp24::utils::sumColumnsH(masked_input, N, true);
-            result = mehp24::utils::transposeColumnH(result, N, true);
-        }else{
+    Ciphertext<DCRTPoly> transposeColumnHybrid(Ciphertext<DCRTPoly> c,
+                                               const size_t matrixSize,
+                                               bool maskOutput) {
+        for (size_t i = 1; i <= LOG2(matrixSize); i++)
+            c = m_cc->EvalAdd(
+                c, rot.rotate(c, matrixSize * (matrixSize - 1) / (1 << i)));
 
+        if (maskOutput) {
+            std::vector<double> msk(matrixSize * matrixSize, 0.0);
+            for (size_t i = 0; i < matrixSize; i++)
+                msk[i] = 1.0;
+
+            Plaintext pmsk = m_cc->MakeCKKSPackedPlaintext(
+                msk, 1, c->GetLevel(), nullptr, matrixSize * matrixSize);
+            c = m_cc->EvalMult(c, pmsk);
+        }
+        return c;
+    }
+
+    // Helper function to get binary path for target column
+    std::vector<bool> getBinaryPath(size_t columnIndex, size_t matrixSize) {
+        std::vector<bool> path(LOG2(matrixSize));
+        for (int i = LOG2(matrixSize) - 1; i >= 0; i--) {
+            path[LOG2(matrixSize) - 1 - i] = (columnIndex >> i) & 1;
+        }
+        return path;
+    }
+
+    // Extended version of sumColumns that allows specifying target column
+    Ciphertext<DCRTPoly> sumColumnsToTarget(Ciphertext<DCRTPoly> c,
+                                            const size_t matrixSize,
+                                            const size_t columnIndex,
+                                            bool maskOutput) {
+        assert(columnIndex < matrixSize && "Invalid column index");
+        // Get binary path to target column
+        auto path = getBinaryPath(columnIndex, matrixSize);
+        std::cout << "matrixSize: " << matrixSize << std::endl;
+        std::cout << "column index: " << columnIndex << std::endl;
+        std::cout << "path: " << path << std::endl;
+
+        // Start with matrixSize/2 and divide by 2 in each step
+        size_t step = matrixSize >> 1;
+
+        c->SetSlots(matrixSize * matrixSize);
+        for (size_t i = 0; i < LOG2(matrixSize); i++) {
+            // path[i] == 1 means we want right child in binary tree
+            // path[i] == 0 means we want left child in binary tree
+            if (path[i]) {
+                c = m_cc->EvalAdd(c, rot.rotate(c, -step));
+
+            } else {
+                c = m_cc->EvalAdd(c, rot.rotate(c, step));
+            }
+            step >>= 1;
+        }
+        if (maskOutput) {
+            std::vector<double> msk(matrixSize * matrixSize, 0.0);
+
+            for (size_t i = 0; i < matrixSize; i++)
+                msk[matrixSize * i + columnIndex] = 1.0;
+
+            Plaintext pmsk = m_cc->MakeCKKSPackedPlaintext(
+                msk, 1, c->GetLevel(), nullptr, matrixSize * matrixSize);
+            c = m_cc->EvalMult(c, pmsk);
         }
 
-        // if (N < 512) {
-        //     static const auto &sincCoefficients = selectCoefficients<N>();
-        //     rotIndex = m_cc->EvalChebyshevSeriesPS(rotIndex,
-        //                                             sincCoefficients, -1, 1);
-        // } else if (N == 512) {
-        //     SignConfig Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
-        //     rotIndex = comp.indicator(m_cc, rotIndex, 0.5 / (2 * N),
-        //                                 SignFunc::CompositeSign, Cfg);
-        // } else {
-        //     SignConfig Cfg = SignConfig(CompositeSignConfig(3, 6, 2));
-        //     rotIndex = comp.indicator(m_cc, rotIndex, 0.5 / (2 * N),
-        //                                 SignFunc::CompositeSign, Cfg);
-        // }
+        return c;
+    }
 
+    Ciphertext<DCRTPoly> transposeColumnTarget(Ciphertext<DCRTPoly> c,
+                                               const size_t matrixSize,
+                                               const size_t rowIndex,
+                                               bool maskOutput) {
+        c->SetSlots(matrixSize * matrixSize);
+
+        for (size_t i = 1; i <= LOG2(matrixSize); i++)
+            c = m_cc->EvalAdd(
+                c, rot.rotate(c, (matrixSize * (matrixSize - 1) / (1 << i))));
+
+        if (maskOutput) {
+            std::vector<double> msk(matrixSize * matrixSize, 0.0);
+
+            for (size_t i = 0; i < matrixSize; i++)
+                msk[matrixSize * rowIndex + i] = 1.0;
+            Plaintext pmsk = m_cc->MakeCKKSPackedPlaintext(
+                msk, 1, c->GetLevel(), nullptr, matrixSize * matrixSize);
+            c = m_cc->EvalMult(c, pmsk);
+        }
+
+        return c;
+    }
+
+    Ciphertext<DCRTPoly>
+    rotationIndexCheckHybrid(const Ciphertext<DCRTPoly> &ctx_Rank,
+                             const Ciphertext<DCRTPoly> &input_array,
+                             PrivateKey<DCRTPoly> sk) {
+
+        size_t maxArraySize = 256;
+        size_t num_slots;
+        size_t num_batch;
+
+        if (N > maxArraySize) {
+            num_slots = max_batch;
+            num_batch = N / maxArraySize;
+        } else {
+            num_slots = N * N;
+            num_batch = 1;
+        }
+
+        ctx_Rank->SetSlots(num_slots);
+        auto r = m_cc->EvalMult(ctx_Rank, 1.0 / N);
+        input_array->SetSlots(num_slots);
+
+        std::vector<std::vector<double>> subMasks(
+            num_batch, std::vector<double>(num_slots));
+
+        auto array_size = std::min(static_cast<size_t>(N), maxArraySize);
+#pragma omp parallel for collapse(3)
+        for (size_t b = 0; b < num_batch; b++) {
+            for (size_t i = 0; i < array_size; i++) {
+                for (size_t j = 0; j < array_size; j++) {
+                    subMasks[b][i * array_size + j] =
+                        static_cast<double>(b * array_size + i) /
+                        static_cast<double>(N);
+                }
+            }
+        }
+        std::vector<Plaintext> subMaskPtxs(num_batch);
+        std::vector<Ciphertext<DCRTPoly>> rots_Rank(num_batch);
+        std::vector<Ciphertext<DCRTPoly>> rots_Input(num_batch);
+
+#pragma omp parallel for
+        for (size_t b = 0; b < num_batch; b++) {
+            rots_Rank[b] = rot.rotate(r, b * maxArraySize);
+            rots_Input[b] = rot.rotate(input_array, b * maxArraySize);
+        }
+
+        std::vector<Ciphertext<DCRTPoly>> Masked(num_batch);
+        std::cout << "N: " << N << std::endl;
+        std::cout << "num_batch: " << num_batch << std::endl;
+        std::cout << "N / num_batch: " << N / num_batch << std::endl;
+        for (size_t b = 0; b < num_batch; b++) {
+            std::cout << "b: " << b << std::endl;
+            // std::cout << "submaks: " << subMasks[b] << std::endl;
+
+            subMaskPtxs[b] = m_cc->MakeCKKSPackedPlaintext(
+                subMasks[b], 1, ctx_Rank->GetLevel(), nullptr, num_slots);
+
+            auto subMasked = this->getZero()->Clone();
+            subMasked->SetSlots(num_slots);
+            for (size_t k = 0; k < num_batch; k++) {
+                auto rotationMask = m_cc->EvalSub(subMaskPtxs[b], rots_Rank[k]);
+                if (N < 256) {
+                    static const auto &sincCoefficients =
+                        selectCoefficients<N>();
+                    rotationMask = m_cc->EvalChebyshevSeriesPS(
+                        rotationMask, sincCoefficients, -1, 1);
+                } else if (N < 512) {
+                    SignConfig Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
+                    rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N,
+                                                  SignFunc::CompositeSign, Cfg);
+                } else {
+                    SignConfig Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
+                    rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N,
+                                                  SignFunc::CompositeSign, Cfg);
+                }
+
+                subMasked = m_cc->EvalAdd(
+                    subMasked, m_cc->EvalMult(rots_Input[k], rotationMask));
+            }
+
+            subMasked = sumColumnsToTarget(subMasked, N / num_batch, b, true);
+            Masked[b] =
+                transposeColumnTarget(subMasked, N / num_batch, b, true);
+        }
+        auto result = m_cc->EvalAddMany(Masked);
 
         return result;
     }
 
-    
     // Employing rotation index checking method from MEHP24
     Ciphertext<DCRTPoly> sort_hybrid(const Ciphertext<DCRTPoly> &input_array,
-                              SignFunc SignFunc, SignConfig &Cfg) {
+                                     SignFunc SignFunc, SignConfig &Cfg,
+                                     PrivateKey<DCRTPoly> sk) {
         Ciphertext<DCRTPoly> ctx_Rank;
         ctx_Rank = constructRank(input_array, SignFunc, Cfg);
 
-        Ciphertext<DCRTPoly> output_array = rotationIndexCheckH(ctx_Rank, input_array);
+        Ciphertext<DCRTPoly> output_array =
+            rotationIndexCheckHybrid(ctx_Rank, input_array, sk);
 
         std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
         return output_array;

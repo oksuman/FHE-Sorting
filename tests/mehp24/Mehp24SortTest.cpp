@@ -162,9 +162,8 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
     Ciphertext<DCRTPoly> ctxt_out;
     auto start = high_resolution_clock::now();
     if (N <= 256)
-        ctxt_out =
-            mehp24::sortFG(ctxt, N, SignFunc::CompositeSign, Cfg, this->comp,
-                           dg_i, df_i, this->m_cc);
+        ctxt_out = mehp24::sortFG(ctxt, N, SignFunc::CompositeSign, Cfg,
+                                  this->comp, dg_i, df_i, this->m_cc);
     else {
         const size_t subLength = 256;
         ctxt_out = mehp24::sortLargeArrayFG(ctxt, N, subLength,

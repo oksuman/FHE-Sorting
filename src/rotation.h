@@ -214,7 +214,7 @@ template <int N> class RotationComposer {
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
-        rotation_calls.insert(rotation); 
+        rotation_calls.insert(rotation);
 
         if (rotation % input->GetSlots() == 0) {
             return input->Clone();
@@ -232,14 +232,9 @@ template <int N> class RotationComposer {
         return result;
     }
 
-    const std::set<int>& getRotationCalls() const { 
-        return rotation_calls; 
-    }
+    const std::set<int> &getRotationCalls() const { return rotation_calls; }
 
-    void clearRotationCalls() { 
-        rotation_calls.clear(); 
-    }
-
+    void clearRotationCalls() { rotation_calls.clear(); }
 };
 
 template <int N> class RotationTree {

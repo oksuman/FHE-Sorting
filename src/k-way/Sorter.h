@@ -2,9 +2,9 @@
 #define SORTER_H_
 
 #include "SortUtils.h"
+#include "comparison.h"
 #include "openfhe.h"
 #include "sign.h"
-#include "comparison.h"
 #include <memory>
 #include <string>
 #include <vector>

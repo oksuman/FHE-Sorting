@@ -164,25 +164,5 @@ Ciphertext<DCRTPoly>
 combineCiphertext(const std::vector<Ciphertext<DCRTPoly>> &parts,
                   const size_t subLength, CryptoContext<DCRTPoly> &cc);
 
-//added by oksuman
-Ciphertext<DCRTPoly> sumColumnsH(Ciphertext<DCRTPoly> c, const size_t matrixSize,
-                                bool maskOutput = false);
-
-Ciphertext<DCRTPoly> transposeColumnH(Ciphertext<DCRTPoly> c,
-                                     const size_t matrixSize,
-                                     bool maskOutput = false);
-
-Ciphertext<DCRTPoly> sumColumnsToTarget(Ciphertext<DCRTPoly> c, 
-                                       const size_t matrixSize,
-                                       const size_t columnIndex,
-                                       bool maskOutput = false);
-
-Ciphertext<DCRTPoly> transposeColumnTarget(Ciphertext<DCRTPoly> c,
-                                          const size_t matrixSize, 
-                                          const size_t rowIndex,
-                                          bool maskOutput = false);
-
-std::vector<bool> getBinaryPath(size_t columnIndex, size_t matrixSize);
-
 } // namespace utils
 } // namespace mehp24
