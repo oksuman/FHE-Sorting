@@ -85,7 +85,7 @@ template <size_t N> class HybridSortTest : public ::testing::Test {
                          8160, 8192, 16320, 16384, 32640, 32768};
             break;
         case 1024:
-            m_multDepth = 50;
+            m_multDepth = 53;
             m_scaleMod = 40;
             rotations = {1,    2,    3,     4,     5,     6,    7,    8,
                          9,    10,   11,    12,    13,    14,   15,   16,
@@ -95,7 +95,7 @@ template <size_t N> class HybridSortTest : public ::testing::Test {
                          8160, 8192, 16320, 16384, 32640, 32768};
             break;
         case 2048:
-            m_multDepth = 50;
+            m_multDepth = 53;
             m_scaleMod = 40;
             rotations = {1,    2,    3,     4,     5,     6,    7,    8,
                          9,    10,   11,    12,    13,    14,   15,   16,
