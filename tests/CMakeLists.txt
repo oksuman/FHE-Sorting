@@ -87,3 +87,6 @@ add_unit_test(KWaySortTest
     ${CMAKE_SOURCE_DIR}/src/k-way/Masking.cpp
 )
 add_dependencies(KWaySortTest generate_coeffs_target)
+
+add_subdirectory(mehp24)
+add_subdirectory(k-way)

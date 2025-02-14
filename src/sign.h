@@ -25,7 +25,7 @@ struct SignConfig {
     SignConfig() : compos(0, 0, 0) {}
     // No bootstrap
     SignConfig(CompositeSignConfig compos)
-        : compos(compos.n, compos.dg, compos.df), multDepth(0) {}
+        : compos(compos.n, compos.dg, compos.df), multDepth(100) {}
     // Bootstrap enabled
     SignConfig(CompositeSignConfig compos, int depth)
         : compos(compos.n, compos.dg, compos.df), multDepth(depth) {}

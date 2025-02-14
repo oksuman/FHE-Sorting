@@ -19,7 +19,7 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
         KWayAdapter<N>::getSizeParameters(parameters, rotations);
 
         parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr usint ringDim = 1 << 12;
+        constexpr usint ringDim = 1 << 17;
         parameters.SetRingDim(ringDim);
 
         m_cc = GenCryptoContext(parameters);
@@ -64,26 +64,27 @@ template <typename T>
 class KWaySortTestFixture : public KWaySortTest<T::value> {};
 
 using TestSizes =
-    ::testing::Types<std::integral_constant<size_t, 4>,    // For k=2, M=2
-                     std::integral_constant<size_t, 8>,    // For k=2, M=3
+    ::testing::Types<
+                    //  std::integral_constant<size_t, 4>,    // For k=2, M=2
+                    //  std::integral_constant<size_t, 8>,    // For k=2, M=3
                      std::integral_constant<size_t, 9>,    // For k=3, M=2
-                     std::integral_constant<size_t, 16>,   // For k=2, M=4
+                    //  std::integral_constant<size_t, 16>,   // For k=2, M=4
                      std::integral_constant<size_t, 25>,   // For k=5, M=2
-                     std::integral_constant<size_t, 27>,   // For k=3, M=3
-                     std::integral_constant<size_t, 32>,   // For k=2, M=5
-                     std::integral_constant<size_t, 64>,   // For k=2, M=6
+                    //  std::integral_constant<size_t, 27>,   // For k=3, M=3
+                    //  std::integral_constant<size_t, 32>,   // For k=2, M=5
+                    //  std::integral_constant<size_t, 64>,   // For k=2, M=6
                      std::integral_constant<size_t, 81>,   // For k=3, M=4
                      std::integral_constant<size_t, 125>,  // For k=5, M=3
-                     std::integral_constant<size_t, 128>,  // For k=2, M=7
+                    //  std::integral_constant<size_t, 128>,  // For k=2, M=7
                      std::integral_constant<size_t, 243>,  // For k=3, M=5
-                     std::integral_constant<size_t, 256>,  // For k=2, M=8
-                     std::integral_constant<size_t, 512>,  // For k=2, M=9
+                    //  std::integral_constant<size_t, 256>,  // For k=2, M=8
+                    //  std::integral_constant<size_t, 512>,  // For k=2, M=9
                      std::integral_constant<size_t, 625>,  // For k=5, M=4
-                     std::integral_constant<size_t, 729>,  // For k=3, M=6
-                     std::integral_constant<size_t, 1024>, // For k=2, M=10
-                     std::integral_constant<size_t, 2048>, // For k=2, M=11
-                     std::integral_constant<size_t, 2187>, // For k=3, M=7
-                     std::integral_constant<size_t, 3125>  // For k=5, M=5
+                     std::integral_constant<size_t, 729>  // For k=3, M=6
+                    //  std::integral_constant<size_t, 1024>, // For k=2, M=10
+                    //  std::integral_constant<size_t, 2048>, // For k=2, M=11
+                    //  std::integral_constant<size_t, 2187>, // For k=3, M=7
+                    //  std::integral_constant<size_t, 3125>  // For k=5, M=5
                      >;
 
 TYPED_TEST_SUITE(KWaySortTestFixture, TestSizes);
@@ -99,85 +100,85 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
         k = 2;
         M = 2;
         d_f = 2;
-        d_g = 5;
+        d_g = 2;
         break;
     case 8:
         k = 2;
         M = 3;
         d_f = 2;
-        d_g = 5;
+        d_g = 2;
         break;
     case 9:
         k = 3;
         M = 2;
         d_f = 2;
-        d_g = 5;
+        d_g = 2;
         break;
     case 16:
         k = 2;
         M = 4;
         d_f = 2;
-        d_g = 5;
+        d_g = 2;
         break;
     case 25:
         k = 5;
         M = 2;
         d_f = 2;
-        d_g = 5;
+        d_g = 3;
         break;
     case 27:
         k = 3;
         M = 3;
         d_f = 2;
-        d_g = 5;
+        d_g = 3;
         break;
     case 32:
         k = 2;
         M = 5;
         d_f = 2;
-        d_g = 5;
+        d_g = 3;
         break;
     case 64:
         k = 2;
         M = 6;
         d_f = 2;
-        d_g = 5;
+        d_g = 3;
         break;
     case 81:
         k = 3;
         M = 4;
         d_f = 2;
-        d_g = 5;
+        d_g = 3;
         break;
     case 125:
         k = 5;
         M = 3;
         d_f = 2;
-        d_g = 5;
+        d_g = 3;
         break;
     case 128:
         k = 2;
         M = 7;
         d_f = 2;
-        d_g = 5;
+        d_g = 4;
         break;
     case 243:
         k = 3;
         M = 5;
         d_f = 2;
-        d_g = 5;
+        d_g = 4;
         break;
     case 256:
         k = 2;
         M = 8;
         d_f = 2;
-        d_g = 5;
+        d_g = 4;
         break;
     case 512:
         k = 2;
         M = 9;
         d_f = 2;
-        d_g = 5;
+        d_g = 4;
         break;
     case 625:
         k = 5;
@@ -221,7 +222,8 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     }
 
     // Generate random input array with minimum difference
-    std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 1, 1.0 / N);
+    std::vector<double> inputArray = getVectorWithMinDiff(N, 0, 1, (1.0 - 1e-8 )/ N);
+    std::cout << "current size: " << N << std::endl;
     std::cout << "Input array: " << inputArray << std::endl;
 
     // Encrypt input

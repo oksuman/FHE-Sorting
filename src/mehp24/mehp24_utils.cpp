@@ -93,7 +93,6 @@ Ciphertext<DCRTPoly> transposeRow(Ciphertext<DCRTPoly> c,
 Ciphertext<DCRTPoly> transposeColumn(Ciphertext<DCRTPoly> c,
                                      const size_t matrixSize, bool maskOutput) {
     for (size_t i = 1; i <= LOG2(matrixSize); i++) {
-        std::cout << "required: " << i << std::endl;
         c += c << (matrixSize * (matrixSize - 1) / (1 << i));
     }
 

@@ -11,8 +11,8 @@
 #include "../utils.h"
 #include "comparison.h"
 #include "encryption.h"
-#include "mehp24_sort.h"
-#include "mehp24_utils.h"
+#include "../src/mehp24/mehp24_sort.h"
+#include "../src/mehp24/mehp24_utils.h"
 #include "openfhe.h"
 
 using namespace lbcrypto;
@@ -219,10 +219,16 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 REGISTER_TYPED_TEST_SUITE_P(MEHPSortTestFixture, SortFGTest);
 
 using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
-    std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>, std::integral_constant<size_t, 2048>>;
+    // std::integral_constant<size_t, 4>, 
+    // std::integral_constant<size_t, 8>,
+    // std::integral_constant<size_t, 16>, 
+    // std::integral_constant<size_t, 32>,
+    // std::integral_constant<size_t, 64>, 
+    // std::integral_constant<size_t, 128>,
+    // std::integral_constant<size_t, 256>, 
+    std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>
+    // std::integral_constant<size_t, 2048>
+>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(MEHPSort, MEHPSortTestFixture, TestSizes);

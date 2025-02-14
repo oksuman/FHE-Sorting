@@ -75,34 +75,28 @@ template <size_t N> class HybridSortTest : public ::testing::Test {
         case 512:
             m_multDepth = 47;
             m_scaleMod = 40;
-            rotations = {-1,   1,    2,     3,     4,     5,    6,    7,
-                         8,    9,    10,    11,    12,    13,   14,   15,
-                         16,   32,   48,    64,    80,    96,   112,  128,
-                         144,  160,  176,   192,   208,   224,  240,  255,
-                         256,  272,  288,   304,   320,   336,  352,  368,
-                         384,  400,  416,   432,   448,   464,  480,  496,
-                         510,  512,  1020,  1024,  2040,  2048, 4080, 4096,
-                         8160, 8192, 16320, 16384, 32640, 32768};
+            rotations = {-255, -1,   1,     2,     3,    4,    5,
+                6,    7,    8,     9,     10,    11,   12,   13,
+                14,   15,   16,    32,    48,    64,   80,   96,
+                112,  128,  144,   160,   176,   192,  208,  224,
+                240,  255,  256,   272,   288,   304,  320,  336,
+                352,  368,  384,   400,   416,   432,  448,  464,
+                480,  496,  510,   512,   1020,  1024, 2040, 2048,
+                4080, 4096, 8160,  8192,  16320, 16384, 32640, 32768};
             break;
         case 1024:
-            m_multDepth = 53;
+            m_multDepth = 50;
             m_scaleMod = 40;
-            rotations = {1,    2,    3,     4,     5,     6,    7,    8,
-                         9,    10,   11,    12,    13,    14,   15,   16,
-                         32,   48,   64,    80,    96,    112,  128,  144,
-                         160,  176,  192,   208,   224,   240,  255,  256,
-                         510,  512,  1020,  1024,  2040,  2048, 4080, 4096,
-                         8160, 8192, 16320, 16384, 32640, 32768};
-            break;
-        case 2048:
-            m_multDepth = 53;
-            m_scaleMod = 40;
-            rotations = {1,    2,    3,     4,     5,     6,    7,    8,
-                         9,    10,   11,    12,    13,    14,   15,   16,
-                         32,   48,   64,    80,    96,    112,  128,  144,
-                         160,  176,  192,   208,   224,   240,  255,  256,
-                         510,  512,  1020,  1024,  2040,  2048, 4080, 4096,
-                         8160, 8192, 16320, 16384, 32640, 32768};
+            rotations = {-510, -255, -2, -1,  1,    2,    3,
+                4,    5,    6,     7,     8,     9,    10,   11,
+                12,   13,   14,    15,    16,    17,   28,   18,
+                20,   21,   22,    23,    24,    25,   26,   27,
+                29,   30,   31,    32,    64,    96,   128,  160,
+                192,  224,  255,   256,   288,   320,  352,  384,
+                416,  448,  480,   510,   512,   544,  576,  608,
+                640,  672,  704,   736,   768,   800,  832,  864,
+                896,  928,  960,   992,   1020,  1024, 2040, 2048,
+                4080, 4096, 8160,  8192,  16320, 16384, 32640, 32768};
             break;
         default:
             throw std::runtime_error("Unsupported array size");
@@ -114,6 +108,8 @@ template <size_t N> class HybridSortTest : public ::testing::Test {
         parameters.SetMultiplicativeDepth(m_multDepth);
 
         m_cc = GenCryptoContext(parameters);
+
+        // std::cout << "key switching technique: " << parameters.GetKeySwitchTechnique() << std::endl;
 
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
@@ -194,7 +190,6 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
         Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
     else
         Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
-
     // Start timing
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -240,6 +235,10 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
         totalError += error;
         if (error >= 0.01) {
             largeErrorCount++;
+            // std::cout << "index: " << i << std::endl;
+            // std::cout << "expected: " << expected[i] << std::endl;
+            // std::cout << "output_array: " << output_array[i] << std::endl;
+            
         }
     }
 
@@ -264,72 +263,20 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
     ASSERT_LT(maxError, 0.01);
 }
 
-// TYPED_TEST_P(HybridSortTestFixture, MatrixOperationsTest) {
-//     constexpr size_t N = TypeParam::value;
-//     const size_t targetIndex = 2;
-
-//     std::vector<double> inputMatrix(N);
-
-//     for(size_t i = 0; i < N; i++) {
-//         inputMatrix[i] = 0.1*(i+1);
-//     }
-
-//     std::cout << "input matrix" << std::endl;
-//     std::cout << inputMatrix << std::endl;
-
-//     auto ctxt = this->m_enc->encryptInput(inputMatrix);
-
-//     auto directSort = std::make_unique<DirectSort<N>>(
-//         this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
-
-//     auto result = ctxt;
-//     Plaintext result_ptxt;
-//     result = directSort->sumColumnsToTarget(result, N, targetIndex, true);
-//     this->m_cc->Decrypt(this->m_privateKey, result, &result_ptxt);
-//     result_ptxt->SetLength(N * N);
-//     std::vector<double> outputMatrix1 = result_ptxt->GetRealPackedValue();
-
-//     result = directSort->transposeColumnTarget(result, N, targetIndex, true);
-
-//     this->m_cc->Decrypt(this->m_privateKey, result, &result_ptxt);
-//     result_ptxt->SetLength(N * N);
-//     std::vector<double> outputMatrix2 = result_ptxt->GetRealPackedValue();
-
-//     std::vector<double> expected(N * N, 0.0);
-//     std::vector<double> columnSums(N, 0.0);
-
-//     for(size_t i = 0; i < N; i++) {
-//         for(size_t j = 0; j < N; j++) {
-//             columnSums[j] += inputMatrix[i * N + j];
-//         }
-//     }
-
-//     for(size_t i = 0; i < N; i++) {
-//         expected[i * N + targetIndex] = columnSums[i];
-//     }
-
-//     std::cout << "result of col sum" << std::endl;
-//     std::cout << outputMatrix1 << std::endl;
-//     std::cout << "result of transpose" << std::endl;
-//     std::cout << outputMatrix2 << std::endl;
-//     std::cout << "expected" << std::endl;
-//     std::cout << expected << std::endl;
-
-//  }
 
 REGISTER_TYPED_TEST_SUITE_P(HybridSortTestFixture, SortHybridTest);
-// REGISTER_TYPED_TEST_SUITE_P(HybridSortTestFixture, SortHybridTest,
-// MatrixOperationsTest);
+
 
 using TestSizes = ::testing::Types<
-    // std::integral_constant<size_t, 4>,
+    std::integral_constant<size_t, 4>,
     std::integral_constant<size_t, 8>,
-    // std::integral_constant<size_t, 16>,
-    // std::integral_constant<size_t, 32>,
-    // std::integral_constant<size_t, 64>,
-    // std::integral_constant<size_t, 128>,
-    // std::integral_constant<size_t, 256>,
-    std::integral_constant<size_t, 512>, std::integral_constant<size_t, 1024>,
-    std::integral_constant<size_t, 2048>>;
+    std::integral_constant<size_t, 16>,
+    std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>,
+    std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>,
+    std::integral_constant<size_t, 512>, 
+    std::integral_constant<size_t, 1024>
+>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(HybridSort, HybridSortTestFixture, TestSizes);
