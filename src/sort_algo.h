@@ -15,7 +15,7 @@ using namespace lbcrypto;
 #include "mehp24/mehp24_utils.h"
 
 #ifdef _OPENMP
-    #include <omp.h>
+#include <omp.h>
 #endif
 
 enum class SortAlgo { DirectSort, BitonicSort };
@@ -368,30 +368,32 @@ template <int N> class DirectSort : public SortBase<N> {
         std::vector<Ciphertext<DCRTPoly>> outer_results(num_partition / np);
 
         if constexpr (N == 1024) {
-#pragma omp parallel for 
+#pragma omp parallel for
             for (int j = 0; j < num_partition / np; j++) {
                 auto T = this->getZero()->Clone();
                 T->SetSlots(num_slots);
                 for (int i = 0; i < np; i++) {
                     auto msk = generateMaskVector(num_slots, np * j + i);
                     msk = vectorRotate(msk, -is * num_partition - j * np);
-                    auto pmsk = m_cc->MakeCKKSPackedPlaintext(msk, 1, 0, nullptr,
-                                                              num_slots);
-                    T = m_cc->EvalAdd(T, m_cc->EvalMult(preRotatedArrays[i], pmsk));
+                    auto pmsk = m_cc->MakeCKKSPackedPlaintext(
+                        msk, 1, 0, nullptr, num_slots);
+                    T = m_cc->EvalAdd(
+                        T, m_cc->EvalMult(preRotatedArrays[i], pmsk));
                 }
                 outer_results[j] = rot.rotate(T, is * num_partition + j * np);
             }
         } else {
-#pragma omp parallel for schedule(dynamic)   
+#pragma omp parallel for schedule(dynamic)
             for (int j = 0; j < num_partition / np; j++) {
                 auto T = this->getZero()->Clone();
                 T->SetSlots(num_slots);
                 for (int i = 0; i < np; i++) {
                     auto msk = generateMaskVector(num_slots, np * j + i);
                     msk = vectorRotate(msk, -is * num_partition - j * np);
-                    auto pmsk = m_cc->MakeCKKSPackedPlaintext(msk, 1, 0, nullptr,
-                                                              num_slots);
-                    T = m_cc->EvalAdd(T, m_cc->EvalMult(preRotatedArrays[i], pmsk));
+                    auto pmsk = m_cc->MakeCKKSPackedPlaintext(
+                        msk, 1, 0, nullptr, num_slots);
+                    T = m_cc->EvalAdd(
+                        T, m_cc->EvalMult(preRotatedArrays[i], pmsk));
                 }
                 outer_results[j] = rot.rotate(T, is * num_partition + j * np);
             }
@@ -476,56 +478,53 @@ template <int N> class DirectSort : public SortBase<N> {
                 // auto shifted_input_array = vecRots(input_array, i);
                 auto shifted_input_array =
                     vecRotsOpt(babyStpesofB, num_partition, num_slots, np, i);
-    
+
                 // Generate duplicated input array
                 auto duplicated_input_array = inputOver255->Clone();
                 duplicated_input_array->SetSlots(num_slots);
-    
+
                 // comp(duplicated, shifted)
-                auto comp_result = comp.compare(m_cc, duplicated_input_array,
-                                                shifted_input_array, SignFunc, Cfg);
-    
+                auto comp_result =
+                    comp.compare(m_cc, duplicated_input_array,
+                                 shifted_input_array, SignFunc, Cfg);
+
                 m_cc->EvalAddInPlace(rank_result, comp_result);
             }
-        }
-        else if constexpr (N == 512) {
+        } else if constexpr (N == 512) {
 #pragma omp parallel for num_threads(4)
             for (int i = 0; i < num_batch; i++) {
                 auto shifted_input_array =
                     vecRotsOpt(babyStpesofB, num_partition, num_slots, np, i);
-    
+
                 // Generate duplicated input array
                 auto duplicated_input_array = inputOver255->Clone();
                 duplicated_input_array->SetSlots(num_slots);
-    
+
                 // comp(duplicated, shifted)
-                auto comp_result = comp.compare(m_cc, duplicated_input_array,
-                                                shifted_input_array, SignFunc, Cfg);
-    
-                #pragma omp critical
-                {
-                    m_cc->EvalAddInPlace(rank_result, comp_result);
-                }
+                auto comp_result =
+                    comp.compare(m_cc, duplicated_input_array,
+                                 shifted_input_array, SignFunc, Cfg);
+
+#pragma omp critical
+                { m_cc->EvalAddInPlace(rank_result, comp_result); }
             }
-        }
-        else if constexpr (N == 1024) {
+        } else if constexpr (N == 1024) {
 #pragma omp parallel for num_threads(16)
             for (int i = 0; i < num_batch; i++) {
                 auto shifted_input_array =
                     vecRotsOpt(babyStpesofB, num_partition, num_slots, np, i);
-    
+
                 // Generate duplicated input array
                 auto duplicated_input_array = inputOver255->Clone();
                 duplicated_input_array->SetSlots(num_slots);
-    
+
                 // comp(duplicated, shifted)
-                auto comp_result = comp.compare(m_cc, duplicated_input_array,
-                                                shifted_input_array, SignFunc, Cfg);
-    
-                #pragma omp critical
-                {
-                    m_cc->EvalAddInPlace(rank_result, comp_result);
-                }
+                auto comp_result =
+                    comp.compare(m_cc, duplicated_input_array,
+                                 shifted_input_array, SignFunc, Cfg);
+
+#pragma omp critical
+                { m_cc->EvalAddInPlace(rank_result, comp_result); }
             }
         }
         // This cannot be parallelized
@@ -781,12 +780,11 @@ template <int N> class DirectSort : public SortBase<N> {
                                                const size_t rowIndex,
                                                bool maskOutput) {
 
-                                                
         auto path = getBinaryPath(rowIndex, matrixSize);
         size_t step = matrixSize * (matrixSize - 1) / 2;
 
         c->SetSlots(matrixSize * matrixSize);
-        for (size_t i = 0; i < LOG2(matrixSize); i++){
+        for (size_t i = 0; i < LOG2(matrixSize); i++) {
             if (path[i]) {
                 c = m_cc->EvalAdd(c, rot.rotate(c, -step));
             } else {
@@ -848,19 +846,19 @@ template <int N> class DirectSort : public SortBase<N> {
         std::vector<Ciphertext<DCRTPoly>> rots_Rank(num_batch);
         std::vector<Ciphertext<DCRTPoly>> rots_Input(num_batch);
 
-        #pragma omp parallel sections
+#pragma omp parallel sections
         {
-            #pragma omp section
+#pragma omp section
             {
-                #pragma omp parallel for
+#pragma omp parallel for
                 for (size_t b = 0; b < num_batch; b++) {
                     rots_Rank[b] = rot.rotate(r, b * maxArraySize);
                 }
             }
-            
-            #pragma omp section
+
+#pragma omp section
             {
-                #pragma omp parallel for 
+#pragma omp parallel for
                 for (size_t b = 0; b < num_batch; b++) {
                     rots_Input[b] = rot.rotate(input_array, b * maxArraySize);
                 }
@@ -874,81 +872,89 @@ template <int N> class DirectSort : public SortBase<N> {
 
                 subMaskPtxs[b] = m_cc->MakeCKKSPackedPlaintext(
                     subMasks[b], 1, ctx_Rank->GetLevel(), nullptr, num_slots);
-    
+
                 auto subMasked = this->getZero()->Clone();
                 subMasked->SetSlots(num_slots);
                 for (size_t k = 0; k < num_batch; k++) {
-                    auto rotationMask = m_cc->EvalSub(subMaskPtxs[b], rots_Rank[k]);
+                    auto rotationMask =
+                        m_cc->EvalSub(subMaskPtxs[b], rots_Rank[k]);
                     if (N < 256) {
                         static const auto &sincCoefficients =
                             selectCoefficients<N>();
                         rotationMask = m_cc->EvalChebyshevSeriesPS(
                             rotationMask, sincCoefficients, -1, 1);
                     } else if (N < 512) {
-                        SignConfig Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
-                        rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N,
-                                                      SignFunc::CompositeSign, Cfg);
+                        SignConfig Cfg =
+                            SignConfig(CompositeSignConfig(3, 4, 2));
+                        rotationMask =
+                            comp.indicator(m_cc, rotationMask, 0.5 / N,
+                                           SignFunc::CompositeSign, Cfg);
                     } else {
-                        SignConfig Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
-                        rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N,
-                                                      SignFunc::CompositeSign, Cfg);
+                        SignConfig Cfg =
+                            SignConfig(CompositeSignConfig(3, 5, 2));
+                        rotationMask =
+                            comp.indicator(m_cc, rotationMask, 0.5 / N,
+                                           SignFunc::CompositeSign, Cfg);
                     }
-    
+
                     subMasked = m_cc->EvalAdd(
                         subMasked, m_cc->EvalMult(rots_Input[k], rotationMask));
                 }
-    
-                subMasked = sumColumnsToTarget(subMasked, N / num_batch, b, true);
+
+                subMasked =
+                    sumColumnsToTarget(subMasked, N / num_batch, b, true);
                 Masked[b] =
                     transposeColumnTarget(subMasked, N / num_batch, b, true);
             }
-        }
-        else if constexpr (N == 512) {
-#pragma omp parallel for num_threads(4) 
+        } else if constexpr (N == 512) {
+#pragma omp parallel for num_threads(4)
             for (size_t b = 0; b < num_batch; b++) {
 
                 subMaskPtxs[b] = m_cc->MakeCKKSPackedPlaintext(
                     subMasks[b], 1, ctx_Rank->GetLevel(), nullptr, num_slots);
-    
+
                 auto subMasked = this->getZero()->Clone();
                 subMasked->SetSlots(num_slots);
                 for (size_t k = 0; k < num_batch; k++) {
-                    auto rotationMask = m_cc->EvalSub(subMaskPtxs[b], rots_Rank[k]);
-            
+                    auto rotationMask =
+                        m_cc->EvalSub(subMaskPtxs[b], rots_Rank[k]);
+
                     SignConfig Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
                     rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N,
-                                                    SignFunc::CompositeSign, Cfg);
-    
+                                                  SignFunc::CompositeSign, Cfg);
+
                     subMasked = m_cc->EvalAdd(
                         subMasked, m_cc->EvalMult(rots_Input[k], rotationMask));
                 }
-    
-                subMasked = sumColumnsToTarget(subMasked, N / num_batch, b, true);
+
+                subMasked =
+                    sumColumnsToTarget(subMasked, N / num_batch, b, true);
                 Masked[b] =
                     transposeColumnTarget(subMasked, N / num_batch, b, true);
             }
-        }
-        else if constexpr (N == 1024) {
-#pragma omp parallel for num_threads(16) 
+        } else if constexpr (N == 1024) {
+#pragma omp parallel for num_threads(16)
             for (size_t b = 0; b < num_batch; b++) {
 
                 subMaskPtxs[b] = m_cc->MakeCKKSPackedPlaintext(
                     subMasks[b], 1, ctx_Rank->GetLevel(), nullptr, num_slots);
-    
+
                 auto subMasked = this->getZero()->Clone();
                 subMasked->SetSlots(num_slots);
                 for (size_t k = 0; k < num_batch; k++) {
-                    auto rotationMask = m_cc->EvalSub(subMaskPtxs[b], rots_Rank[k]);
-                
+                    auto rotationMask =
+                        m_cc->EvalSub(subMaskPtxs[b], rots_Rank[k]);
+
                     SignConfig Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
                     rotationMask = comp.indicator(m_cc, rotationMask, 0.5 / N,
-                                                    SignFunc::CompositeSign, Cfg);
-                    
+                                                  SignFunc::CompositeSign, Cfg);
+
                     subMasked = m_cc->EvalAdd(
                         subMasked, m_cc->EvalMult(rots_Input[k], rotationMask));
                 }
-    
-                subMasked = sumColumnsToTarget(subMasked, N / num_batch, b, true);
+
+                subMasked =
+                    sumColumnsToTarget(subMasked, N / num_batch, b, true);
                 Masked[b] =
                     transposeColumnTarget(subMasked, N / num_batch, b, true);
             }
@@ -961,13 +967,13 @@ template <int N> class DirectSort : public SortBase<N> {
     Ciphertext<DCRTPoly> sort_hybrid(const Ciphertext<DCRTPoly> &input_array,
                                      SignFunc SignFunc, SignConfig &Cfg,
                                      PrivateKey<DCRTPoly> sk) {
-                                        
+
         omp_set_nested(1);
         omp_set_max_active_levels(2);
 
         Ciphertext<DCRTPoly> ctx_Rank;
         ctx_Rank = constructRank(input_array, SignFunc, Cfg);
-        
+
         Ciphertext<DCRTPoly> output_array =
             rotationIndexCheckHybrid(ctx_Rank, input_array, sk);
 

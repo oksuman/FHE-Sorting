@@ -214,7 +214,7 @@ template <int N> class RotationComposer {
 
     Ciphertext<DCRTPoly> rotate(const Ciphertext<DCRTPoly> &input,
                                 int rotation) {
-        rotation_calls.insert(rotation);
+        // rotation_calls.insert(rotation);
 
         if (rotation % input->GetSlots() == 0) {
             return input->Clone();

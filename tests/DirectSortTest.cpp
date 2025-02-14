@@ -161,11 +161,11 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
               << std::endl;
 
     // Save results to file
-    std::string filename = "sort_results_N" + std::to_string(N) + ".txt";
-    this->SaveResults(filename, N,
-                      17, // logRingDim
-                      this->m_multDepth, this->m_scaleMod, Cfg, maxError,
-                      avgError, duration.count());
+    // std::string filename = "sort_results_N" + std::to_string(N) + ".txt";
+    // this->SaveResults(filename, N,
+    //                   17, // logRingDim
+    //                   this->m_multDepth, this->m_scaleMod, Cfg, maxError,
+    //                   avgError, duration.count());
 
     ASSERT_LT(maxError, 0.01);
 }
