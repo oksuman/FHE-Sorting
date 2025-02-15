@@ -16,7 +16,8 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
     void SetUp() override {
         // Set up the CryptoContext
         CCParams<CryptoContextCKKSRNS> parameters;
-        KWayAdapter<N>::getSizeParameters(parameters, rotations);
+        std::vector<uint32_t> levelBudget;
+        KWayAdapter<N>::getSizeParameters(parameters, rotations, levelBudget);
 
         parameters.SetSecurityLevel(HEStd_NotSet);
         constexpr usint ringDim = 1 << 17;
@@ -42,13 +43,13 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
         m_cc->EvalMultKeyGen(m_privateKey);
 
         // Setup bootstrapping
-        std::vector<uint32_t> levelBudget = {5, 5};
         std::vector<uint32_t> bsgsDim = {0, 0};
         m_cc->EvalBootstrapSetup(levelBudget, bsgsDim, m_numSlots);
         m_cc->EvalBootstrapKeyGen(m_privateKey, m_numSlots);
 
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
         m_multDepth = parameters.GetMultiplicativeDepth();
+        m_scaleMod = parameters.GetScalingModSize();
     }
 
     std::vector<int> rotations;
@@ -57,6 +58,7 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
     PrivateKey<DCRTPoly> m_privateKey;
     std::shared_ptr<DebugEncryption> m_enc;
     int m_multDepth;
+    int m_scaleMod;
     int m_numSlots;
 };
 
@@ -67,24 +69,24 @@ using TestSizes = ::testing::Types<
     //  std::integral_constant<size_t, 4>,    // For k=2, M=2
     //  std::integral_constant<size_t, 8>,    // For k=2, M=3
     std::integral_constant<size_t, 9>, // For k=3, M=2
-    //  std::integral_constant<size_t, 16>,   // For k=2, M=4
+    std::integral_constant<size_t, 16>,   // For k=2, M=4
     std::integral_constant<size_t, 25>, // For k=5, M=2
-    //  std::integral_constant<size_t, 27>,   // For k=3, M=3
-    //  std::integral_constant<size_t, 32>,   // For k=2, M=5
-    //  std::integral_constant<size_t, 64>,   // For k=2, M=6
+    std::integral_constant<size_t, 27>,   // For k=3, M=3
+    std::integral_constant<size_t, 32>,   // For k=2, M=5
+    std::integral_constant<size_t, 64>,   // For k=2, M=6
     std::integral_constant<size_t, 81>,  // For k=3, M=4
     std::integral_constant<size_t, 125>, // For k=5, M=3
-    //  std::integral_constant<size_t, 128>,  // For k=2, M=7
+    std::integral_constant<size_t, 128>,  // For k=2, M=7
     std::integral_constant<size_t, 243>, // For k=3, M=5
-    //  std::integral_constant<size_t, 256>,  // For k=2, M=8
-    //  std::integral_constant<size_t, 512>,  // For k=2, M=9
+    std::integral_constant<size_t, 256>,  // For k=2, M=8
+    std::integral_constant<size_t, 512>,  // For k=2, M=9
     std::integral_constant<size_t, 625>, // For k=5, M=4
-    std::integral_constant<size_t, 729>  // For k=3, M=6
-    //  std::integral_constant<size_t, 1024>, // For k=2, M=10
-    //  std::integral_constant<size_t, 2048>, // For k=2, M=11
-    //  std::integral_constant<size_t, 2187>, // For k=3, M=7
+    std::integral_constant<size_t, 729>,  // For k=3, M=6
+    std::integral_constant<size_t, 1024>, // For k=2, M=10
+    std::integral_constant<size_t, 2048>, // For k=2, M=11
+    std::integral_constant<size_t, 2187> // For k=3, M=7
     //  std::integral_constant<size_t, 3125>  // For k=5, M=5
-    >;
+>;
 
 TYPED_TEST_SUITE(KWaySortTestFixture, TestSizes);
 
@@ -223,8 +225,11 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     // Generate random input array with minimum difference
     std::vector<double> inputArray =
         getVectorWithMinDiff(N, 0, 1, (1.0 - 1e-8) / N);
-    std::cout << "current size: " << N << std::endl;
-    std::cout << "Input array: " << inputArray << std::endl;
+    std::cout << "Input array size: " << N << std::endl;
+    std::cout << "Using Ring Dimension: " << this->m_cc->GetRingDimension()
+              << std::endl;
+    std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
+    std::cout << "Scaling Mod: " << this->m_scaleMod << std::endl;
 
     // Encrypt input
     auto ctxt = this->m_enc->encryptInput(inputArray);
@@ -237,9 +242,12 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     );
 
     // Sort using k-way algorithm
-    auto Cfg = SignConfig(CompositeSignConfig(3, d_f, d_g));
-    Ciphertext<DCRTPoly> ctxt_out =
-        kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
+    auto Cfg = SignConfig(CompositeSignConfig(3, d_f, d_g), this->m_multDepth);
+    auto start = std::chrono::high_resolution_clock::now();
+    Ciphertext<DCRTPoly> ctxt_out = kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Result Level: " << ctxt_out->GetLevel() << std::endl;
 
     // Decrypt result
     Plaintext result;
@@ -252,25 +260,26 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
 
     // Calculate error metrics
     double maxError = 0.0;
+    double totalError = 0.0;
     int largeErrorCount = 0;
     int effectiveOutputSize = std::pow(k, M);
+
     for (int i = 0; i < effectiveOutputSize; ++i) {
         double error = std::abs(outputArray[i] - expected[i]);
         maxError = std::max(maxError, error);
+        totalError += error;
         if (error >= 0.01) {
             largeErrorCount++;
-            std::cout << "Large error at index " << i
-                      << ": expected=" << expected[i]
-                      << ", got=" << outputArray[i] << ", error=" << error
-                      << std::endl;
         }
     }
+    
+    double avgError = totalError / effectiveOutputSize;
 
-    // Print results
-    std::cout << "Output array: " << outputArray << std::endl;
-    std::cout << "Expected array: " << expected << std::endl;
-    std::cout << "Maximum error: " << maxError
-              << ", log2: " << std::log2(maxError) << std::endl;
+    std::cout << "\nPerformance Analysis:" << std::endl;
+    std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
+    std::cout << "\nError Analysis:" << std::endl;
+    std::cout << "Maximum error: " << maxError << " (log2: " << std::log2(maxError) << ")" << std::endl;
+    std::cout << "Average error: " << avgError << " (log2: " << std::log2(avgError) << ")" << std::endl;
     std::cout << "Number of errors >= 0.01: " << largeErrorCount << std::endl;
 
     // Verify sorting accuracy

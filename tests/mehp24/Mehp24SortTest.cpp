@@ -27,9 +27,8 @@ template <int N> class MEHPSortTest : public ::testing::Test {
         // parameters.SetSecurityLevel(HEStd_NotSet);
         parameters.SetSecurityLevel(HEStd_128_classic);
         auto logRingDim = 17;
-        // parameters.SetRingDim(1 << logRingDim);
+        parameters.SetRingDim(1 << logRingDim);
         auto batchSize = std::min(N * N, (1 << logRingDim) / 2);
-        std::cout << "batch size: " << batchSize << std::endl;
         parameters.SetBatchSize(batchSize);
 
         switch (N) {
@@ -71,8 +70,6 @@ template <int N> class MEHPSortTest : public ::testing::Test {
         parameters.SetScalingModSize(m_scaleMod);
 
         m_cc = GenCryptoContext(parameters);
-        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension()
-                  << std::endl;
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
@@ -88,33 +85,6 @@ template <int N> class MEHPSortTest : public ::testing::Test {
         m_cc->EvalMultKeyGen(m_privateKey);
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
         comp = std::make_unique<Comparison>(m_enc);
-    }
-
-    void SaveResults(const std::string &filename, size_t arraySize,
-                     int logRingDim, int multDepth, int scalingModSize,
-                     uint32_t dg_i, uint32_t df_i, // indicator configuration
-                     double maxError, double avgError, double executionTimeMs,
-                     int resultLevel) {
-        // Create directory if it doesn't exist
-        fs::create_directories("ours_results");
-
-        std::ofstream outFile("ours_results/" + filename, std::ios::app);
-        outFile << std::fixed << std::setprecision(6);
-        outFile << "Array Size (N): " << arraySize << "\n";
-        outFile << "Ring Dimension: 2^" << logRingDim << "\n";
-        outFile << "Multiplicative Depth: " << multDepth << "\n";
-        outFile << "Scaling Mod Size: " << scalingModSize << "\n";
-        // outFile << "Comparison Configuration (degree, dg, df): (3, " << dg_c
-        // << ", " << df_c << ")\n";
-        outFile << "Indicator Configuration (dg_i, df_i): (" << dg_i << ", "
-                << df_i << ")\n";
-        outFile << "Max Error: " << maxError
-                << " (log2: " << std::log2(maxError) << ")\n";
-        outFile << "Average Error: " << avgError
-                << " (log2: " << std::log2(avgError) << ")\n";
-        outFile << "Execution Time: " << executionTimeMs << " ms\n";
-        outFile << "Result Level: " << resultLevel << "\n";
-        outFile << "----------------------------------------\n";
     }
 
     std::vector<int> rotations;
@@ -134,15 +104,14 @@ TYPED_TEST_SUITE_P(MEHPSortTestFixture);
 
 TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
     constexpr size_t N = TypeParam::value;
-
     std::vector<double> inputArray =
         getVectorWithMinDiff(N, 0, 1, 1 / (double)N);
+
     std::cout << "Input array size: " << N << std::endl;
-    std::cout << "Ring Dimension: " << this->m_cc->GetRingDimension()
+    std::cout << "Using Ring Dimension: " << this->m_cc->GetRingDimension()
               << std::endl;
     std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
-    std::cout << "Scaling size: " << this->m_scaleMod << std::endl;
-    // std::cout << "Input array: " << inputArray << std::endl;
+    std::cout << "Scaling Mod: " << this->m_scaleMod << std::endl;
 
     auto ctxt = this->m_enc->encryptInput(inputArray);
 
@@ -197,21 +166,17 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 
     double avgError = totalError / N;
 
-    std::cout << "\nSort Error Analysis:" << std::endl;
+    // Print results to console
+    std::cout << "\nPerformance Analysis:" << std::endl;
+    std::cout << "Execution time: " << duration<< " ms" << std::endl;
+    std::cout << "\nError Analysis:" << std::endl;
     std::cout << "Maximum error: " << maxError
               << " (log2: " << std::log2(maxError) << ")" << std::endl;
     std::cout << "Average error: " << avgError
               << " (log2: " << std::log2(avgError) << ")" << std::endl;
-    std::cout << "Number of errors >= 0.01: " << largeErrorCount << std::endl;
-    std::cout << "Sorting time: " << duration << " ms" << std::endl;
+    std::cout << "Number of errors larger than 0.01: " << largeErrorCount
+              << std::endl;
     std::cout << "Result Level: " << ctxt_out->GetLevel() << std::endl;
-
-    // Save results to file
-    // std::string filename = "mehp_sort_results_N" + std::to_string(N) +
-    // ".txt"; this->SaveResults(filename, N,
-    //                   17, // logRingDim
-    //                   this->m_multDepth, this->m_scaleMod, dg_i, df_i,
-    //                   maxError, avgError, duration, ctxt_out->GetLevel());
 
     ASSERT_LT(maxError, 0.01);
 }

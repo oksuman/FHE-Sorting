@@ -38,7 +38,7 @@ template <int N> class KWayAdapter : public SortBase<N> {
     }
 
     static void getSizeParameters(CCParams<CryptoContextCKKSRNS> &parameters,
-                                  std::vector<int> &rotations) {
+                                  std::vector<int> &rotations, std::vector<uint32_t> &levelBudget) {
         parameters.SetBatchSize(next_power_of_two(N));
         parameters.SetFirstModSize(60);
         parameters.SetScalingModSize(59);
@@ -50,9 +50,18 @@ template <int N> class KWayAdapter : public SortBase<N> {
         }
 
         // Set multiplicative depth based on array size
-        int multDepth;
+        int multDepth; 
         switch (N) {
+        case 9:
+            levelBudget = {4, 4};
+            multDepth = 40;
+            break;
+        case 16:
+            levelBudget = {4, 4};
+            multDepth = 40;
+            break;
         case 128:
+            levelBudget = {5, 5};
             multDepth = 50;
             break;
         default:

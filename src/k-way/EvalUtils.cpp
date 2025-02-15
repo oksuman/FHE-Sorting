@@ -67,7 +67,10 @@ void EvalUtils::checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, long level,
         }
 
         // Perform bootstrapping
+        std::cout << "Bootstrapping required" << std::endl;
+        std::cout << "Level befor bootstrapping: " << ctxt->GetLevel() << std::endl;
         ctxt = m_cc->EvalBootstrap(ctxt);
+        std::cout << "Level after bootstrapping: " << ctxt->GetLevel() << std::endl;
 
         if (verbose) {
             std::cout << "Finished bootstrapping at level " << ctxt->GetLevel()

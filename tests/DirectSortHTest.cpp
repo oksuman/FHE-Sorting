@@ -130,27 +130,6 @@ template <size_t N> class HybridSortTest : public ::testing::Test {
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
     }
 
-    void SaveResults(const std::string &filename, size_t arraySize,
-                     int logRingDim, const SignConfig &cfg, double maxError,
-                     double avgError, double executionTimeMs) {
-        fs::create_directories("hybrid_results");
-
-        std::ofstream outFile("hybrid_results/" + filename, std::ios::app);
-        outFile << std::fixed << std::setprecision(6);
-        outFile << "Array Size (N): " << arraySize << "\n";
-        outFile << "Ring Dimension: 2^" << logRingDim << "\n";
-        outFile << "Multiplicative Depth: " << m_multDepth << "\n";
-        outFile << "Scaling Mod Size: " << m_scaleMod << "\n";
-        outFile << "Sign Configuration (degree, dg, df): (" << cfg.compos.n
-                << ", " << cfg.compos.dg << ", " << cfg.compos.df << ")\n";
-        outFile << "Max Error: " << maxError
-                << " (log2: " << std::log2(maxError) << ")\n";
-        outFile << "Average Error: " << avgError
-                << " (log2: " << std::log2(avgError) << ")\n";
-        outFile << "Execution Time: " << executionTimeMs << " ms\n";
-        outFile << "----------------------------------------\n";
-    }
-
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
@@ -216,13 +195,9 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
     this->m_cc->Decrypt(this->m_privateKey, ctxt_out, &result);
     result->SetLength(N);
     std::vector<double> output_array = result->GetRealPackedValue();
-    // std::cout << "result: " << std::endl;
-    // std::cout << output_array << std::endl;
 
     auto expected = inputArray;
     std::sort(expected.begin(), expected.end());
-    // std::cout << "expected: " << std::endl;
-    // std::cout << expected << std::endl;
 
     // Calculate errors
     double maxError = 0.0;
@@ -235,9 +210,6 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
         totalError += error;
         if (error >= 0.01) {
             largeErrorCount++;
-            // std::cout << "index: " << i << std::endl;
-            // std::cout << "expected: " << expected[i] << std::endl;
-            // std::cout << "output_array: " << output_array[i] << std::endl;
         }
     }
 
@@ -253,11 +225,6 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
               << " (log2: " << std::log2(avgError) << ")" << std::endl;
     std::cout << "Number of errors larger than 0.01: " << largeErrorCount
               << std::endl;
-
-    // Save results to file
-    // std::string filename = "hybrid_sort_results_N" + std::to_string(N) +
-    // ".txt"; this->SaveResults(filename, N, 17, Cfg, maxError, avgError,
-    //                   duration.count());
 
     ASSERT_LT(maxError, 0.01);
 }

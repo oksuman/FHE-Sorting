@@ -307,19 +307,19 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
 
         if (slope == 0) {
             if (m_k == 2) {
-                checkLevelAndBoot(ctxt, m_level[m_k], 1);
+                // checkLevelAndBoot(ctxt, m_level[m_k], 1);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
                 checkLevelAndBoot(ctxt_comp1, m_level[m_k], 0);
                 runTwoSorter(ctxt, indices, shift, ctxt_comp1, ctxt);
             } else if (m_k == 3) {
-                checkLevelAndBoot(ctxt, m_level[m_k], 0);
+                // checkLevelAndBoot(ctxt, m_level[m_k], 0);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
                 checkLevelAndBoot(ctxt_comp1, m_level[m_k], 0);
                 runThreeSorter(ctxt, indices, shift, ctxt_comp1, ctxt);
             } else if (m_k == 5) {
-                checkLevelAndBoot(ctxt, m_level[m_k], 1);
+                // checkLevelAndBoot(ctxt, m_level[m_k], 1);
                 comparisonForSort2(ctxt, indices, logDist, slope, ctxt_comp1,
                                    ctxt_comp2, ctxt_fix, Cfg);
                 checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[m_k], 1);
@@ -328,14 +328,14 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
             }
         } else if (slope == m_k / 2 + 1) {
             if (m_k == 3) {
-                checkLevelAndBoot(ctxt, m_level[m_k - 1], 0);
+                // checkLevelAndBoot(ctxt, m_level[m_k - 1], 0);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
                 checkLevelAndBoot(ctxt_comp1, m_level[m_k - 1], 0);
                 runTwoSorter(ctxt, indices, shift, ctxt_comp1, ctxt);
                 ctxt = m_cc->EvalAdd(ctxt, ctxt_fix);
             } else if (m_k == 5) {
-                checkLevelAndBoot(ctxt, m_level[m_k - 1], 0);
+                // checkLevelAndBoot(ctxt, m_level[m_k - 1], 0);
                 comparisonForSort2(ctxt, indices, logDist, slope, ctxt_comp1,
                                    ctxt_comp2, ctxt_fix, Cfg);
                 checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[m_k - 1], 0);
@@ -345,7 +345,7 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
             }
         } else {
             if (m_k == 5 && slope == 1) {
-                checkLevelAndBoot(ctxt, m_level[5], 0);
+                // checkLevelAndBoot(ctxt, m_level[5], 0);
                 comparisonForSort2(ctxt, indices, logDist, slope, ctxt_comp1,
                                    ctxt_comp2, ctxt_fix, Cfg);
                 checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[5], 0);
@@ -354,7 +354,7 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
                 ctxt = m_cc->EvalAdd(ctxt, ctxt_fix);
             } else if ((m_k == 5 && slope == 2) || (m_k == 3 && slope == 1)) {
                 Ciphertext<DCRTPoly> ctxt2, ctxt3;
-                checkLevelAndBoot(ctxt, m_level[3], 0);
+                // checkLevelAndBoot(ctxt, m_level[3], 0);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
                 checkLevelAndBoot(ctxt_comp1, m_level[3], 0);
@@ -364,7 +364,7 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
                 ctxt = m_cc->EvalAdd(ctxt2, ctxt3);
             } else if (m_k == 2 && slope == 1) {
                 Ciphertext<DCRTPoly> ctxt2;
-                checkLevelAndBoot(ctxt, m_level[2], 0);
+                // checkLevelAndBoot(ctxt, m_level[2], 0);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
                 checkLevelAndBoot(ctxt_comp1, m_level[2], 0);
@@ -385,6 +385,7 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
         // decryptAndPrint(ctxt, pow(m_k, checklen), "check");
     }
     ctxt_out = ctxt;
+    std::cout << "Level of output: " << ctxt->GetLevel() << std::endl;
     PRINT_PT(m_enc, ctxt_out);
 }
 
