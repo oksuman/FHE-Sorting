@@ -54,15 +54,18 @@ void EvalUtils::squareAndKillImage(Ciphertext<DCRTPoly> &ctxt1,
     ctxt_out = m_cc->EvalSquare(ctxt1);
 }
 
-void EvalUtils::checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, long level,
-                                  long po2bit, bool verbose) {
+void EvalUtils::checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, int level,
+                                  int multDepth, bool verbose) {
     auto currentLevel = ctxt->GetLevel();
 
     // Bootstrap if level is too high
-    if (static_cast<long>(currentLevel) > level) {
+    // Required level is added by 1 since it is not possible to bootstrap when
+    // ctxt level = depth
+    if (multDepth - currentLevel < level + 1) {
         if (verbose) {
             std::cout << "Starting bootstrap at level " << currentLevel
-                      << std::endl;
+                      << " (MultDepth : " << multDepth
+                      << ", Required level: " << level << ")" << std::endl;
             debugWithSk(ctxt, 5, "before boot");
         }
 
@@ -82,29 +85,10 @@ void EvalUtils::checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, long level,
 
 void EvalUtils::checkLevelAndBoot2(Ciphertext<DCRTPoly> &ctxt,
                                    Ciphertext<DCRTPoly> &ctxt2, long level,
-                                   long po2bit, bool verbose) {
+                                   long multDepth, bool verbose) {
     // Check the levels and bootstrap if needed
-    checkLevelAndBoot(ctxt, level, po2bit, verbose);
-    checkLevelAndBoot(ctxt2, level, po2bit, verbose);
-
-    // Optional: Ensure both ciphertexts are at the same level
-    auto ctxtLevel = ctxt->GetLevel();
-    auto ctxt2Level = ctxt2->GetLevel();
-
-    if (ctxtLevel != ctxt2Level) {
-        if (verbose) {
-            std::cout << "Adjusting levels to match..." << std::endl;
-        }
-
-        // Bring both ciphertexts to the same level (the lower of the two)
-        int targetLevel = std::min(ctxtLevel, ctxt2Level);
-        if (static_cast<long>(ctxtLevel) > targetLevel) {
-            m_cc->LevelReduceInPlace(ctxt, nullptr, ctxtLevel - targetLevel);
-        }
-        if (static_cast<long>(ctxt2Level) > targetLevel) {
-            m_cc->LevelReduceInPlace(ctxt2, nullptr, ctxt2Level - targetLevel);
-        }
-    }
+    checkLevelAndBoot(ctxt, level, multDepth, verbose);
+    checkLevelAndBoot(ctxt2, level, multDepth, verbose);
 }
 
 void EvalUtils::flipCtxt(Ciphertext<DCRTPoly> &ctxt) {

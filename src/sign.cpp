@@ -164,7 +164,7 @@ Ciphertext<DCRTPoly> compositeSign(Ciphertext<DCRTPoly> x,
     auto lazyBootstrap = [&cc, &Cfg](Ciphertext<DCRTPoly> &cipher,
                                      int requiredDepth) {
         if (Cfg.multDepth - static_cast<int>(cipher->GetLevel()) <
-            requiredDepth) {
+            requiredDepth + 2) {
             std::cout << "Bootstrapping required" << std::endl;
             std::cout << "Level befor bootstrapping: " << cipher->GetLevel() << std::endl;
             cipher = cc->EvalBootstrap(cipher);

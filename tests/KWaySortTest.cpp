@@ -16,7 +16,9 @@ class KWaySortTest : public ::testing::Test {
     void SetUp() override {
         // Set up the CryptoContext
         CCParams<CryptoContextCKKSRNS> parameters;
-        KWayAdapter<array_length>::getSizeParameters(parameters, rotations);
+        std::vector<uint32_t> levelBudget;
+        KWayAdapter<array_length>::getSizeParameters(parameters, rotations,
+                                                     levelBudget);
 
         parameters.SetSecurityLevel(HEStd_NotSet);
         constexpr usint ringDim = 1 << 10;
@@ -38,8 +40,6 @@ class KWaySortTest : public ::testing::Test {
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
         m_cc->EvalMultKeyGen(m_privateKey);
 
-        // Setup bootstrapping
-        std::vector<uint32_t> levelBudget = {5, 5};
         std::vector<uint32_t> bsgsDim = {0, 0};
         m_cc->EvalBootstrapSetup(levelBudget, bsgsDim, array_length);
         m_cc->EvalBootstrapKeyGen(m_privateKey, array_length);

@@ -26,6 +26,7 @@ template <int N> class KWayAdapter : public SortBase<N> {
     PublicKey<DCRTPoly> m_PublicKey;
     std::shared_ptr<Encryption> m_enc;
     std::unique_ptr<kwaySort::Sorter> m_sorter;
+    int m_multDepth;
 
   public:
     KWayAdapter(CryptoContext<DCRTPoly> cc, PublicKey<DCRTPoly> publicKey,
@@ -65,7 +66,8 @@ template <int N> class KWayAdapter : public SortBase<N> {
             multDepth = 50;
             break;
         default:
-            multDepth = 44;
+            levelBudget = {4, 4};
+            multDepth = 59;
             break;
         }
         parameters.SetMultiplicativeDepth(multDepth);

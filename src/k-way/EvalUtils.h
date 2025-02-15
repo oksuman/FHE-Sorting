@@ -39,12 +39,12 @@ class EvalUtils {
                             Ciphertext<DCRTPoly> &ctxt_out);
 
     // Level management and bootstrapping
-    void checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, long depth, long po2bit,
-                           bool verbose = false);
+    void checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, int level, int multDepth,
+                           bool verbose = true);
 
     void checkLevelAndBoot2(Ciphertext<DCRTPoly> &ctxt,
                             Ciphertext<DCRTPoly> &ctxt2, long depth,
-                            long po2bit, bool verbose = false);
+                            long po2bit, bool verbose = true);
 
     // Wrappers for ciphertext negation and masking
     void flipCtxt(Ciphertext<DCRTPoly> &ctxt);
@@ -60,11 +60,11 @@ class EvalUtils {
     void evalG(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out);
 
     void approxComp(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
-                    SignConfig &Cfg);
+                    int multDepth, long d_f, long d_g);
 
     void approxComp2(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
                      Ciphertext<DCRTPoly> &c, Ciphertext<DCRTPoly> &d,
-                     SignConfig &Cfg);
+                     int multDepth, long d_f, long d_g);
 
     void leftRotate(Ciphertext<DCRTPoly> &ctxt, long r,
                     Ciphertext<DCRTPoly> &ctxt_out);

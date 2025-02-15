@@ -20,7 +20,7 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
         KWayAdapter<N>::getSizeParameters(parameters, rotations, levelBudget);
 
         parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr usint ringDim = 1 << 17;
+        constexpr usint ringDim = 1 << 12;
         parameters.SetRingDim(ringDim);
 
         m_cc = GenCryptoContext(parameters);
@@ -95,7 +95,6 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
 
     // Configure k and M based on array size
     int k, M, d_f, d_g;
-
     switch (N) {
     case 4:
         k = 2;

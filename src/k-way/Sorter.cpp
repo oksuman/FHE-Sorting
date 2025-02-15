@@ -1,4 +1,5 @@
 #include "Sorter.h"
+#include "encryption.h"
 #include "sign.h"
 #include <vector>
 
@@ -285,6 +286,10 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
     Ciphertext<DCRTPoly> ctxt_fix, ctxt_comp1, ctxt_comp2;
     Ciphertext<DCRTPoly> ctxt_out2, ctxt_out3, ctxt_out4, ctxt_out5;
     assert(m_k == 2 || m_k == 3 || m_k == 5 && "Only k=2,3,5 is supported");
+
+    constexpr bool verbose = false;
+    int m_multDepth = Cfg.multDepth;
+
     std::vector<std::vector<int>> indices;
     std::tuple<int, int, int> type;
     long m, logDist, slope, shift;
@@ -302,72 +307,81 @@ void Sorter::sorter(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out,
         std::cout << m_k << " " << m_M << " " << m << " " << logDist << " "
                   << slope << std::endl;
         std::cout << "Level " << m_level[m_k] << "\n";
-        PRINT_PT(m_enc, ctxt);
+        if (verbose)
+            PRINT_PT(m_enc, ctxt);
         indices = genIndices(m_numSlots, m_k, m_M, m, logDist, slope);
 
         if (slope == 0) {
             if (m_k == 2) {
-                // checkLevelAndBoot(ctxt, m_level[m_k], 1);
+                checkLevelAndBoot(ctxt, m_level[m_k], m_multDepth, verbose);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
-                checkLevelAndBoot(ctxt_comp1, m_level[m_k], 0);
+                checkLevelAndBoot(ctxt_comp1, m_level[m_k], m_multDepth,
+                                  verbose);
                 runTwoSorter(ctxt, indices, shift, ctxt_comp1, ctxt);
             } else if (m_k == 3) {
-                // checkLevelAndBoot(ctxt, m_level[m_k], 0);
+                checkLevelAndBoot(ctxt, m_level[m_k], m_multDepth, verbose);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
-                checkLevelAndBoot(ctxt_comp1, m_level[m_k], 0);
+                checkLevelAndBoot(ctxt_comp1, m_level[m_k], m_multDepth,
+                                  verbose);
                 runThreeSorter(ctxt, indices, shift, ctxt_comp1, ctxt);
             } else if (m_k == 5) {
-                // checkLevelAndBoot(ctxt, m_level[m_k], 1);
+                checkLevelAndBoot(ctxt, m_level[m_k], m_multDepth, verbose);
                 comparisonForSort2(ctxt, indices, logDist, slope, ctxt_comp1,
                                    ctxt_comp2, ctxt_fix, Cfg);
-                checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[m_k], 1);
+                checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[m_k],
+                                   m_multDepth, verbose);
                 runFiveSorter(ctxt, indices, shift, ctxt_comp1, ctxt_comp2,
                               ctxt);
             }
         } else if (slope == m_k / 2 + 1) {
             if (m_k == 3) {
-                // checkLevelAndBoot(ctxt, m_level[m_k - 1], 0);
+                checkLevelAndBoot(ctxt, m_level[m_k - 1], m_multDepth, verbose);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
-                checkLevelAndBoot(ctxt_comp1, m_level[m_k - 1], 0);
+                checkLevelAndBoot(ctxt_comp1, m_level[m_k - 1], m_multDepth,
+                                  verbose);
                 runTwoSorter(ctxt, indices, shift, ctxt_comp1, ctxt);
                 ctxt = m_cc->EvalAdd(ctxt, ctxt_fix);
             } else if (m_k == 5) {
-                // checkLevelAndBoot(ctxt, m_level[m_k - 1], 0);
+                checkLevelAndBoot(ctxt, m_level[m_k - 1], m_multDepth, verbose);
                 comparisonForSort2(ctxt, indices, logDist, slope, ctxt_comp1,
                                    ctxt_comp2, ctxt_fix, Cfg);
-                checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[m_k - 1], 0);
+                checkLevelAndBoot(ctxt, m_level[m_k - 1], m_multDepth, verbose);
+                checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[m_k - 1],
+                                   m_multDepth, verbose);
                 runFourSorter(ctxt, indices, shift, ctxt_comp1, ctxt_comp2,
                               ctxt);
                 ctxt = m_cc->EvalAdd(ctxt, ctxt_fix);
             }
         } else {
             if (m_k == 5 && slope == 1) {
-                // checkLevelAndBoot(ctxt, m_level[5], 0);
+                checkLevelAndBoot(ctxt, m_level[5], m_multDepth, verbose);
                 comparisonForSort2(ctxt, indices, logDist, slope, ctxt_comp1,
                                    ctxt_comp2, ctxt_fix, Cfg);
-                checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[5], 0);
+                checkLevelAndBoot2(ctxt_comp1, ctxt_comp2, m_level[5],
+                                   m_multDepth, verbose);
                 run2345Sorter(ctxt, indices, shift, ctxt_comp1, ctxt_comp2,
                               ctxt);
                 ctxt = m_cc->EvalAdd(ctxt, ctxt_fix);
             } else if ((m_k == 5 && slope == 2) || (m_k == 3 && slope == 1)) {
                 Ciphertext<DCRTPoly> ctxt2, ctxt3;
-                // checkLevelAndBoot(ctxt, m_level[3], 0);
+                checkLevelAndBoot(ctxt, m_level[3], m_multDepth, verbose);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
-                checkLevelAndBoot(ctxt_comp1, m_level[3], 0);
+                checkLevelAndBoot(ctxt_comp1, m_level[2], m_multDepth, verbose);
                 runTwoSorter(ctxt, indices, shift, ctxt_comp1, ctxt2);
+                checkLevelAndBoot(ctxt_comp1, m_level[3], m_multDepth, verbose);
                 runThreeSorter(ctxt, indices, shift, ctxt_comp1, ctxt3);
                 ctxt2 = m_cc->EvalAdd(ctxt2, ctxt_fix);
                 ctxt = m_cc->EvalAdd(ctxt2, ctxt3);
             } else if (m_k == 2 && slope == 1) {
                 Ciphertext<DCRTPoly> ctxt2;
-                // checkLevelAndBoot(ctxt, m_level[2], 0);
+                checkLevelAndBoot(ctxt, m_level[2], m_multDepth, verbose);
                 comparisonForSort(ctxt, indices, logDist, slope, ctxt_comp1,
                                   ctxt_fix, Cfg);
-                checkLevelAndBoot(ctxt_comp1, m_level[2], 0);
+                checkLevelAndBoot(ctxt_comp1, m_level[2], m_multDepth, verbose);
                 runTwoSorter(ctxt, indices, shift, ctxt_comp1, ctxt2);
                 ctxt = m_cc->EvalAdd(ctxt2, ctxt_fix);
             } else {

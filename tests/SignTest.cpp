@@ -47,12 +47,14 @@ TEST_F(ArraySortTest, CompositeSignTest) {
     auto encrypted_input = cc->Encrypt(keyPair.publicKey, plaintext);
 
     // Parameters for compositeSign
-    int dg = 3;
-    int df = 3;
+    int dg = 0;
+    int df = 1;
 
     // Apply compositeSign
-    auto result = compositeSign<4>(encrypted_input, cc,
-                                   SignConfig(CompositeSignConfig(4, dg, df)));
+    auto result = compositeSign<3>(encrypted_input, cc,
+                                   SignConfig(CompositeSignConfig(3, dg, df)));
+
+    PRINT_PT(m_enc, result);
 
     // Decrypt the result
     Plaintext decryptedResult;
