@@ -130,6 +130,12 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     this->m_cc->Decrypt(this->m_privateKey, ctxt_out, &result);
     std::vector<double> output_array = result->GetRealPackedValue();
 
+    std::cout << "input:" << std::endl;
+    std::cout << inputArray << std::endl;
+
+    std::cout << "output:" << std::endl;
+    std::cout << output_array << std::endl;
+
     auto expected = inputArray;
     std::sort(expected.begin(), expected.end());
 

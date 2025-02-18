@@ -12,6 +12,7 @@
 using namespace lbcrypto;
 
 #include "generated_coeffs.h"
+#include "generated_doubled_sinc_coeffs.h"
 #include "mehp24/mehp24_utils.h"
 
 #ifdef _OPENMP
@@ -118,12 +119,14 @@ template <int N> class DirectSort : public SortBase<N> {
             break;
         case 16:
             rotations = {1, 2, 3, 4, 8, 12, 16, 32, 64, 128, 256};
-            multDepth = 24;
+            // multDepth = 24;
+            multDepth = 25;
             break;
         case 32:
             rotations = {1,  2,  3,  4,  8,   12,  16,  20,
                          24, 28, 32, 64, 128, 256, 512, 1024};
-            multDepth = 28;
+            // multDepth = 28;
+            multDepth = 29;
             break;
         case 64:
             rotations = {1,  2,  3,  4,  5,   6,   7,   8,    16,   24,  32,
@@ -283,6 +286,15 @@ template <int N> class DirectSort : public SortBase<N> {
 
         return result;
     }
+    std::vector<double> generateMaskVectorN(int num_slots, int k) {
+        std::vector<double> result(num_slots, 0.0);
+
+        for (int i = k * N; i < (k + 1) * N; ++i) {
+            result[i] = 1.0;
+        }
+
+        return result;
+    }
 
     // generate index vector, e.g. n=4 [0,1,2,3]
     std::vector<double> generateIndexVector() {
@@ -301,7 +313,7 @@ template <int N> class DirectSort : public SortBase<N> {
        repeating pattern of [k, k, ..., k, -N+k, -N+k, ..., -N+k] where each
        value is repeated N times.
     */
-    std::vector<double> generateCheckingVector(int num_slots, int k) {
+    std::vector<double> generateCheckingVector2N(int num_slots, int k) {
         std::vector<double> result(num_slots);
         int index = 0;
         int current_k = k;
@@ -319,6 +331,21 @@ template <int N> class DirectSort : public SortBase<N> {
             current_k = (current_k + 1) % N;
         }
 
+        return result;
+    }
+    std::vector<double> generateCheckingVectorN(int num_slots, int k) {
+        std::vector<double> result(num_slots);
+        int index = 0;
+        int current_k = k;
+
+        while (index < num_slots) {
+            // Fill with k
+            for (int i = 0; i < N && index < num_slots; ++i) {
+                result[index++] = current_k;
+            }
+            // Move to next k
+            current_k = (current_k + 1) % N;
+        }
         return result;
     }
 
@@ -572,14 +599,14 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     Ciphertext<DCRTPoly>
-    blindRotationOpt(const std::vector<Ciphertext<DCRTPoly>> &masked_inputs,
-                     int num_slots, int np, int ib) {
+    blindRotationOpt2N(const std::vector<Ciphertext<DCRTPoly>> &masked_inputs,
+                       int num_slots, int np, int ib) {
         auto result = this->getZero()->Clone();
 
         for (int i = 0; i < (num_slots / N / 2) / np; i++) {
             auto tmp = this->getZero()->Clone();
 
-#pragma omp parallel for num_threads(32)
+#pragma omp parallel for
             for (int j = 0; j < np; j++) {
                 auto msk = generateMaskVector2N(num_slots, (np * i + j));
                 msk = vectorRotate(msk, j);
@@ -598,8 +625,33 @@ template <int N> class DirectSort : public SortBase<N> {
     }
 
     Ciphertext<DCRTPoly>
-    rotationIndexCheck(const Ciphertext<DCRTPoly> &ctx_Rank,
-                       const Ciphertext<DCRTPoly> &input_array) {
+    blindRotationOptN(const std::vector<Ciphertext<DCRTPoly>> &masked_inputs,
+                      int num_slots, int np, int ib) {
+        auto result = this->getZero()->Clone();
+
+        for (int i = 0; i < (num_slots / N) / np; i++) {
+            auto tmp = this->getZero()->Clone();
+
+#pragma omp parallel for
+            for (int j = 0; j < np; j++) {
+                auto msk = generateMaskVectorN(num_slots, (np * i + j));
+                msk = vectorRotate(msk, j);
+                Plaintext pmsk = m_cc->MakeCKKSPackedPlaintext(
+                    msk, 1, masked_inputs[j]->GetLevel(), nullptr, num_slots);
+
+                auto rotated = m_cc->EvalMult(masked_inputs[j], pmsk);
+#pragma omp critical
+                { m_cc->EvalAddInPlace(tmp, rotated); }
+            }
+            tmp = rot.rotate(tmp, i * np);
+            m_cc->EvalAddInPlace(result, tmp);
+        }
+        return result;
+    }
+
+    Ciphertext<DCRTPoly>
+    rotationIndexCheck2N(const Ciphertext<DCRTPoly> &ctx_Rank,
+                         const Ciphertext<DCRTPoly> &input_array) {
 
         auto output_array = this->getZero()->Clone();
 
@@ -629,7 +681,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
         for (int b = 0; b < num_batch; b++) {
             Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
-                generateCheckingVector(num_slots, b * (num_slots / N / 2)), 1,
+                generateCheckingVector2N(num_slots, b * (num_slots / N / 2)), 1,
                 index_minus_rank->GetLevel(), nullptr, num_slots);
 
             auto rotIndex =
@@ -653,7 +705,7 @@ template <int N> class DirectSort : public SortBase<N> {
                 //     i);
             }
             auto rotated_input =
-                blindRotationOpt(masked_inputs, num_slots, np, b);
+                blindRotationOpt2N(masked_inputs, num_slots, np, b);
             // auto rotated_input = blindRotation(masked_input, num_slots, b);
             m_cc->EvalAddInPlace(output_array, rotated_input);
         }
@@ -664,6 +716,97 @@ template <int N> class DirectSort : public SortBase<N> {
             // m_cc->EvalAddInPlace(
             //     output_array, m_cc->EvalRotate(output_array, num_slots / (1
             //     << i)));
+        }
+        output_array->SetSlots(N);
+        return output_array;
+    }
+
+    Ciphertext<DCRTPoly>
+    rotationIndexCheckN(const Ciphertext<DCRTPoly> &ctx_Rank,
+                        const Ciphertext<DCRTPoly> &input_array) {
+
+        auto output_array = this->getZero()->Clone();
+
+        /////////////// Meta Data for Rotation Index Checking ///////////////
+        int num_partition =
+            std::min(N, max_batch / N); // slot usage = num_partition * N
+        int num_batch = N / num_partition;
+        int num_slots = num_partition * N;
+
+        int np;
+        switch (N) {
+        case 4:
+            np = 2;
+            break;
+        case 8:
+            np = 2;
+            break;
+        case 16:
+            np = 4;
+            break;
+        case 32:
+            np = 4;
+            break;
+        case 64:
+            np = 8;
+            break;
+        case 128:
+            np = 8;
+            break;
+        case 256:
+            np = 16;
+            break;
+        case 512: // num partition = 128
+            np = 8;
+            break;
+        case 1024: // num partition = 64
+            np = 8;
+            break;
+
+        default:
+            np = 4;
+            break;
+        }
+        /////////////////////////////////////////////////////////////////////
+
+        Plaintext index_vector = m_cc->MakeCKKSPackedPlaintext(
+            generateIndexVector(), 1, ctx_Rank->GetLevel(), nullptr, N);
+        auto index_minus_rank = m_cc->EvalSub(index_vector, ctx_Rank);
+
+        index_minus_rank->SetSlots(num_slots);
+        input_array->SetSlots(num_slots);
+
+        for (int b = 0; b < num_batch; b++) {
+            Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
+                generateCheckingVectorN(num_slots, b * num_partition), 1,
+                index_minus_rank->GetLevel(), nullptr, num_slots);
+
+            auto rotIndex =
+                m_cc->EvalSub(index_minus_rank, rot_checking_vector);
+
+            // range (-2N, N) -> (-1, 0.5)
+            m_cc->EvalMultInPlace(rotIndex, 1.0 / N / 2);
+
+            static const auto &doubledSincCoefficients =
+                selectDoubledSincCoefficients<N>();
+            rotIndex = m_cc->EvalChebyshevSeriesPS(
+                rotIndex, doubledSincCoefficients, -1, 1);
+
+            auto masked_input = m_cc->EvalMult(rotIndex, input_array);
+            std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);
+#pragma omp parallel for
+            for (int i = 0; i < np; i++) {
+                masked_inputs[i] =
+                    rot.rotate(masked_input, b * num_partition + i);
+            }
+            auto rotated_input =
+                blindRotationOptN(masked_inputs, num_slots, np, b);
+            m_cc->EvalAddInPlace(output_array, rotated_input);
+        }
+
+        for (int i = 1; i < log2(num_partition) + 1; i++) {
+            m_cc->EvalAddInPlace(
+                output_array, rot.rotate(output_array, num_slots / (1 << i)));
         }
         output_array->SetSlots(N);
         return output_array;
@@ -681,7 +824,7 @@ template <int N> class DirectSort : public SortBase<N> {
         // PRINT_PT(m_enc, ctx_Rank);
 
         Ciphertext<DCRTPoly> output_array;
-        output_array = rotationIndexCheck(ctx_Rank, input_array);
+        output_array = rotationIndexCheckN(ctx_Rank, input_array);
 
         // std::cout << "\n===== Final Output: \n";
         // PRINT_PT(m_enc, output_array);
@@ -977,7 +1120,8 @@ template <int N> class DirectSort : public SortBase<N> {
         Ciphertext<DCRTPoly> output_array =
             rotationIndexCheckHybrid(ctx_Rank, input_array, sk);
 
-        std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
+        // std::cout << "Final Level: " << output_array->GetLevel() <<
+        // std::endl;
         return output_array;
     }
 };

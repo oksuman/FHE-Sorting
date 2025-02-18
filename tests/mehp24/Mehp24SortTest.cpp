@@ -168,7 +168,7 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 
     // Print results to console
     std::cout << "\nPerformance Analysis:" << std::endl;
-    std::cout << "Execution time: " << duration<< " ms" << std::endl;
+    std::cout << "Execution time: " << duration << " ms" << std::endl;
     std::cout << "\nError Analysis:" << std::endl;
     std::cout << "Maximum error: " << maxError
               << " (log2: " << std::log2(maxError) << ")" << std::endl;

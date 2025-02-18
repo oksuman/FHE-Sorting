@@ -68,25 +68,25 @@ class KWaySortTestFixture : public KWaySortTest<T::value> {};
 using TestSizes = ::testing::Types<
     //  std::integral_constant<size_t, 4>,    // For k=2, M=2
     //  std::integral_constant<size_t, 8>,    // For k=2, M=3
-    std::integral_constant<size_t, 9>, // For k=3, M=2
+    std::integral_constant<size_t, 9>,    // For k=3, M=2
     std::integral_constant<size_t, 16>,   // For k=2, M=4
-    std::integral_constant<size_t, 25>, // For k=5, M=2
+    std::integral_constant<size_t, 25>,   // For k=5, M=2
     std::integral_constant<size_t, 27>,   // For k=3, M=3
     std::integral_constant<size_t, 32>,   // For k=2, M=5
     std::integral_constant<size_t, 64>,   // For k=2, M=6
-    std::integral_constant<size_t, 81>,  // For k=3, M=4
-    std::integral_constant<size_t, 125>, // For k=5, M=3
+    std::integral_constant<size_t, 81>,   // For k=3, M=4
+    std::integral_constant<size_t, 125>,  // For k=5, M=3
     std::integral_constant<size_t, 128>,  // For k=2, M=7
-    std::integral_constant<size_t, 243>, // For k=3, M=5
+    std::integral_constant<size_t, 243>,  // For k=3, M=5
     std::integral_constant<size_t, 256>,  // For k=2, M=8
     std::integral_constant<size_t, 512>,  // For k=2, M=9
-    std::integral_constant<size_t, 625>, // For k=5, M=4
+    std::integral_constant<size_t, 625>,  // For k=5, M=4
     std::integral_constant<size_t, 729>,  // For k=3, M=6
     std::integral_constant<size_t, 1024>, // For k=2, M=10
     std::integral_constant<size_t, 2048>, // For k=2, M=11
-    std::integral_constant<size_t, 2187> // For k=3, M=7
+    std::integral_constant<size_t, 2187>  // For k=3, M=7
     //  std::integral_constant<size_t, 3125>  // For k=5, M=5
->;
+    >;
 
 TYPED_TEST_SUITE(KWaySortTestFixture, TestSizes);
 
@@ -243,9 +243,11 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     // Sort using k-way algorithm
     auto Cfg = SignConfig(CompositeSignConfig(3, d_f, d_g), this->m_multDepth);
     auto start = std::chrono::high_resolution_clock::now();
-    Ciphertext<DCRTPoly> ctxt_out = kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
+    Ciphertext<DCRTPoly> ctxt_out =
+        kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
     auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     std::cout << "Result Level: " << ctxt_out->GetLevel() << std::endl;
 
     // Decrypt result
@@ -271,14 +273,16 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
             largeErrorCount++;
         }
     }
-    
+
     double avgError = totalError / effectiveOutputSize;
 
     std::cout << "\nPerformance Analysis:" << std::endl;
     std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
     std::cout << "\nError Analysis:" << std::endl;
-    std::cout << "Maximum error: " << maxError << " (log2: " << std::log2(maxError) << ")" << std::endl;
-    std::cout << "Average error: " << avgError << " (log2: " << std::log2(avgError) << ")" << std::endl;
+    std::cout << "Maximum error: " << maxError
+              << " (log2: " << std::log2(maxError) << ")" << std::endl;
+    std::cout << "Average error: " << avgError
+              << " (log2: " << std::log2(avgError) << ")" << std::endl;
     std::cout << "Number of errors >= 0.01: " << largeErrorCount << std::endl;
 
     // Verify sorting accuracy

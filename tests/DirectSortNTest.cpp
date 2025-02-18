@@ -152,7 +152,7 @@ TYPED_TEST_P(DirectSortTestFixture, RotationIndexCheck) {
         this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
 
     // Call rotationIndexCheck
-    auto ctxtResult = directSort->rotationIndexCheck(ctxRank, ctxtInput);
+    auto ctxtResult = directSort->rotationIndexCheckN(ctxRank, ctxtInput);
 
     // Decrypt the result
     Plaintext result;
@@ -239,7 +239,7 @@ TYPED_TEST_P(DirectSortTestFixture, RotationIndexCheckWithNoise) {
     auto directSort = std::make_unique<DirectSort<N>>(
         this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
 
-    auto ctxtResult = directSort->rotationIndexCheck(ctxRank, ctxtInput);
+    auto ctxtResult = directSort->rotationIndexCheckN(ctxRank, ctxtInput);
 
     // Decrypt the result
     Plaintext result;

@@ -53,6 +53,29 @@ template <int N> struct Sinc {
 
         return result;
     }
+
+    static double doubled_sinc(double x) {
+        constexpr double epsilon = 1e-10;
+
+        // First term: Sinc(x)
+        double term1;
+        if (std::abs(x) < epsilon) {
+            term1 = 1.0;
+        } else {
+            term1 = std::sin(M_PI * N * x) / (M_PI * N * x);
+        }
+
+        // Second term: Sinc(x + n)
+        double x2 = x + 0.5;
+        double term2;
+        if (std::abs(x2) < epsilon) {
+            term2 = 1.0;
+        } else {
+            term2 = std::sin(M_PI * N * x2) / (M_PI * N * x2);
+        }
+
+        return term1 + term2;
+    }
 };
 
 class Comparison {

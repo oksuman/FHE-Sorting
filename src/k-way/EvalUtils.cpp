@@ -61,7 +61,7 @@ void EvalUtils::checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, int level,
     // Bootstrap if level is too high
     // Required level is added by 1 since it is not possible to bootstrap when
     // ctxt level = depth
-    if (multDepth - currentLevel < level + 1) {
+    if (static_cast<int>(multDepth - currentLevel) < level + 1) {
         if (verbose) {
             std::cout << "Starting bootstrap at level " << currentLevel
                       << " (MultDepth : " << multDepth
@@ -71,9 +71,11 @@ void EvalUtils::checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, int level,
 
         // Perform bootstrapping
         std::cout << "Bootstrapping required" << std::endl;
-        std::cout << "Level befor bootstrapping: " << ctxt->GetLevel() << std::endl;
+        std::cout << "Level befor bootstrapping: " << ctxt->GetLevel()
+                  << std::endl;
         ctxt = m_cc->EvalBootstrap(ctxt);
-        std::cout << "Level after bootstrapping: " << ctxt->GetLevel() << std::endl;
+        std::cout << "Level after bootstrapping: " << ctxt->GetLevel()
+                  << std::endl;
 
         if (verbose) {
             std::cout << "Finished bootstrapping at level " << ctxt->GetLevel()
