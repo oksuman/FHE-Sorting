@@ -125,8 +125,7 @@ template <int N> class DirectSort : public SortBase<N> {
         case 32:
             rotations = {1,  2,  3,  4,  8,   12,  16,  20,
                          24, 28, 32, 64, 128, 256, 512, 1024};
-            // multDepth = 28;
-            multDepth = 29;
+            multDepth = 28;
             break;
         case 64:
             rotations = {1,  2,  3,  4,  5,   6,   7,   8,    16,   24,  32,
@@ -151,7 +150,7 @@ template <int N> class DirectSort : public SortBase<N> {
             // multDepth = 46;
             break;
         case 512:
-            multDepth = 46;
+            multDepth = 35;
             rotations = {
                 1,    2,    3,    4,    5,     6,    7,   8,   9,   10,  11,
                 12,   13,   14,   15,   16,    24,   32,  40,  48,  56,  64,
@@ -165,7 +164,7 @@ template <int N> class DirectSort : public SortBase<N> {
                 1024, 2048, 4096, 8192, 16384, 32768};
             break;
         case 1024:
-            multDepth = 52;
+            multDepth = 39;
             rotations = {
                 1,   2,    3,    4,    5,    6,     7,    8,   9,   10,  11,
                 12,  13,   14,   15,   16,   17,    18,   19,  20,  21,  22,
@@ -213,51 +212,7 @@ template <int N> class DirectSort : public SortBase<N> {
                 1937, 1938, 1939, 1953, 1954, 1955, 1968, 1969, 1970,  1971,
                 1985, 1986, 1987, 2000, 2001, 2002, 2003, 2016, 2017,  2018,
                 2019, 2032, 2033, 2034, 2035, 2048, 4096, 8192, 16384, 32768};
-            // rotations = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
-            // 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-            // 32, 33, 34, 35, 48, 49, 50, 51, 64, 65, 66, 67, 80, 81, 82, 83,
-            // 96, 97, 98, 99, 112, 113, 114, 115, 128, 129, 130, 131, 144, 145,
-            // 146, 147, 160, 161, 162, 163, 176, 177, 178, 179, 192, 193, 194,
-            // 195, 208, 209, 210, 211, 224, 225, 226, 227, 240, 241, 242, 243,
-            // 256, 257, 258, 259, 272, 273, 274, 275, 288, 289, 290, 291, 304,
-            // 305, 306, 307, 320, 321, 322, 323, 336, 337, 338, 339, 352, 353,
-            // 354, 355, 368, 369, 370, 371, 384, 385, 386, 387, 400, 401, 402,
-            // 403, 416, 417, 418, 419, 432, 433, 434, 435, 448, 449, 450, 451,
-            // 464, 465, 466, 467, 480, 481, 482, 483, 496, 497, 498, 499, 512,
-            // 513, 514, 515, 528, 529, 530, 531, 544, 545, 546, 547, 560, 561,
-            // 562, 563, 576, 577, 578, 579, 592, 593, 594, 595, 608, 609, 610,
-            // 611, 624, 625, 626, 627, 640, 641, 642, 643, 656, 657, 658, 659,
-            // 672, 673, 674, 675, 688, 689, 690, 691, 704, 705, 706, 707, 720,
-            // 721, 722, 723, 736, 737, 738, 739, 752, 753, 754, 755, 768, 769,
-            // 770, 771, 784, 785, 786, 787, 800, 801, 802, 803, 816, 817, 818,
-            // 819, 832, 833, 834, 835, 848, 849, 850, 851, 864, 865, 866, 867,
-            // 880, 881, 882, 883, 896, 897, 898, 899, 912, 913, 914, 915, 928,
-            // 929, 930, 931, 944, 945, 946, 947, 960, 961, 962, 963, 976, 977,
-            // 978, 979, 992, 993, 994, 995, 1008, 1009, 1010, 1011, 1024, 1025,
-            // 1026, 1027, 1040, 1041, 1042, 1043, 1056, 1057, 1058, 1059, 1072,
-            // 1073, 1074, 1075, 1088, 1089, 1090, 1091, 1104, 1105, 1106, 1107,
-            // 1120, 1121, 1122, 1123, 1136, 1137, 1138, 1139, 1152, 1153, 1154,
-            // 1155, 1168, 1169, 1170, 1171, 1184, 1185, 1186, 1187, 1200, 1201,
-            // 1202, 1203, 1216, 1217, 1218, 1219, 1232, 1233, 1234, 1235, 1248,
-            // 1249, 1250, 1251, 1264, 1265, 1266, 1267, 1280, 1281, 1282, 1283,
-            // 1296, 1297, 1298, 1299, 1312, 1313, 1314, 1315, 1328, 1329, 1330,
-            // 1331, 1344, 1345, 1346, 1347, 1360, 1361, 1362, 1363, 1376, 1377,
-            // 1378, 1379, 1392, 1393, 1394, 1395, 1408, 1409, 1410, 1411, 1424,
-            // 1425, 1426, 1427, 1440, 1441, 1442, 1443, 1456, 1457, 1458, 1459,
-            // 1472, 1473, 1474, 1475, 1488, 1489, 1490, 1491, 1504, 1505, 1506,
-            // 1507, 1520, 1521, 1522, 1523, 1536, 1537, 1538, 1539, 1552, 1553,
-            // 1554, 1555, 1568, 1569, 1570, 1571, 1584, 1585, 1586, 1587, 1600,
-            // 1601, 1602, 1603, 1616, 1617, 1618, 1619, 1632, 1633, 1634, 1635,
-            // 1648, 1649, 1650, 1651, 1664, 1665, 1666, 1667, 1680, 1681, 1682,
-            // 1683, 1696, 1697, 1698, 1699, 1712, 1713, 1714, 1715, 1728, 1729,
-            // 1730, 1731, 1744, 1745, 1746, 1747, 1760, 1761, 1762, 1763, 1776,
-            // 1777, 1778, 1779, 1792, 1793, 1794, 1795, 1808, 1809, 1810, 1811,
-            // 1824, 1825, 1826, 1827, 1840, 1841, 1842, 1843, 1856, 1857, 1858,
-            // 1859, 1872, 1873, 1874, 1875, 1888, 1889, 1890, 1891, 1904, 1905,
-            // 1906, 1907, 1920, 1921, 1922, 1923, 1936, 1937, 1938, 1939, 1952,
-            // 1953, 1954, 1955, 1968, 1969, 1970, 1971, 1984, 1985, 1986, 1987,
-            // 2000, 2001, 2002, 2003, 2016, 2017, 2018, 2019, 2032, 2033, 2034,
-            // 2035, 2048, 4096, 8192, 16384, 32768};
+         
             break;
         }
         parameters.SetScalingModSize(modSize);
@@ -333,7 +288,8 @@ template <int N> class DirectSort : public SortBase<N> {
 
         return result;
     }
-    std::vector<double> generateCheckingVectorN(int num_slots, int k) {
+    std::vector<double> 
+    generateCheckingVectorN(int num_slots, int k) {
         std::vector<double> result(num_slots);
         int index = 0;
         int current_k = k;
@@ -626,7 +582,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
     Ciphertext<DCRTPoly>
     blindRotationOptN(const std::vector<Ciphertext<DCRTPoly>> &masked_inputs,
-                      int num_slots, int np, int ib) {
+                      int num_slots, int np, int ib, int num_partition) {
         auto result = this->getZero()->Clone();
 
         for (int i = 0; i < (num_slots / N) / np; i++) {
@@ -643,7 +599,7 @@ template <int N> class DirectSort : public SortBase<N> {
 #pragma omp critical
                 { m_cc->EvalAddInPlace(tmp, rotated); }
             }
-            tmp = rot.rotate(tmp, i * np);
+            tmp = rot.rotate(tmp,  ib * num_partition + i * np);
             m_cc->EvalAddInPlace(result, tmp);
         }
         return result;
@@ -726,7 +682,7 @@ template <int N> class DirectSort : public SortBase<N> {
                         const Ciphertext<DCRTPoly> &input_array) {
 
         auto output_array = this->getZero()->Clone();
-
+        
         /////////////// Meta Data for Rotation Index Checking ///////////////
         int num_partition =
             std::min(N, max_batch / N); // slot usage = num_partition * N
@@ -776,6 +732,7 @@ template <int N> class DirectSort : public SortBase<N> {
         index_minus_rank->SetSlots(num_slots);
         input_array->SetSlots(num_slots);
 
+#pragma omp parallel for
         for (int b = 0; b < num_batch; b++) {
             Plaintext rot_checking_vector = m_cc->MakeCKKSPackedPlaintext(
                 generateCheckingVectorN(num_slots, b * num_partition), 1,
@@ -797,11 +754,14 @@ template <int N> class DirectSort : public SortBase<N> {
 #pragma omp parallel for
             for (int i = 0; i < np; i++) {
                 masked_inputs[i] =
-                    rot.rotate(masked_input, b * num_partition + i);
+                    rot.rotate(masked_input, i);
+                    // rot.rotate(masked_input, b * num_partition + i);
             }
             auto rotated_input =
-                blindRotationOptN(masked_inputs, num_slots, np, b);
-            m_cc->EvalAddInPlace(output_array, rotated_input);
+                blindRotationOptN(masked_inputs, num_slots, np, b, num_partition);
+
+#pragma omp critical
+            { m_cc->EvalAddInPlace(output_array, rotated_input);}
         }
 
         for (int i = 1; i < log2(num_partition) + 1; i++) {
@@ -816,6 +776,9 @@ template <int N> class DirectSort : public SortBase<N> {
                               SignFunc SignFunc, SignConfig &Cfg) override {
         // std::cout << "\n===== Direct Sort Input Array: \n";
         // PRINT_PT(m_enc, input_array);
+        
+        omp_set_nested(1);
+        omp_set_max_active_levels(2);
 
         Ciphertext<DCRTPoly> ctx_Rank;
         ctx_Rank = constructRank(input_array, SignFunc, Cfg);

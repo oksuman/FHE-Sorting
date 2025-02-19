@@ -52,24 +52,13 @@ template <int N> class KWayAdapter : public SortBase<N> {
         }
 
         // Set multiplicative depth based on array size
-        int multDepth;
-        switch (N) {
-        case 9:
+        int multDepth = 44;
+        if(N <= 128){
             levelBudget = {4, 4};
-            multDepth = 40;
-            break;
-        case 16:
-            levelBudget = {4, 4};
-            multDepth = 40;
-            break;
-        case 128:
+            // multDepth = 44;
+        } else {
             levelBudget = {5, 5};
-            multDepth = 50;
-            break;
-        default:
-            levelBudget = {4, 4};
-            multDepth = 59;
-            break;
+            // multDepth = 44;
         }
         parameters.SetMultiplicativeDepth(multDepth);
     }
