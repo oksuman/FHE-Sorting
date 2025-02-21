@@ -1,0 +1,80 @@
+======================================
+     Results for N = 4
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 23
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+  Average Time     : 4.2400s
+
+Error Analysis:
+  Max Error (log2): -19.8556
+  Average Error (log2): -20.1702
+======================================
+
+======================================
+     Results for N = 8
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 24
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+  Average Time     : 4.7670s
+
+Error Analysis:
+  Max Error (log2): -22.1130
+  Average Error (log2): -23.0769
+======================================
+
+======================================
+     Results for N = 16
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 25
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+  Average Time     : 5.2980s
+
+Error Analysis:
+  Max Error (log2): -19.6487
+  Average Error (log2): -21.5500
+======================================
+
+======================================
+     Results for N = 32
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 28
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 3, 2)
+
+  Average Time     : 7.7960s
+
+Error Analysis:
+  Max Error (log2): -16.4766
+  Average Error (log2): -18.3646
+======================================
+
+======================================
+     Results for N = 64
+======================================
+Crypto Parameters:
+  Ring Dimension      : N/A
+  Multiplicative Depth: 29
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 3, 2)
+
+  Average Time     : 9.3290s
+
+Error Analysis:
+  Max Error (log2): -17.0204
+  Average Error (log2): -18.5217
+======================================
+

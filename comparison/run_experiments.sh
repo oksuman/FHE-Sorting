@@ -10,14 +10,46 @@ mkdir -p "$SCRIPT_DIR/experimental_results/ours"
 mkdir -p "$SCRIPT_DIR/experimental_results/ours_hybrid"
 mkdir -p "$SCRIPT_DIR/experimental_results/kway"
 
-DIRECT_SIZES=(4 8 16 32 64 128 256 512 1024)
-MEHP24_SIZES=(4 8 16 32 64 128 256 512 1024)
-KWAY_SIZES=(9 16 25 27 32 64 81 125 128 243 256 512 625 729 1024 2048 2187)
+DIRECT_SIZES=(4 8 16 32 64)
+MEHP24_SIZES=(4 8 16 32 64)
+KWAY_SIZES=(9 16 25 27 32 64 81 125 128 243 256 512 625)
 
 extract_test_results() {
     local input_file=$1
     local output_dir=$2
-    awk '/Input array size:/{p=1} p; /\[ *OK \]/{p=0}' "$input_file" | awk 'BEGIN{RS="Input array size:"} NR>1{print "Input array size:" $0 > "'$output_dir'/size_" $1 ".txt"}'
+    
+    local sizes=($(grep "^Input array size:" "$input_file" | awk '{print $4}'))
+    
+    if [ ${#sizes[@]} -eq 0 ]; then
+        echo "Warning: No 'Input array size:' patterns found in $input_file"
+        return
+    fi
+    
+    for i in "${!sizes[@]}"; do
+        local size=${sizes[$i]}
+        echo "Processing results for size: $size"
+        
+        local size_file="${output_dir}/size_${size}.txt"
+        > "$size_file"
+        
+        local start_pattern="Input array size: ${size}"
+        
+        if [ $((i+1)) -lt ${#sizes[@]} ]; then
+            local next_size=${sizes[$((i+1))]}
+            local end_pattern="Input array size: ${next_size}"
+            
+            awk -v start="$start_pattern" -v end="$end_pattern" \
+                'BEGIN {found=0} 
+                $0 ~ start {found=1} 
+                found && $0 !~ end {print} 
+                $0 ~ end {found=0}' "$input_file" > "$size_file"
+        else
+            awk -v start="$start_pattern" \
+                'BEGIN {found=0} 
+                $0 ~ start {found=1} 
+                found {print}' "$input_file" > "$size_file"
+        fi
+    done
 }
 
 get_kway_params() {
@@ -51,6 +83,8 @@ format_results() {
     local summary_file="${SCRIPT_DIR}/experimental_results/${algo}/N${size}_summary.txt"
     local total_file="${SCRIPT_DIR}/experimental_results/${algo}/total_results.txt"
     
+    > "$summary_file"
+    
     local ring_dim=""
     local mult_depth=""
     local scale_mod=""
@@ -59,37 +93,53 @@ format_results() {
     local max_err_logs=()
     local avg_err_logs=()
     
+    local found_results=false
+    
     for trial in $(seq 1 $NUM_TRIALS); do
         local result_file="${trial_dir}/trial_${trial}/size_${size}.txt"
-        if [[ -f "$result_file" ]]; then
+        if [[ -f "$result_file" && -s "$result_file" ]]; then
+            found_results=true
+            
             if [[ -z "$ring_dim" ]]; then
-                ring_dim=$(grep "Using Ring Dimension:" "$result_file" | awk '{print $4}')
-                mult_depth=$(grep "Multiplicative depth:" "$result_file" | awk '{print $3}')
-                scale_mod=$(grep "Scaling Mod:" "$result_file" | awk '{print $3}')
+                ring_dim=$(grep -m1 "Using Ring Dimension:" "$result_file" | awk '{print $4}')
+                mult_depth=$(grep -m1 "Multiplicative depth:" "$result_file" | awk '{print $3}')
+                scale_mod=$(grep -m1 "Scaling Mod:" "$result_file" | awk '{print $3}')
                 
-                if [[ "$algo" == "kway" ]]; then
-                    sign_config="CompositeSign(3, $(get_kway_params $size))"
+                sign_config_line=$(grep -m1 "Sign Configuration:" "$result_file" 2>/dev/null)
+                
+                if [[ -n "$sign_config_line" ]]; then
+                    sign_config=$(echo "$sign_config_line" | sed 's/Sign Configuration: //')
                 else
-                    if [[ $size -le 16 ]]; then
-                        sign_config="CompositeSign(3, 2, 2)"
-                    elif [[ $size -le 128 ]]; then
-                        sign_config="CompositeSign(3, 3, 2)"
-                    elif [[ $size -le 512 ]]; then
-                        sign_config="CompositeSign(3, 4, 2)"
+                    if [[ "$algo" == "kway" ]]; then
+                        sign_config="CompositeSign(3, $(get_kway_params $size))"
                     else
-                        sign_config="CompositeSign(3, 5, 2)"
-                    fi
-                    
-                    if [[ "$algo" == "mehp24" ]]; then
-                        local dg_i=$(echo "scale=0; (l($size)/l(2) + 1)/2" | bc -l)
-                        sign_config="$sign_config, dg_i=$dg_i, df_i=2"
+                        if [[ $size -le 16 ]]; then
+                            sign_config="CompositeSign(3, 2, 2)"
+                        elif [[ $size -le 128 ]]; then
+                            sign_config="CompositeSign(3, 3, 2)"
+                        elif [[ $size -le 512 ]]; then
+                            sign_config="CompositeSign(3, 4, 2)"
+                        else
+                            sign_config="CompositeSign(3, 5, 2)"
+                        fi
+                        
+                        if [[ "$algo" == "mehp24" ]]; then
+                            local dg_i=$(echo "scale=0; (l($size)/l(2) + 1)/2" | bc -l)
+                            sign_config="$sign_config, dg_i=$dg_i, df_i=2"
+                        fi
                     fi
                 fi
+                
+                ring_dim=${ring_dim:-"N/A"}
+                mult_depth=${mult_depth:-"N/A"}
+                scale_mod=${scale_mod:-"N/A"}
+                sign_config=${sign_config:-"N/A"}
             fi
             
-            local time=$(grep "Execution time:" "$result_file" | awk '{print $3}')
-            local max_err_log=$(grep "Maximum error:" "$result_file" | awk -F'log2: ' '{print $2}' | tr -d ')')
-            local avg_err_log=$(grep "Average error:" "$result_file" | awk -F'log2: ' '{print $2}' | tr -d ')')
+            # 실행 시간 값을 추출 (ms 단위)
+            local time=$(grep -m1 "Execution time:" "$result_file" | awk '{print $3}')
+            local max_err_log=$(grep -m1 "Maximum error:" "$result_file" | awk -F'log2: ' '{print $2}' | tr -d ')')
+            local avg_err_log=$(grep -m1 "Average error:" "$result_file" | awk -F'log2: ' '{print $2}' | tr -d ')')
 
             if [[ "$max_err_log" != "N/A" && "$max_err_log" =~ ^-?[0-9]+(\.[0-9]+)?$ ]]; then
                 max_err_logs+=($max_err_log)
@@ -99,24 +149,38 @@ format_results() {
                 avg_err_logs+=($avg_err_log)
             fi
 
-            times+=($time)
+            if [[ -n "$time" ]]; then
+                times+=($time)
+            fi
         fi
     done
     
-    local n_trials=${#times[@]}
-    if [[ $n_trials -eq 0 ]]; then
-        echo "No results found for $algo with N=$size"
+    if [[ "$found_results" == "false" ]]; then
+        echo "No valid results found for $algo with N=$size"
         return
     fi
     
-    local total_time=0
-    for t in "${times[@]}"; do
-        total_time=$(echo "$total_time + $t" | bc -l)
-    done
-    local avg_time=$(echo "scale=4; $total_time / $n_trials / 1000" | bc -l)
+    local n_trials=${#times[@]}
+    if [[ $n_trials -eq 0 ]]; then
+        echo "No timing data found for $algo with N=$size"
+        return
+    fi
     
-    local avg_max_err_log=""
-    local avg_avg_err_log=""
+    local avg_time="N/A"
+    local avg_max_err_log="N/A"
+    local avg_avg_err_log="N/A"
+    
+    if [[ $n_trials -gt 0 ]]; then
+        local total_time=0
+        for t in "${times[@]}"; do
+            total_time=$(echo "$total_time + $t" | bc -l)
+        done
+        avg_time=$(echo "scale=4; $total_time / $n_trials / 1000" | bc -l)
+        
+        if [[ -z "$avg_time" || "$avg_time" == "0" ]]; then
+            avg_time="N/A"
+        fi
+    fi
     
     if [[ ${#max_err_logs[@]} -gt 0 ]]; then
         local log_sum=0
@@ -143,8 +207,8 @@ format_results() {
     echo "  Scaling Mod Size    : $scale_mod" >> "$summary_file"
     echo "  Sign Configuration  : $sign_config" >> "$summary_file"
     echo "" >> "$summary_file"
-    echo "Performance Metrics:" >> "$summary_file"
-    echo "  Average Time     : $avg_time s" >> "$summary_file"
+    echo "Performance Metrics:" >> "$summary_file"sh
+    echo "  Average Time     : ${avg_time}s" >> "$summary_file"
     echo "" >> "$summary_file"
     echo "Error Analysis:" >> "$summary_file"
     echo "  Max Error (log2): $avg_max_err_log" >> "$summary_file"
@@ -153,6 +217,8 @@ format_results() {
     
     cat "$summary_file" >> "$total_file"
     echo "" >> "$total_file"
+    
+    echo "Results for $algo with N=$size successfully processed"
 }
 
 run_test() {
@@ -193,17 +259,16 @@ generate_final_summary() {
     echo "# FHE Sorting Algorithms Comparative Summary" > "$final_summary_md"
     echo "" >> "$final_summary_md"
     echo "## Performance Comparison" >> "$final_summary_md"
-    echo "" >> "$final_summary_md"
     
     for algo in "ours" "ours_hybrid" "mehp24" "kway"; do
         echo "" >> "$final_summary"
         echo "=== $algo Algorithm Summary ===" >> "$final_summary"
         echo "" >> "$final_summary"
         
-        echo "### ${algo} Algorithm" >> "$final_summary_md"
         echo "" >> "$final_summary_md"
-        echo "| Size | Ring Dim | Mult Depth | Scale Mod | Sign Config | Avg Time (s) | Max Error (log2) | Avg Error (log2) |" >> "$final_summary_md"
-        echo "|------|----------|------------|-----------|-------------|--------------|------------------|------------------|" >> "$final_summary_md"
+        echo "### ${algo} Algorithm" >> "$final_summary_md"
+        echo "| Size  | Ring Dim | Mult Depth | Scale Mod | Sign Config                          | Avg Time (s) | Max Error (log2) | Avg Error (log2) |" >> "$final_summary_md"
+        echo "|-------|----------|------------|-----------|------------------------------------- |--------------|------------------|------------------|" >> "$final_summary_md"
         
         local sizes
         case "$algo" in
@@ -223,7 +288,10 @@ generate_final_summary() {
                 local mult_depth=$(grep "Multiplicative Depth" "$summary_file" | awk '{print $NF}')
                 local scale_mod=$(grep "Scaling Mod Size" "$summary_file" | awk '{print $NF}')
                 local sign_config=$(grep "Sign Configuration" "$summary_file" | awk -F': ' '{print $2}')
-                local avg_time=$(grep "Average Time" "$summary_file" | awk '{print $NF}')
+                
+                local avg_time_line=$(grep "Average Time" "$summary_file")
+                local avg_time=$(echo "$avg_time_line" | awk -F': ' '{print $2}')
+                
                 local max_err_log=$(grep "Max Error" "$summary_file" | awk '{print $NF}')
                 local avg_err_log=$(grep "Average Error" "$summary_file" | awk '{print $NF}')
                 
@@ -237,22 +305,21 @@ generate_final_summary() {
                 echo "  Avg Error (log2): $avg_err_log" >> "$final_summary"
                 echo "" >> "$final_summary"
                 
-                echo "| $size | $ring_dim | $mult_depth | $scale_mod | $sign_config | $avg_time | $max_err_log | $avg_err_log |" >> "$final_summary_md"
+                printf "| %-5s | %-8s | %-10s | %-9s | %-35s | %-12s | %-16s | %-16s |\n" "$size" "$ring_dim" "$mult_depth" "$scale_mod" "$sign_config" "$avg_time" "$max_err_log" "$avg_err_log" >> "$final_summary_md"
             fi
         done
     done
     
     echo "" >> "$final_summary_md"
     echo "## Cross-Algorithm Comparison" >> "$final_summary_md"
-    echo "" >> "$final_summary_md"
     
-    local common_sizes=(16 32 64 128 256 512 1024)
+    local common_sizes=(16 32 64)
     
     for size in "${common_sizes[@]}"; do
-        echo "### Comparison for N = $size" >> "$final_summary_md"
         echo "" >> "$final_summary_md"
-        echo "| Algorithm | Ring Dim | Mult Depth | Scale Mod | Avg Time (s) | Max Error (log2) | Avg Error (log2) |" >> "$final_summary_md"
-        echo "|-----------|----------|------------|-----------|--------------|------------------|------------------|" >> "$final_summary_md"
+        echo "### Comparison for N = $size" >> "$final_summary_md"
+        echo "| Algorithm   | Ring Dim | Mult Depth | Scale Mod | Avg Time (s) | Max Error (log2) | Avg Error (log2) |" >> "$final_summary_md"
+        echo "|-------------|----------|------------|-----------|--------------|------------------|------------------|" >> "$final_summary_md"
         
         for algo in "ours" "ours_hybrid" "mehp24" "kway"; do
             local summary_file="${SCRIPT_DIR}/experimental_results/${algo}/N${size}_summary.txt"
@@ -261,24 +328,38 @@ generate_final_summary() {
                 local ring_dim=$(grep "Ring Dimension" "$summary_file" | awk '{print $NF}')
                 local mult_depth=$(grep "Multiplicative Depth" "$summary_file" | awk '{print $NF}')
                 local scale_mod=$(grep "Scaling Mod Size" "$summary_file" | awk '{print $NF}')
-                local avg_time=$(grep "Average Time" "$summary_file" | awk '{print $NF}')
+                
+                local avg_time_line=$(grep "Average Time" "$summary_file")
+                local avg_time=$(echo "$avg_time_line" | awk -F': ' '{print $2}')
+                
                 local max_err_log=$(grep "Max Error" "$summary_file" | awk '{print $NF}')
                 local avg_err_log=$(grep "Average Error" "$summary_file" | awk '{print $NF}')
                 
-                echo "| $algo | $ring_dim | $mult_depth | $scale_mod | $avg_time | $max_err_log | $avg_err_log |" >> "$final_summary_md"
+                printf "| %-11s | %-8s | %-10s | %-9s | %-12s | %-16s | %-16s |\n" "$algo" "$ring_dim" "$mult_depth" "$scale_mod" "$avg_time" "$max_err_log" "$avg_err_log" >> "$final_summary_md"
             fi
         done
-        echo "" >> "$final_summary_md"
     done
     
     echo "" >> "$final_summary"
     echo "Note: Results are averaged over $NUM_TRIALS trials." >> "$final_summary"
     echo "=========================================================" >> "$final_summary"
+    echo "" >> "$final_summary_md"
+    echo "Note: Results are averaged over $NUM_TRIALS trials." >> "$final_summary_md"
     
     echo "Final summaries generated at:"
     echo "  - Text format: $final_summary"
     echo "  - Markdown format: $final_summary_md"
 }
+
+mkdir -p "${SCRIPT_DIR}/experimental_results/ours_hybrid/trials"
+mkdir -p "${SCRIPT_DIR}/experimental_results/mehp24/trials"
+mkdir -p "${SCRIPT_DIR}/experimental_results/ours/trials"
+mkdir -p "${SCRIPT_DIR}/experimental_results/kway/trials"
+
+> "${SCRIPT_DIR}/experimental_results/ours_hybrid/total_results.txt"
+> "${SCRIPT_DIR}/experimental_results/mehp24/total_results.txt"
+> "${SCRIPT_DIR}/experimental_results/ours/total_results.txt"
+> "${SCRIPT_DIR}/experimental_results/kway/total_results.txt"
 
 run_test "ours_hybrid" "DirectSortHTest" "${DIRECT_SIZES[@]}"
 run_test "mehp24" "mehp24/Mehp24SortTest" "${MEHP24_SIZES[@]}"
@@ -288,5 +369,6 @@ run_test "kway" "k-way/KWaySort235Test" "${KWAY_SIZES[@]}"
 generate_final_summary
 
 echo "All experiments completed!"
+
 # chmod +x run_experiments.sh
-# ./run_experiments.sh
+# ./run_experiments.s

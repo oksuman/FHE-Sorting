@@ -1,0 +1,208 @@
+======================================
+     Results for N = 9
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=2, M=4, d_f=2, d_g=2)
+
+  Average Time     : 1.5690s
+
+Error Analysis:
+  Max Error (log2): -29.8547
+  Average Error (log2): -31.1785
+======================================
+
+======================================
+     Results for N = 16
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=5, M=2, d_f=2, d_g=3)
+
+  Average Time     : 4.6160s
+
+Error Analysis:
+  Max Error (log2): -22.9964
+  Average Error (log2): -23.8711
+======================================
+
+======================================
+     Results for N = 25
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=3, M=3, d_f=2, d_g=3)
+
+  Average Time     : 5.7110s
+
+Error Analysis:
+  Max Error (log2): -21.7237
+  Average Error (log2): -23.4385
+======================================
+
+======================================
+     Results for N = 27
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=2, M=5, d_f=2, d_g=3)
+
+  Average Time     : 5.4510s
+
+Error Analysis:
+  Max Error (log2): -20.9080
+  Average Error (log2): -21.5556
+======================================
+
+======================================
+     Results for N = 32
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=2, M=6, d_f=2, d_g=3)
+
+  Average Time     : 7.5020s
+
+Error Analysis:
+  Max Error (log2): -18.6987
+  Average Error (log2): -18.9570
+======================================
+
+======================================
+     Results for N = 64
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=3, M=4, d_f=2, d_g=3)
+
+  Average Time     : 10.7760s
+
+Error Analysis:
+  Max Error (log2): -17.8075
+  Average Error (log2): -18.2726
+======================================
+
+======================================
+     Results for N = 81
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=5, M=3, d_f=2, d_g=3)
+
+  Average Time     : 10.2200s
+
+Error Analysis:
+  Max Error (log2): -15.2789
+  Average Error (log2): -17.4329
+======================================
+
+======================================
+     Results for N = 125
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=2, M=7, d_f=2, d_g=4)
+
+  Average Time     : 14.1690s
+
+Error Analysis:
+  Max Error (log2): -10.3980
+  Average Error (log2): -12.5674
+======================================
+
+======================================
+     Results for N = 128
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=3, M=5, d_f=2, d_g=4)
+
+  Average Time     : 17.7240s
+
+Error Analysis:
+  Max Error (log2): -18.7930
+  Average Error (log2): -20.7989
+======================================
+
+======================================
+     Results for N = 243
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=2, M=8, d_f=2, d_g=4)
+
+  Average Time     : 19.5810s
+
+Error Analysis:
+  Max Error (log2): -12.2682
+  Average Error (log2): -14.9611
+======================================
+
+======================================
+     Results for N = 256
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=2, M=9, d_f=2, d_g=4)
+
+  Average Time     : 25.4800s
+
+Error Analysis:
+  Max Error (log2): -11.7482
+  Average Error (log2): -14.2343
+======================================
+
+======================================
+     Results for N = 512
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=5, M=4, d_f=2, d_g=5)
+
+  Average Time     : 30.5110s
+
+Error Analysis:
+  Max Error (log2): -9.4609
+  Average Error (log2): -11.9005
+======================================
+
+======================================
+     Results for N = 625
+======================================
+Crypto Parameters:
+  Ring Dimension      : 4096
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 59
+  Sign Configuration  : CompositeSign(3, k=5, M=4, d_f=2, d_g=5)
+
+  Average Time     : 36.7030s
+
+Error Analysis:
+  Max Error (log2): -11.4644
+  Average Error (log2): -14.1180
+======================================
+

@@ -1,0 +1,126 @@
+Running main() from /Users/hoo/workspace/FHE-Sorting/third_party/googletest/googletest/src/gtest_main.cc
+[==========] Running 5 tests from 5 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from DirectSort/DirectSortTestFixture/0, where TypeParam = std::integral_constant<unsigned long,4ul>
+[ RUN      ] DirectSort/DirectSortTestFixture/0.SortTest
+Using Ring Dimension: 131072
+Input array size: 4
+Multiplicative depth: 23
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
+Final Level: 23
+input:
+[ 0 0.5 0.25 0.75 ]
+output:
+[ 1.05405e-06 0.250001 0.500001 0.750001 ]
+
+Performance Analysis:
+Execution time: 4240 ms
+
+Error Analysis:
+Maximum error: 1.05405e-06 (log2: -19.8556)
+Average error: 8.4754e-07 (log2: -20.1702)
+Number of errors larger than 0.01: 0
+[       OK ] DirectSort/DirectSortTestFixture/0.SortTest (7013 ms)
+[----------] 1 test from DirectSort/DirectSortTestFixture/0 (7013 ms total)
+
+[----------] 1 test from DirectSort/DirectSortTestFixture/1, where TypeParam = std::integral_constant<unsigned long,8ul>
+[ RUN      ] DirectSort/DirectSortTestFixture/1.SortTest
+Using Ring Dimension: 131072
+Input array size: 8
+Multiplicative depth: 24
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
+Final Level: 24
+input:
+[ 0.375 0.875 0 0.75 0.625 0.25 0.125 0.5 ]
+output:
+[ -2.20461e-07 0.125 0.25 0.375 0.5 0.625 0.75 0.875 ]
+
+Performance Analysis:
+Execution time: 4767 ms
+
+Error Analysis:
+Maximum error: 2.20461e-07 (log2: -22.113)
+Average error: 1.13022e-07 (log2: -23.0769)
+Number of errors larger than 0.01: 0
+[       OK ] DirectSort/DirectSortTestFixture/1.SortTest (7467 ms)
+[----------] 1 test from DirectSort/DirectSortTestFixture/1 (7467 ms total)
+
+[----------] 1 test from DirectSort/DirectSortTestFixture/2, where TypeParam = std::integral_constant<unsigned long,16ul>
+[ RUN      ] DirectSort/DirectSortTestFixture/2.SortTest
+Using Ring Dimension: 131072
+Input array size: 16
+Multiplicative depth: 25
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
+Final Level: 25
+input:
+[ 0.625 0.375 0.875 0 0.25 0.5 0.5625 0.9375 0.0625 0.1875 0.6875 0.75 0.125 0.3125 0.4375 0.8125 ]
+output:
+[ 2.07722e-07 0.0625001 0.125 0.1875 0.25 0.3125 0.375 0.4375 0.5 0.562499 0.624999 0.6875 0.75 0.8125 0.874999 0.9375 ]
+
+Performance Analysis:
+Execution time: 5298 ms
+
+Error Analysis:
+Maximum error: 1.21658e-06 (log2: -19.6487)
+Average error: 3.25681e-07 (log2: -21.55)
+Number of errors larger than 0.01: 0
+[       OK ] DirectSort/DirectSortTestFixture/2.SortTest (8121 ms)
+[----------] 1 test from DirectSort/DirectSortTestFixture/2 (8121 ms total)
+
+[----------] 1 test from DirectSort/DirectSortTestFixture/3, where TypeParam = std::integral_constant<unsigned long,32ul>
+[ RUN      ] DirectSort/DirectSortTestFixture/3.SortTest
+Using Ring Dimension: 131072
+Input array size: 32
+Multiplicative depth: 28
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
+Final Level: 28
+input:
+[ 0.5625 0.3125 0.5 0.125 0.53125 0 0.28125 0.59375 0.9375 0.65625 0.71875 0.625 0.25 0.4375 0.40625 0.0625 0.375 0.84375 0.15625 0.34375 0.03125 0.78125 0.6875 0.46875 0.21875 0.1875 0.09375 0.8125 0.90625 0.75 0.96875 0.875 ]
+output:
+[ 1.40332e-06 0.0312467 0.0625053 0.0937495 0.125005 0.156245 0.187499 0.21875 0.249998 0.281243 0.312502 0.343753 0.375002 0.406251 0.4375 0.468752 0.499996 0.53125 0.562496 0.593753 0.624996 0.656253 0.687495 0.718751 0.75 0.78125 0.812503 0.843758 0.875011 0.906252 0.937504 0.968749 ]
+
+Performance Analysis:
+Execution time: 7796 ms
+
+Error Analysis:
+Maximum error: 1.09664e-05 (log2: -16.4766)
+Average error: 2.96278e-06 (log2: -18.3646)
+Number of errors larger than 0.01: 0
+[       OK ] DirectSort/DirectSortTestFixture/3.SortTest (11186 ms)
+[----------] 1 test from DirectSort/DirectSortTestFixture/3 (11186 ms total)
+
+[----------] 1 test from DirectSort/DirectSortTestFixture/4, where TypeParam = std::integral_constant<unsigned long,64ul>
+[ RUN      ] DirectSort/DirectSortTestFixture/4.SortTest
+Using Ring Dimension: 131072
+Input array size: 64
+Multiplicative depth: 29
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
+Final Level: 29
+input:
+[ 0.140625 0.625 0.328125 0.203125 0.09375 0.046875 0.21875 0.9375 0.5 0.484375 0.171875 0.578125 0 0.375 0.03125 0.8125 0.859375 0.59375 0.640625 0.953125 0.390625 0.0625 0.4375 0.421875 0.75 0.703125 0.1875 0.875 0.28125 0.515625 0.6875 0.53125 0.765625 0.828125 0.078125 0.453125 0.25 0.609375 0.125 0.984375 0.671875 0.65625 0.359375 0.921875 0.546875 0.890625 0.3125 0.5625 0.90625 0.71875 0.734375 0.796875 0.296875 0.109375 0.015625 0.84375 0.34375 0.78125 0.96875 0.46875 0.265625 0.234375 0.40625 0.15625 ]
+output:
+[ -5.14243e-06 0.0156204 0.0312509 0.0468726 0.0625009 0.0781247 0.0937471 0.109369 0.125 0.140623 0.156248 0.171872 0.187503 0.203119 0.218744 0.234373 0.250002 0.265623 0.281255 0.296877 0.312494 0.328125 0.343751 0.35938 0.375001 0.390619 0.406249 0.421874 0.437497 0.453125 0.468746 0.484376 0.499996 0.515626 0.531247 0.546875 0.562502 0.57812 0.593748 0.609375 0.625 0.640625 0.656245 0.671877 0.687496 0.703127 0.718755 0.734369 0.749996 0.76562 0.781258 0.796876 0.812504 0.828125 0.84375 0.859372 0.874996 0.890618 0.906251 0.921876 0.9375 0.953128 0.968745 0.984375 ]
+
+Performance Analysis:
+Execution time: 9329 ms
+
+Error Analysis:
+Maximum error: 7.52209e-06 (log2: -17.0204)
+Average error: 2.65716e-06 (log2: -18.5217)
+Number of errors larger than 0.01: 0
+[       OK ] DirectSort/DirectSortTestFixture/4.SortTest (13618 ms)
+[----------] 1 test from DirectSort/DirectSortTestFixture/4 (13618 ms total)
+
+[----------] Global test environment tear-down
+[==========] 5 tests from 5 test suites ran. (47407 ms total)
+[  PASSED  ] 5 tests.

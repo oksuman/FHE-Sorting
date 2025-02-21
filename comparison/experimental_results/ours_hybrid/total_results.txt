@@ -7,12 +7,11 @@ Crypto Parameters:
   Scaling Mod Size    : 40
   Sign Configuration  : CompositeSign(3, 2, 2)
 
-Performance Metrics:
-  Average Time     : 15.6490 s
+  Average Time     : 3.9730s
 
 Error Analysis:
-  Max Error (log2): -20.7411
-  Average Error (log2): -21.5216
+  Max Error (log2): -20.7287
+  Average Error (log2): -21.5001
 ======================================
 
 ======================================
@@ -24,12 +23,11 @@ Crypto Parameters:
   Scaling Mod Size    : 40
   Sign Configuration  : CompositeSign(3, 2, 2)
 
-Performance Metrics:
-  Average Time     : 17.2410 s
+  Average Time     : 4.2580s
 
 Error Analysis:
-  Max Error (log2): -20.3655
-  Average Error (log2): -21.0635
+  Max Error (log2): -20.3971
+  Average Error (log2): -21.0289
 ======================================
 
 ======================================
@@ -41,12 +39,11 @@ Crypto Parameters:
   Scaling Mod Size    : 40
   Sign Configuration  : CompositeSign(3, 2, 2)
 
-Performance Metrics:
-  Average Time     : 19.8330 s
+  Average Time     : 4.6170s
 
 Error Analysis:
-  Max Error (log2): -18.7129
-  Average Error (log2): -20.7263
+  Max Error (log2): -19.3065
+  Average Error (log2): -20.8244
 ======================================
 
 ======================================
@@ -58,12 +55,11 @@ Crypto Parameters:
   Scaling Mod Size    : 40
   Sign Configuration  : CompositeSign(3, 3, 2)
 
-Performance Metrics:
-  Average Time     : 27.1500 s
+  Average Time     : 6.6080s
 
 Error Analysis:
-  Max Error (log2): -18.2973
-  Average Error (log2): -20.2096
+  Max Error (log2): -19.0130
+  Average Error (log2): -20.5878
 ======================================
 
 ======================================
@@ -75,79 +71,10 @@ Crypto Parameters:
   Scaling Mod Size    : 40
   Sign Configuration  : CompositeSign(3, 3, 2)
 
-Performance Metrics:
-  Average Time     : 33.6050 s
+  Average Time     : 8.5530s
 
 Error Analysis:
-  Max Error (log2): -17.5883
-  Average Error (log2): -19.2827
-======================================
-
-======================================
-     Results for N = 128
-======================================
-Crypto Parameters:
-  Ring Dimension      : 131072
-  Multiplicative Depth: 31
-  Scaling Mod Size    : 40
-  Sign Configuration  : CompositeSign(3, 3, 2)
-
-Performance Metrics:
-  Average Time     : 47.3580 s
-
-Error Analysis:
-  Max Error (log2): -15.9011
-  Average Error (log2): -18.3246
-======================================
-
-======================================
-     Results for N = 256
-======================================
-Crypto Parameters:
-  Ring Dimension      : 131072
-  Multiplicative Depth: 44
-  Scaling Mod Size    : 40
-  Sign Configuration  : CompositeSign(3, 4, 2)
-
-Performance Metrics:
-  Average Time     : 79.1160 s
-
-Error Analysis:
-  Max Error (log2): -19.6911
-  Average Error (log2): -21.6142
-======================================
-
-======================================
-     Results for N = 512
-======================================
-Crypto Parameters:
-  Ring Dimension      : 131072
-  Multiplicative Depth: 47
-  Scaling Mod Size    : 40
-  Sign Configuration  : CompositeSign(3, 4, 2)
-
-Performance Metrics:
-  Average Time     : 149.5970 s
-
-Error Analysis:
-  Max Error (log2): -18.7891
-  Average Error (log2): -20.7528
-======================================
-
-======================================
-     Results for N = 1024
-======================================
-Crypto Parameters:
-  Ring Dimension      : 131072
-  Multiplicative Depth: 50
-  Scaling Mod Size    : 40
-  Sign Configuration  : CompositeSign(3, 5, 2)
-
-Performance Metrics:
-  Average Time     : 352.1380 s
-
-Error Analysis:
-  Max Error (log2): -18.2497
-  Average Error (log2): -19.8741
+  Max Error (log2): -17.1803
+  Average Error (log2): -19.0573
 ======================================
 

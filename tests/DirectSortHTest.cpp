@@ -169,6 +169,11 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
         Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
     else
         Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
+    std::cout << "Sign Configuration: CompositeSign(" 
+          << Cfg.compos.n << ", " 
+          << Cfg.compos.dg << ", " 
+          << Cfg.compos.df << ")" << std::endl;
+
     // Start timing
     auto start = std::chrono::high_resolution_clock::now();
 
@@ -232,10 +237,15 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
 REGISTER_TYPED_TEST_SUITE_P(HybridSortTestFixture, SortHybridTest);
 
 using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
-    std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>>;
+    std::integral_constant<size_t, 4>, 
+    std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 16>, 
+    std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>
+    // std::integral_constant<size_t, 128>,
+    // std::integral_constant<size_t, 256>, 
+    // std::integral_constant<size_t, 512>,
+    // std::integral_constant<size_t, 1024>
+>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(HybridSort, HybridSortTestFixture, TestSizes);

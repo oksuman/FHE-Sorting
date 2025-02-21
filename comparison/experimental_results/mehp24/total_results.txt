@@ -1,0 +1,80 @@
+======================================
+     Results for N = 4
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 31
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+  Average Time     : 6.9130s
+
+Error Analysis:
+  Max Error (log2): -11.5252
+  Average Error (log2): -13.2029
+======================================
+
+======================================
+     Results for N = 8
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 35
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+  Average Time     : 8.9590s
+
+Error Analysis:
+  Max Error (log2): -25.8452
+  Average Error (log2): -26.9889
+======================================
+
+======================================
+     Results for N = 16
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 35
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+  Average Time     : 9.5120s
+
+Error Analysis:
+  Max Error (log2): -13.7959
+  Average Error (log2): -17.6975
+======================================
+
+======================================
+     Results for N = 32
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 42
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 3, 2)
+
+  Average Time     : 13.5200s
+
+Error Analysis:
+  Max Error (log2): -23.5548
+  Average Error (log2): -24.5046
+======================================
+
+======================================
+     Results for N = 64
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 42
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 3, 2)
+
+  Average Time     : 14.6610s
+
+Error Analysis:
+  Max Error (log2): -16.7240
+  Average Error (log2): -21.8464
+======================================
+

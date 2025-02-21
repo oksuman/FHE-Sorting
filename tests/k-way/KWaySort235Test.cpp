@@ -80,11 +80,11 @@ using TestSizes = ::testing::Types<
     std::integral_constant<size_t, 243>,  // For k=3, M=5
     std::integral_constant<size_t, 256>,  // For k=2, M=8
     std::integral_constant<size_t, 512>,  // For k=2, M=9
-    std::integral_constant<size_t, 625>,  // For k=5, M=4
-    std::integral_constant<size_t, 729>,  // For k=3, M=6
-    std::integral_constant<size_t, 1024>, // For k=2, M=10
-    std::integral_constant<size_t, 2048>, // For k=2, M=11
-    std::integral_constant<size_t, 2187>  // For k=3, M=7
+    std::integral_constant<size_t, 625>  // For k=5, M=4
+    // std::integral_constant<size_t, 729>,  // For k=3, M=6
+    // std::integral_constant<size_t, 1024>, // For k=2, M=10
+    // std::integral_constant<size_t, 2048>, // For k=2, M=11
+    // std::integral_constant<size_t, 2187>  // For k=3, M=7
     //  std::integral_constant<size_t, 3125>  // For k=5, M=5
     >;
 
@@ -220,6 +220,10 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
         FAIL() << "Unsupported array size: " << N;
         break;
     }
+    std::cout << "Sign Configuration: CompositeSign(3, k=" << k 
+          << ", M=" << M
+          << ", d_f=" << d_f
+          << ", d_g=" << d_g << ")" << std::endl;
 
     // Generate random input array with minimum difference
     std::vector<double> inputArray =

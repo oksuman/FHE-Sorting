@@ -2,13 +2,19 @@ Input array size: 64
 Using Ring Dimension: 131072
 Multiplicative depth: 30
 Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+OMP: Info #276: omp_set_nested routine deprecated, please use omp_set_max_active_levels instead.
 
 Performance Analysis:
-Execution time: 33605 ms
+Execution time: 8553 ms
 
 Error Analysis:
-Maximum error: 5.07445e-06 (log2: -17.5883)
-Average error: 1.56797e-06 (log2: -19.2827)
+Maximum error: 6.73296e-06 (log2: -17.1803)
+Average error: 1.83314e-06 (log2: -19.0573)
 Number of errors larger than 0.01: 0
-[       OK ] HybridSort/HybridSortTestFixture/4.SortHybridTest (41722 ms)
+[       OK ] HybridSort/HybridSortTestFixture/4.SortHybridTest (13058 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/4 (13058 ms total)
 
+[----------] Global test environment tear-down
+[==========] 5 tests from 5 test suites ran. (45239 ms total)
+[  PASSED  ] 5 tests.

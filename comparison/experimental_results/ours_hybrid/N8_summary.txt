@@ -7,10 +7,9 @@ Crypto Parameters:
   Scaling Mod Size    : 40
   Sign Configuration  : CompositeSign(3, 2, 2)
 
-Performance Metrics:
-  Average Time     : 17.2410 s
+  Average Time     : 4.2580s
 
 Error Analysis:
-  Max Error (log2): -20.3655
-  Average Error (log2): -21.0635
+  Max Error (log2): -20.3971
+  Average Error (log2): -21.0289
 ======================================
