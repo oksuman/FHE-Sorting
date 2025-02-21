@@ -1,0 +1,14 @@
+Input array size: 4
+Using Ring Dimension: 131072
+Multiplicative depth: 24
+Scaling Mod: 40
+
+Performance Analysis:
+Execution time: 15649 ms
+
+Error Analysis:
+Maximum error: 5.70585e-07 (log2: -20.7411)
+Average error: 3.32161e-07 (log2: -21.5216)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/0.SortHybridTest (22037 ms)
+

@@ -1,0 +1,153 @@
+======================================
+     Results for N = 4
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 24
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+Performance Metrics:
+  Average Time     : 15.6490 s
+
+Error Analysis:
+  Max Error (log2): -20.7411
+  Average Error (log2): -21.5216
+======================================
+
+======================================
+     Results for N = 8
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 25
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+Performance Metrics:
+  Average Time     : 17.2410 s
+
+Error Analysis:
+  Max Error (log2): -20.3655
+  Average Error (log2): -21.0635
+======================================
+
+======================================
+     Results for N = 16
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 25
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+Performance Metrics:
+  Average Time     : 19.8330 s
+
+Error Analysis:
+  Max Error (log2): -18.7129
+  Average Error (log2): -20.7263
+======================================
+
+======================================
+     Results for N = 32
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 29
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 3, 2)
+
+Performance Metrics:
+  Average Time     : 27.1500 s
+
+Error Analysis:
+  Max Error (log2): -18.2973
+  Average Error (log2): -20.2096
+======================================
+
+======================================
+     Results for N = 64
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 30
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 3, 2)
+
+Performance Metrics:
+  Average Time     : 33.6050 s
+
+Error Analysis:
+  Max Error (log2): -17.5883
+  Average Error (log2): -19.2827
+======================================
+
+======================================
+     Results for N = 128
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 31
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 3, 2)
+
+Performance Metrics:
+  Average Time     : 47.3580 s
+
+Error Analysis:
+  Max Error (log2): -15.9011
+  Average Error (log2): -18.3246
+======================================
+
+======================================
+     Results for N = 256
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 44
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 4, 2)
+
+Performance Metrics:
+  Average Time     : 79.1160 s
+
+Error Analysis:
+  Max Error (log2): -19.6911
+  Average Error (log2): -21.6142
+======================================
+
+======================================
+     Results for N = 512
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 47
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 4, 2)
+
+Performance Metrics:
+  Average Time     : 149.5970 s
+
+Error Analysis:
+  Max Error (log2): -18.7891
+  Average Error (log2): -20.7528
+======================================
+
+======================================
+     Results for N = 1024
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 50
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 5, 2)
+
+Performance Metrics:
+  Average Time     : 352.1380 s
+
+Error Analysis:
+  Max Error (log2): -18.2497
+  Average Error (log2): -19.8741
+======================================
+

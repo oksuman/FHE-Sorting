@@ -212,7 +212,7 @@ template <int N> class DirectSort : public SortBase<N> {
                 1937, 1938, 1939, 1953, 1954, 1955, 1968, 1969, 1970,  1971,
                 1985, 1986, 1987, 2000, 2001, 2002, 2003, 2016, 2017,  2018,
                 2019, 2032, 2033, 2034, 2035, 2048, 4096, 8192, 16384, 32768};
-         
+
             break;
         }
         parameters.SetScalingModSize(modSize);
@@ -288,8 +288,7 @@ template <int N> class DirectSort : public SortBase<N> {
 
         return result;
     }
-    std::vector<double> 
-    generateCheckingVectorN(int num_slots, int k) {
+    std::vector<double> generateCheckingVectorN(int num_slots, int k) {
         std::vector<double> result(num_slots);
         int index = 0;
         int current_k = k;
@@ -599,7 +598,7 @@ template <int N> class DirectSort : public SortBase<N> {
 #pragma omp critical
                 { m_cc->EvalAddInPlace(tmp, rotated); }
             }
-            tmp = rot.rotate(tmp,  ib * num_partition + i * np);
+            tmp = rot.rotate(tmp, ib * num_partition + i * np);
             m_cc->EvalAddInPlace(result, tmp);
         }
         return result;
@@ -682,7 +681,7 @@ template <int N> class DirectSort : public SortBase<N> {
                         const Ciphertext<DCRTPoly> &input_array) {
 
         auto output_array = this->getZero()->Clone();
-        
+
         /////////////// Meta Data for Rotation Index Checking ///////////////
         int num_partition =
             std::min(N, max_batch / N); // slot usage = num_partition * N
@@ -753,15 +752,14 @@ template <int N> class DirectSort : public SortBase<N> {
             std::vector<Ciphertext<DCRTPoly>> masked_inputs(np);
 #pragma omp parallel for
             for (int i = 0; i < np; i++) {
-                masked_inputs[i] =
-                    rot.rotate(masked_input, i);
-                    // rot.rotate(masked_input, b * num_partition + i);
+                masked_inputs[i] = rot.rotate(masked_input, i);
+                // rot.rotate(masked_input, b * num_partition + i);
             }
-            auto rotated_input =
-                blindRotationOptN(masked_inputs, num_slots, np, b, num_partition);
+            auto rotated_input = blindRotationOptN(masked_inputs, num_slots, np,
+                                                   b, num_partition);
 
 #pragma omp critical
-            { m_cc->EvalAddInPlace(output_array, rotated_input);}
+            { m_cc->EvalAddInPlace(output_array, rotated_input); }
         }
 
         for (int i = 1; i < log2(num_partition) + 1; i++) {
@@ -776,7 +774,7 @@ template <int N> class DirectSort : public SortBase<N> {
                               SignFunc SignFunc, SignConfig &Cfg) override {
         // std::cout << "\n===== Direct Sort Input Array: \n";
         // PRINT_PT(m_enc, input_array);
-        
+
         omp_set_nested(1);
         omp_set_max_active_levels(2);
 
