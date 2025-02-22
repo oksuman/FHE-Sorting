@@ -18,42 +18,33 @@ data = {
 algorithms = ['ours', 'ours_hybrid', 'mehp24', 'kway']
 
 for algo in algorithms:
-    algo_dir = os.path.join(results_dir, algo, "trials")
+    algo_dir = os.path.join(results_dir, algo)
     if not os.path.exists(algo_dir):
         print(f"Warning: Directory not found: {algo_dir}")
         continue
         
-    for trial_dir in os.listdir(algo_dir):
-        if not trial_dir.startswith("trial_"):
-            continue
+    for size_file in os.listdir(algo_dir):
+        if size_file.startswith("N") and size_file.endswith("_summary.txt"):
+            size = int(re.search(r'N(\d+)_summary', size_file).group(1))
+            file_path = os.path.join(algo_dir, size_file)
             
-        trial_path = os.path.join(algo_dir, trial_dir)
-        
-        for file in os.listdir(trial_path):
-            if file.startswith("size_") and file.endswith(".txt"):
-                size = int(re.search(r'size_(\d+)\.txt', file).group(1))
-                file_path = os.path.join(trial_path, file)
+            with open(file_path, 'r') as f:
+                content = f.read()
+            
+            time_match = re.search(r'Average Time\s*:\s*(\d+(?:\.\d+)?)', content)
+            if time_match:
+                time = float(time_match.group(1)) * 1000  # Convert seconds to milliseconds
                 
-                with open(file_path, 'r') as f:
-                    content = f.read()
+                k_value = None
+                if algo == 'kway':
+                    k_match = re.search(r'Sign Configuration\s*:.*?k=(\d+)', content)
+                    if k_match:
+                        k_value = int(k_match.group(1))
                 
-                time_match = re.search(r'Execution time:\s*(\d+(?:\.\d+)?)', content)
-                if time_match:
-                    time = float(time_match.group(1))
-                    
-                    k_value = None
-                    if algo == 'kway':
-                        if "k=2" in content:
-                            k_value = 2
-                        elif "k=3" in content:
-                            k_value = 3
-                        elif "k=5" in content:
-                            k_value = 5
-                    
-                    data['algorithm'].append(algo)
-                    data['k_value'].append(k_value)
-                    data['size'].append(size)
-                    data['time'].append(time)
+                data['algorithm'].append(algo)
+                data['k_value'].append(k_value)
+                data['size'].append(size)
+                data['time'].append(time)
 
 df = pd.DataFrame(data)
 
@@ -62,6 +53,7 @@ if df.empty:
     exit()
 
 print(f"Extracted data: {len(df)} rows")
+print(df)
 
 df_avg = df.groupby(['algorithm', 'k_value', 'size']).mean().reset_index()
 
@@ -72,6 +64,11 @@ for k in [2, 3, 5]:
         k_rows = k_rows.copy()
         k_rows['algorithm'] = f'kway (k={k})'
         df_merged = pd.concat([df_merged, k_rows])
+
+print("\nAlgorithms found in data:")
+for algo in df_merged['algorithm'].unique():
+    count = len(df_merged[df_merged['algorithm'] == algo])
+    print(f"Algorithm: {algo}, Data points: {count}")
 
 min_time = df_merged['time'].min()
 max_time = df_merged['time'].max()
@@ -93,6 +90,7 @@ for algo in sorted(df_merged['algorithm'].unique()):
         
     algo_data = df_merged[df_merged['algorithm'] == algo]
     if algo_data.empty:
+        print(f"No data points for algorithm: {algo}")
         continue
         
     algo_data = algo_data.sort_values('size')
@@ -112,6 +110,7 @@ plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 plt.tight_layout()
 plt.savefig(os.path.join(script_dir, 'algorithm_comparison.png'), dpi=300)
+print("Saved: algorithm_comparison.png")
 
 plt.figure(figsize=(12, 8))
 
@@ -141,6 +140,7 @@ plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 plt.tight_layout()
 plt.savefig(os.path.join(script_dir, 'algorithm_comparison_log.png'), dpi=300)
+print("Saved: algorithm_comparison_log.png")
 
 ratio = max_time / min_time if min_time > 0 else 1
 if ratio > 15:
@@ -192,16 +192,21 @@ if ratio > 15:
     
     plt.tight_layout()
     plt.savefig(os.path.join(script_dir, 'algorithm_comparison_broken.png'), dpi=300)
+    print("Saved: algorithm_comparison_broken.png")
 
 plt.figure(figsize=(12, 8))
 
 base_algos = ['ours', 'ours_hybrid', 'mehp24']
+base_algo_data = []
+
 for algo in base_algos:
     algo_data = df_avg[df_avg['algorithm'] == algo]
     if algo_data.empty:
+        print(f"No data for base algorithm: {algo}")
         continue
         
     algo_data = algo_data.sort_values('size')
+    base_algo_data.append(algo_data)
     
     color = algo_colors.get(algo, 'black')
     plt.plot(algo_data['size'], algo_data['time'], marker='o', color=color, 
@@ -214,10 +219,15 @@ plt.grid(True, linestyle='--', alpha=0.7)
 plt.legend(fontsize=12)
 
 twin_axes = []
+kway_plotted = False
+
 for i, k in enumerate([2, 3, 5]):
     k_data = df_avg[(df_avg['algorithm'] == 'kway') & (df_avg['k_value'] == k)]
     if k_data.empty:
+        print(f"No data for kway with k={k}")
         continue
+    
+    kway_plotted = True
         
     if i == 0:
         ax = plt.gca()
@@ -234,7 +244,11 @@ for i, k in enumerate([2, 3, 5]):
     ax.tick_params(axis='y', labelcolor=color)
     ax.legend(fontsize=12)
 
-plt.tight_layout()
-plt.savefig(os.path.join(script_dir, 'algorithms_by_k_value.png'), dpi=300)
+if len(base_algo_data) > 0 and kway_plotted:
+    plt.tight_layout()
+    plt.savefig(os.path.join(script_dir, 'algorithms_by_k_value.png'), dpi=300)
+    print("Saved: algorithms_by_k_value.png")
+else:
+    print("Warning: Could not create algorithms_by_k_value.png due to missing data")
 
-print("All plots have been saved to the comparison directory.")
+print("All plots have been saved successfully.")

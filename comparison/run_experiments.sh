@@ -10,9 +10,9 @@ mkdir -p "$SCRIPT_DIR/experimental_results/ours"
 mkdir -p "$SCRIPT_DIR/experimental_results/ours_hybrid"
 mkdir -p "$SCRIPT_DIR/experimental_results/kway"
 
-DIRECT_SIZES=(4 8 16 32 64)
-MEHP24_SIZES=(4 8 16 32 64)
-KWAY_SIZES=(9 16 25 27 32 64 81 125 128 243 256 512 625)
+DIRECT_SIZES=(4 8 16 32 64 128 256 512 1024)
+MEHP24_SIZES=(4 8 16 32 64 128 256 512 1024)
+KWAY_SIZES=(9 16 25 27 32 64 81 125 128 243 256 512 625 729 1024 2048 2187 3125)
 
 extract_test_results() {
     local input_file=$1
@@ -110,33 +110,14 @@ format_results() {
                 if [[ -n "$sign_config_line" ]]; then
                     sign_config=$(echo "$sign_config_line" | sed 's/Sign Configuration: //')
                 else
-                    if [[ "$algo" == "kway" ]]; then
-                        sign_config="CompositeSign(3, $(get_kway_params $size))"
-                    else
-                        if [[ $size -le 16 ]]; then
-                            sign_config="CompositeSign(3, 2, 2)"
-                        elif [[ $size -le 128 ]]; then
-                            sign_config="CompositeSign(3, 3, 2)"
-                        elif [[ $size -le 512 ]]; then
-                            sign_config="CompositeSign(3, 4, 2)"
-                        else
-                            sign_config="CompositeSign(3, 5, 2)"
-                        fi
-                        
-                        if [[ "$algo" == "mehp24" ]]; then
-                            local dg_i=$(echo "scale=0; (l($size)/l(2) + 1)/2" | bc -l)
-                            sign_config="$sign_config, dg_i=$dg_i, df_i=2"
-                        fi
-                    fi
+                    sign_config="Not Found"
                 fi
                 
                 ring_dim=${ring_dim:-"N/A"}
                 mult_depth=${mult_depth:-"N/A"}
                 scale_mod=${scale_mod:-"N/A"}
-                sign_config=${sign_config:-"N/A"}
             fi
             
-            # 실행 시간 값을 추출 (ms 단위)
             local time=$(grep -m1 "Execution time:" "$result_file" | awk '{print $3}')
             local max_err_log=$(grep -m1 "Maximum error:" "$result_file" | awk -F'log2: ' '{print $2}' | tr -d ')')
             local avg_err_log=$(grep -m1 "Average error:" "$result_file" | awk -F'log2: ' '{print $2}' | tr -d ')')
@@ -207,7 +188,7 @@ format_results() {
     echo "  Scaling Mod Size    : $scale_mod" >> "$summary_file"
     echo "  Sign Configuration  : $sign_config" >> "$summary_file"
     echo "" >> "$summary_file"
-    echo "Performance Metrics:" >> "$summary_file"sh
+    echo "Performance Metrics:" >> "$summary_file"
     echo "  Average Time     : ${avg_time}s" >> "$summary_file"
     echo "" >> "$summary_file"
     echo "Error Analysis:" >> "$summary_file"
@@ -313,7 +294,7 @@ generate_final_summary() {
     echo "" >> "$final_summary_md"
     echo "## Cross-Algorithm Comparison" >> "$final_summary_md"
     
-    local common_sizes=(16 32 64)
+    local common_sizes=(16 32 64 128 256 512 1024)
     
     for size in "${common_sizes[@]}"; do
         echo "" >> "$final_summary_md"
@@ -371,4 +352,4 @@ generate_final_summary
 echo "All experiments completed!"
 
 # chmod +x run_experiments.sh
-# ./run_experiments.s
+# ./run_experiments.sh

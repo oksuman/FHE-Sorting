@@ -194,11 +194,11 @@ using TestSizes = ::testing::Types<
     std::integral_constant<size_t, 8>,
     std::integral_constant<size_t, 16>, 
     std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>
-    // std::integral_constant<size_t, 128>,
-    // std::integral_constant<size_t, 256>, 
-    // std::integral_constant<size_t, 512>,
-    // std::integral_constant<size_t, 1024>
+    std::integral_constant<size_t, 64>,
+    std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>, 
+    std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>
 >;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);
