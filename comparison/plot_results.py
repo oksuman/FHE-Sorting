@@ -15,7 +15,7 @@ data = {
     'time': []
 }
 
-algorithms = ['ours', 'ours_hybrid', 'mehp24', 'kway']
+algorithms = ['ours', 'ours_hybrid', 'mehp24', 'kway_k2', 'kway_k3', 'kway_k5']
 
 for algo in algorithms:
     algo_dir = os.path.join(results_dir, algo)
@@ -33,13 +33,11 @@ for algo in algorithms:
             
             time_match = re.search(r'Average Time\s*:\s*(\d+(?:\.\d+)?)', content)
             if time_match:
-                time = float(time_match.group(1)) * 1000  # Convert seconds to milliseconds
+                time = float(time_match.group(1))  # Keep time in seconds
                 
                 k_value = None
-                if algo == 'kway':
-                    k_match = re.search(r'Sign Configuration\s*:.*?k=(\d+)', content)
-                    if k_match:
-                        k_value = int(k_match.group(1))
+                if 'kway_k' in algo:
+                    k_value = int(algo.split('_k')[1])
                 
                 data['algorithm'].append(algo)
                 data['k_value'].append(k_value)
@@ -55,23 +53,21 @@ if df.empty:
 print(f"Extracted data: {len(df)} rows")
 print(df)
 
-df_avg = df.groupby(['algorithm', 'k_value', 'size']).mean().reset_index()
+df_base = df[~df['algorithm'].str.contains('kway')].copy()
+df_kway = df[df['algorithm'].str.contains('kway')].copy()
 
-df_merged = df_avg.copy()
-for k in [2, 3, 5]:
-    k_rows = df_avg[(df_avg['algorithm'] == 'kway') & (df_avg['k_value'] == k)]
-    if not k_rows.empty:
-        k_rows = k_rows.copy()
-        k_rows['algorithm'] = f'kway (k={k})'
-        df_merged = pd.concat([df_merged, k_rows])
+df['display_name'] = df['algorithm']
+for i, row in df.iterrows():
+    if 'kway_k' in row['algorithm']:
+        df.at[i, 'display_name'] = f'kway (k={row["k_value"]})'
 
 print("\nAlgorithms found in data:")
-for algo in df_merged['algorithm'].unique():
-    count = len(df_merged[df_merged['algorithm'] == algo])
+for algo in df['display_name'].unique():
+    count = len(df[df['display_name'] == algo])
     print(f"Algorithm: {algo}, Data points: {count}")
 
-min_time = df_merged['time'].min()
-max_time = df_merged['time'].max()
+min_time = df['time'].min()
+max_time = df['time'].max()
 
 algo_colors = {
     'ours': 'blue',
@@ -82,15 +78,12 @@ algo_colors = {
     'kway (k=5)': 'brown'
 }
 
-plt.figure(figsize=(12, 8))
+fig = plt.figure(figsize=(18, 15))
 
-for algo in sorted(df_merged['algorithm'].unique()):
-    if algo == 'kway':
-        continue
-        
-    algo_data = df_merged[df_merged['algorithm'] == algo]
+plt.subplot(2, 3, 1)
+for algo in sorted(df['display_name'].unique()):
+    algo_data = df[df['display_name'] == algo]
     if algo_data.empty:
-        print(f"No data points for algorithm: {algo}")
         continue
         
     algo_data = algo_data.sort_values('size')
@@ -99,26 +92,19 @@ for algo in sorted(df_merged['algorithm'].unique()):
     color = algo_colors.get(algo, 'black')
     
     plt.plot(algo_data['size'], algo_data['time'], marker='o', linestyle=linestyle, 
-             color=color, linewidth=2, markersize=8, label=algo)
+             color=color, linewidth=2, markersize=6, label=algo)
 
-plt.xlabel('Array Size (N)', fontsize=14)
-plt.ylabel('Execution Time (ms)', fontsize=14)
-plt.title('Comparison of FHE Sorting Algorithm Execution Times', fontsize=16)
+plt.xlabel('Array Size (N)', fontsize=12)
+plt.ylabel('Execution Time (s)', fontsize=12)
+plt.title('Standard Scale', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
-plt.legend(fontsize=12)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-plt.tight_layout()
-plt.savefig(os.path.join(script_dir, 'algorithm_comparison.png'), dpi=300)
-print("Saved: algorithm_comparison.png")
+plt.legend(fontsize=10)
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=10)
 
-plt.figure(figsize=(12, 8))
-
-for algo in sorted(df_merged['algorithm'].unique()):
-    if algo == 'kway':
-        continue
-        
-    algo_data = df_merged[df_merged['algorithm'] == algo]
+plt.subplot(2, 3, 2)
+for algo in sorted(df['display_name'].unique()):
+    algo_data = df[df['display_name'] == algo]
     if algo_data.empty:
         continue
         
@@ -128,127 +114,145 @@ for algo in sorted(df_merged['algorithm'].unique()):
     color = algo_colors.get(algo, 'black')
     
     plt.plot(algo_data['size'], algo_data['time'], marker='o', linestyle=linestyle, 
-             color=color, linewidth=2, markersize=8, label=algo)
+             color=color, linewidth=2, markersize=6, label=algo)
 
-plt.xlabel('Array Size (N)', fontsize=14)
-plt.ylabel('Execution Time (ms)', fontsize=14)
-plt.title('Comparison of FHE Sorting Algorithms (Log Scale)', fontsize=16)
+plt.xlabel('Array Size (N)', fontsize=12)
+plt.ylabel('Execution Time (s)', fontsize=12)
+plt.title('Log Scale', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
 plt.yscale('log')
-plt.legend(fontsize=12)
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-plt.tight_layout()
-plt.savefig(os.path.join(script_dir, 'algorithm_comparison_log.png'), dpi=300)
-print("Saved: algorithm_comparison_log.png")
+plt.legend(fontsize=10)
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=10)
 
-ratio = max_time / min_time if min_time > 0 else 1
-if ratio > 15:
-    fig = plt.figure(figsize=(12, 10))
-    gs = gridspec.GridSpec(2, 1, height_ratios=[1, 3])
-    
-    ax_top = plt.subplot(gs[0])
-    ax_bottom = plt.subplot(gs[1])
-    
-    threshold = min_time * 5
-    
-    for algo in sorted(df_merged['algorithm'].unique()):
-        if algo == 'kway':
-            continue
-            
-        algo_data = df_merged[df_merged['algorithm'] == algo]
-        if algo_data.empty:
-            continue
-            
-        algo_data = algo_data.sort_values('size')
+plt.subplot(2, 3, 3)
+markers = ['o', 's', '^']
+for i, k in enumerate([2, 3, 5]):
+    k_data = df_kway[df_kway['k_value'] == k]
+    if k_data.empty:
+        continue
         
-        linestyle = '--' if 'kway' in algo else '-'
-        color = algo_colors.get(algo, 'black')
-        
-        ax_top.plot(algo_data['size'], algo_data['time'], marker='o', linestyle=linestyle, 
-                 color=color, linewidth=2, markersize=8, label=algo)
-        ax_bottom.plot(algo_data['size'], algo_data['time'], marker='o', linestyle=linestyle, 
-                   color=color, linewidth=2, markersize=8, label=algo)
+    k_data = k_data.sort_values('size')
+    color = algo_colors.get(f'kway (k={k})', 'black')
     
-    ax_top.set_ylim(bottom=threshold, top=max_time * 1.1)
-    ax_bottom.set_ylim(bottom=0, top=threshold)
-    
-    ax_bottom.set_xlabel('Array Size (N)', fontsize=14)
-    ax_bottom.set_ylabel('Execution Time (ms)', fontsize=14)
-    ax_top.set_title('Comparison with Broken Y-axis', fontsize=16)
-    
-    d = .015
-    kwargs = dict(transform=ax_top.transAxes, color='k', clip_on=False)
-    ax_top.plot((-d, +d), (-d, +d), **kwargs)
-    ax_top.plot((1 - d, 1 + d), (-d, +d), **kwargs)
-    
-    kwargs.update(transform=ax_bottom.transAxes)
-    ax_bottom.plot((-d, +d), (1 - d, 1 + d), **kwargs)
-    ax_bottom.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
-    
-    ax_top.legend(fontsize=12)
-    ax_top.grid(True, linestyle='--', alpha=0.7)
-    ax_bottom.grid(True, linestyle='--', alpha=0.7)
-    
-    plt.tight_layout()
-    plt.savefig(os.path.join(script_dir, 'algorithm_comparison_broken.png'), dpi=300)
-    print("Saved: algorithm_comparison_broken.png")
+    plt.plot(k_data['size'], k_data['time'], marker=markers[i], linestyle='--', 
+             color=color, linewidth=2, markersize=6, label=f'kway (k={k})')
 
-plt.figure(figsize=(12, 8))
+plt.xlabel('Array Size (N)', fontsize=12)
+plt.ylabel('Execution Time (s)', fontsize=12)
+plt.title('K-Way Comparison', fontsize=14)
+plt.grid(True, linestyle='--', alpha=0.7)
+plt.legend(fontsize=10)
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=10)
 
-base_algos = ['ours', 'ours_hybrid', 'mehp24']
-base_algo_data = []
+gs = gridspec.GridSpec(3, 1, height_ratios=[1, 3, 1], hspace=0)
+ax_top = plt.subplot(gs[0])
+ax_bottom = plt.subplot(gs[1])
+plt.subplot(2, 3, 4)
 
-for algo in base_algos:
-    algo_data = df_avg[df_avg['algorithm'] == algo]
+threshold = min_time * 5
+for algo in sorted(df['display_name'].unique()):
+    algo_data = df[df['display_name'] == algo]
     if algo_data.empty:
-        print(f"No data for base algorithm: {algo}")
         continue
         
     algo_data = algo_data.sort_values('size')
-    base_algo_data.append(algo_data)
+    
+    linestyle = '--' if 'kway' in algo else '-'
+    color = algo_colors.get(algo, 'black')
+    
+    ax_top.plot(algo_data['size'], algo_data['time'], marker='o', linestyle=linestyle, 
+             color=color, linewidth=2, markersize=6, label=algo)
+    ax_bottom.plot(algo_data['size'], algo_data['time'], marker='o', linestyle=linestyle, 
+               color=color, linewidth=2, markersize=6, label=algo)
+
+ax_top.set_ylim(bottom=threshold, top=max_time * 1.1)
+ax_bottom.set_ylim(bottom=0, top=threshold)
+
+ax_bottom.set_xlabel('Array Size (N)', fontsize=12)
+ax_bottom.set_ylabel('Execution Time (s)', fontsize=12)
+ax_top.set_title('Broken Y-axis', fontsize=14)
+
+d = .015
+kwargs = dict(transform=ax_top.transAxes, color='k', clip_on=False)
+ax_top.plot((-d, +d), (-d, +d), **kwargs)
+ax_top.plot((1 - d, 1 + d), (-d, +d), **kwargs)
+
+kwargs.update(transform=ax_bottom.transAxes)
+ax_bottom.plot((-d, +d), (1 - d, 1 + d), **kwargs)
+ax_bottom.plot((1 - d, 1 + d), (1 - d, 1 + d), **kwargs)
+
+ax_top.legend(fontsize=10)
+ax_top.grid(True, linestyle='--', alpha=0.7)
+ax_bottom.grid(True, linestyle='--', alpha=0.7)
+
+plt.subplot(2, 3, 5)
+base_algos = ['ours', 'ours_hybrid', 'mehp24']
+for algo in base_algos:
+    algo_data = df_base[df_base['algorithm'] == algo]
+    if algo_data.empty:
+        continue
+    
+    algo_data = algo_data.sort_values('size')
     
     color = algo_colors.get(algo, 'black')
     plt.plot(algo_data['size'], algo_data['time'], marker='o', color=color, 
-             linewidth=2, markersize=8, label=algo)
+             linewidth=2, markersize=6, label=algo)
 
-plt.xlabel('Array Size (N)', fontsize=14)
-plt.ylabel('Execution Time (ms)', fontsize=14)
-plt.title('Main Algorithms vs. k-way by k-value', fontsize=16)
+plt.xlabel('Array Size (N)', fontsize=12)
+plt.ylabel('Execution Time (s)', fontsize=12)
+plt.title('Base Algorithms Comparison', fontsize=14)
 plt.grid(True, linestyle='--', alpha=0.7)
-plt.legend(fontsize=12)
+plt.legend(fontsize=10)
+plt.xticks(fontsize=10)
+plt.yticks(fontsize=10)
 
-twin_axes = []
-kway_plotted = False
+plt.subplot(2, 3, 6)
+common_sizes = [size for size in df_base['size'].unique() if size in df_kway['size'].unique()]
+comparison_data = []
 
-for i, k in enumerate([2, 3, 5]):
-    k_data = df_avg[(df_avg['algorithm'] == 'kway') & (df_avg['k_value'] == k)]
-    if k_data.empty:
-        print(f"No data for kway with k={k}")
-        continue
+for size in sorted(common_sizes):
+    for algo in base_algos:
+        base_time = df_base[(df_base['algorithm'] == algo) & (df_base['size'] == size)]['time'].values
+        if len(base_time) > 0:
+            base_time = base_time[0]
+            
+            for k_value in [2, 3, 5]:
+                kway_data = df_kway[(df_kway['k_value'] == k_value) & (df_kway['size'] == size)]
+                if not kway_data.empty:
+                    kway_time = kway_data['time'].values[0]
+                    speedup = kway_time / base_time
+                    comparison_data.append({
+                        'size': size,
+                        'base_algo': algo,
+                        'k_value': k_value,
+                        'speedup': speedup
+                    })
+
+if comparison_data:
+    comparison_df = pd.DataFrame(comparison_data)
     
-    kway_plotted = True
-        
-    if i == 0:
-        ax = plt.gca()
-    else:
-        ax = plt.twinx()
-        ax.spines['right'].set_position(('outward', 60 * (i-1)))
-        twin_axes.append(ax)
-    
-    k_data = k_data.sort_values('size')
-    color = algo_colors.get(f'kway (k={k})', 'black')
-    ax.plot(k_data['size'], k_data['time'], marker='s', linestyle='--', 
-            color=color, linewidth=2, markersize=8, label=f'kway (k={k})')
-    ax.set_ylabel(f'Time for k={k} (ms)', color=color, fontsize=14)
-    ax.tick_params(axis='y', labelcolor=color)
-    ax.legend(fontsize=12)
+    for algo in base_algos:
+        for k in [2, 3, 5]:
+            data = comparison_df[(comparison_df['base_algo'] == algo) & (comparison_df['k_value'] == k)]
+            if not data.empty:
+                plt.plot(data['size'], data['speedup'], marker='o', linestyle='-',
+                         label=f'{algo} vs kway k={k}')
 
-if len(base_algo_data) > 0 and kway_plotted:
-    plt.tight_layout()
-    plt.savefig(os.path.join(script_dir, 'algorithms_by_k_value.png'), dpi=300)
-    print("Saved: algorithms_by_k_value.png")
-else:
-    print("Warning: Could not create algorithms_by_k_value.png due to missing data")
+    plt.axhline(y=1.0, color='black', linestyle='--')
+    plt.xlabel('Array Size (N)', fontsize=12)
+    plt.ylabel('Speedup (kway/base)', fontsize=12)
+    plt.title('Performance Ratio', fontsize=14)
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend(fontsize=8)
+    plt.xticks(fontsize=10)
+    plt.yticks(fontsize=10)
+
+plt.suptitle('FHE Sorting Algorithms Performance Comparison', fontsize=16)
+plt.tight_layout(rect=[0, 0, 1, 0.97])
+
+plt.savefig(os.path.join(script_dir, 'algorithm_comparison_combined.png'), dpi=300)
+print("Saved: algorithm_comparison_combined.png")
 
 print("All plots have been saved successfully.")

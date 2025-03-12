@@ -52,7 +52,7 @@ template <int N> class KWayAdapter : public SortBase<N> {
         }
 
         // Set multiplicative depth based on array size
-        int multDepth = 44;
+        int multDepth = 40;
         if (N <= 128) {
             levelBudget = {4, 4};
             // multDepth = 44;

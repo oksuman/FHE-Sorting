@@ -1,0 +1,18 @@
+Input array size: 128
+Using Ring Dimension: 131072
+Multiplicative depth: 31
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+
+Performance Analysis:
+Execution time: 46448 ms
+
+Error Analysis:
+Maximum error: 1.40897e-05 (log2: -16.115)
+Average error: 3.45849e-06 (log2: -18.1414)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/5.SortHybridTest (55382 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/5 (55382 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/6, where TypeParam = std::integral_constant<unsigned long,256ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/6.SortHybridTest

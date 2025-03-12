@@ -1,0 +1,22 @@
+Input array size: 32
+Using Ring Dimension: 131072
+Multiplicative depth: 42
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+, dg_i=3, df_i=2C levels: 17
+M levels: 39
+S levels: 41
+
+Performance Analysis:
+Execution time: 61073 ms
+
+Error Analysis:
+Maximum error: 8.34052e-08 (log2: -23.5153)
+Average error: 4.20489e-08 (log2: -24.5034)
+Number of errors larger than 0.01: 0
+Result Level: 42
+[       OK ] MEHPSort/MEHPSortTestFixture/3.SortFGTest (71416 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/3 (71416 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/4, where TypeParam = std::integral_constant<unsigned long,64ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/4.SortFGTest

@@ -19,8 +19,9 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
         std::vector<uint32_t> levelBudget;
         KWayAdapter<N>::getSizeParameters(parameters, rotations, levelBudget);
 
-        parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr usint ringDim = 1 << 12;
+        parameters.SetSecurityLevel(HEStd_128_classic);
+        // parameters.SetSecurityLevel(HEStd_NotSet);
+        constexpr usint ringDim = 1 << 17;
         parameters.SetRingDim(ringDim);
 
         m_cc = GenCryptoContext(parameters);
@@ -66,8 +67,8 @@ template <typename T>
 class KWaySortTestFixture : public KWaySortTest<T::value> {};
 
 using TestSizes = ::testing::Types<
-    //  std::integral_constant<size_t, 4>,    // For k=2, M=2
-    //  std::integral_constant<size_t, 8>,    // For k=2, M=3
+    std::integral_constant<size_t, 4>,    // For k=2, M=2
+    std::integral_constant<size_t, 8>,    // For k=2, M=3
     std::integral_constant<size_t, 9>,    // For k=3, M=2
     std::integral_constant<size_t, 16>,   // For k=2, M=4
     std::integral_constant<size_t, 25>,   // For k=5, M=2

@@ -1,0 +1,23 @@
+Input array size: 32
+Multiplicative depth: 28
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+Final Level: 28
+input:
+[ 0.3125 0.59375 0.6875 0.84375 0.75 0.875 0.15625 0.125 0.25 0.71875 0.5 0.34375 0.90625 0.96875 0.5625 0.375 0.78125 0.8125 0.21875 0 0.625 0.65625 0.9375 0.4375 0.09375 0.0625 0.03125 0.28125 0.46875 0.40625 0.53125 0.1875 ]
+output:
+[ 1.3181e-06 0.0312486 0.0625001 0.0937515 0.124999 0.156253 0.187502 0.21875 0.250004 0.281244 0.312501 0.34375 0.375002 0.406251 0.437499 0.468746 0.499998 0.531259 0.562498 0.593752 0.625008 0.656258 0.6875 0.718751 0.750003 0.781253 0.812495 0.843749 0.874997 0.90625 0.937502 0.968749 ]
+
+Performance Analysis:
+Execution time: 30764 ms
+
+Error Analysis:
+Maximum error: 8.88296e-06 (log2: -16.7805)
+Average error: 2.5122e-06 (log2: -18.6026)
+Number of errors larger than 0.01: 0
+[       OK ] DirectSort/DirectSortTestFixture/3.SortTest (37931 ms)
+[----------] 1 test from DirectSort/DirectSortTestFixture/3 (37931 ms total)
+
+[----------] 1 test from DirectSort/DirectSortTestFixture/4, where TypeParam = std::integral_constant<unsigned long,64ul>
+[ RUN      ] DirectSort/DirectSortTestFixture/4.SortTest
+Using Ring Dimension: 131072

@@ -1,0 +1,133 @@
+Input array size: 128
+Using Ring Dimension: 131072
+Multiplicative depth: 40
+Scaling Mod: 59
+ == stage 0 == 
+2 7 0 0 0
+Level 3
+ == End stage 0 == 
+ == stage 1 == 
+2 7 0 1 0
+Level 3
+ == End stage 1 == 
+ == stage 2 == 
+2 7 1 0 1
+Level 3
+ == End stage 2 == 
+ == stage 3 == 
+2 7 0 2 0
+Level 3
+ == End stage 3 == 
+ == stage 4 == 
+2 7 1 1 1
+Level 3
+ == End stage 4 == 
+ == stage 5 == 
+2 7 2 0 1
+Level 3
+ == End stage 5 == 
+ == stage 6 == 
+2 7 0 3 0
+Level 3
+ == End stage 6 == 
+ == stage 7 == 
+2 7 1 2 1
+Level 3
+ == End stage 7 == 
+ == stage 8 == 
+2 7 2 1 1
+Level 3
+ == End stage 8 == 
+ == stage 9 == 
+2 7 3 0 1
+Level 3
+ == End stage 9 == 
+ == stage 10 == 
+2 7 0 4 0
+Level 3
+ == End stage 10 == 
+ == stage 11 == 
+2 7 1 3 1
+Level 3
+ == End stage 11 == 
+ == stage 12 == 
+2 7 2 2 1
+Level 3
+ == End stage 12 == 
+ == stage 13 == 
+2 7 3 1 1
+Level 3
+ == End stage 13 == 
+ == stage 14 == 
+2 7 4 0 1
+Level 3
+ == End stage 14 == 
+ == stage 15 == 
+2 7 0 5 0
+Level 3
+ == End stage 15 == 
+ == stage 16 == 
+2 7 1 4 1
+Level 3
+ == End stage 16 == 
+ == stage 17 == 
+2 7 2 3 1
+Level 3
+ == End stage 17 == 
+ == stage 18 == 
+2 7 3 2 1
+Level 3
+ == End stage 18 == 
+ == stage 19 == 
+2 7 4 1 1
+Level 3
+ == End stage 19 == 
+ == stage 20 == 
+2 7 5 0 1
+Level 3
+ == End stage 20 == 
+ == stage 21 == 
+2 7 0 6 0
+Level 3
+ == End stage 21 == 
+ == stage 22 == 
+2 7 1 5 1
+Level 3
+ == End stage 22 == 
+ == stage 23 == 
+2 7 2 4 1
+Level 3
+ == End stage 23 == 
+ == stage 24 == 
+2 7 3 3 1
+Level 3
+ == End stage 24 == 
+ == stage 25 == 
+2 7 4 2 1
+Level 3
+ == End stage 25 == 
+ == stage 26 == 
+2 7 5 1 1
+Level 3
+ == End stage 26 == 
+ == stage 27 == 
+2 7 6 0 1
+Level 3
+ == End stage 27 == 
+Level of output: 36
+[ -0.000121218 0.00770115 0.0155507 0.0233846 0.0311865 0.0390111 0.0467868 0.054683 0.0624726 0.0703032 0.0780538 0.0858752 0.0936725 0.101478 0.109316 0.117089 0.124989 0.132732 0.140423 0.148386 0.156284 0.164036 0.171795 0.179606 0.187432 0.195295 0.203064 0.210898 0.218744 0.226545 0.234329 0.242112 0.24996 0.257768 0.265522 0.273353 0.281204 0.288973 0.296766 0.304692 0.312413 0.3202 0.32802 0.33589 0.34374 0.351521 0.359312 0.367133 0.374911 0.382844 0.390537 0.398388 0.406178 0.414032 0.421809 0.429688 0.437451 0.445211 0.453063 0.460878 0.468647 0.476539 0.484336 0.492098 0.500032 0.507667 0.515599 0.523352 0.531147 0.538995 0.546754 0.554625 0.562449 0.570265 0.57806 0.585859 0.59372 0.601537 0.609321 0.617096 0.624941 0.632672 0.640531 0.648353 0.656156 0.663963 0.671815 0.679607 0.687428 0.695216 0.703012 0.710882 0.718769 0.726521 0.734357 0.742158 0.749875 0.757709 0.765445 0.773346 0.781178 0.788976 0.796786 0.804621 0.812402 0.820166 0.828064 0.835843 0.843664 0.851538 0.859259 0.867064 0.874967 0.882755 0.890546 0.898338 0.906197 0.91398 0.921817 0.929562 0.937351 0.94527 0.953054 0.96086 0.968596 0.976542 0.984286 0.992111 ]: ctxt_out Level: 36, LogPrecision: 15
+Result Level: 36
+
+Performance Analysis:
+Execution time: 2409181 ms
+
+Error Analysis:
+Maximum error: 0.000183917 (log2: -12.4087)
+Average error: 6.82408e-05 (log2: -13.839)
+Number of errors >= 0.01: 0
+[       OK ] KWaySortTestFixture/5.SortTest (2429636 ms)
+[----------] 1 test from KWaySortTestFixture/5 (2429636 ms total)
+
+[----------] 1 test from KWaySortTestFixture/6, where TypeParam = std::integral_constant<unsigned long,256ul>
+[ RUN      ] KWaySortTestFixture/6.SortTest
+Sign Configuration: CompositeSign(3, k=2, M=8, d_f=2, d_g=4)

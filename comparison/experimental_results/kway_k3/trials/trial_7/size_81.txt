@@ -1,0 +1,85 @@
+Input array size: 81
+Using Ring Dimension: 131072
+Multiplicative depth: 40
+Scaling Mod: 59
+ == stage 0 == 
+3 4 0 0 0
+Level 5
+ == End stage 0 == 
+ == stage 1 == 
+3 4 0 1 0
+Level 5
+ == End stage 1 == 
+ == stage 2 == 
+3 4 1 0 1
+Level 5
+ == End stage 2 == 
+ == stage 3 == 
+3 4 1 0 2
+Level 5
+ == End stage 3 == 
+ == stage 4 == 
+3 4 0 2 0
+Level 5
+ == End stage 4 == 
+ == stage 5 == 
+3 4 1 1 1
+Level 5
+ == End stage 5 == 
+ == stage 6 == 
+3 4 1 1 2
+Level 5
+ == End stage 6 == 
+ == stage 7 == 
+3 4 2 0 1
+Level 5
+ == End stage 7 == 
+ == stage 8 == 
+3 4 2 0 2
+Level 5
+ == End stage 8 == 
+ == stage 9 == 
+3 4 0 3 0
+Level 5
+ == End stage 9 == 
+ == stage 10 == 
+3 4 1 2 1
+Level 5
+ == End stage 10 == 
+ == stage 11 == 
+3 4 1 2 2
+Level 5
+ == End stage 11 == 
+ == stage 12 == 
+3 4 2 1 1
+Level 5
+ == End stage 12 == 
+ == stage 13 == 
+3 4 2 1 2
+Level 5
+ == End stage 13 == 
+ == stage 14 == 
+3 4 3 0 1
+Level 5
+ == End stage 14 == 
+ == stage 15 == 
+3 4 3 0 2
+Level 5
+ == End stage 15 == 
+Level of output: 34
+[ -1.86485e-05 0.0123092 0.0247001 0.037006 0.0493934 0.0617371 0.0740943 0.0864565 0.0987429 0.11108 0.123462 0.135787 0.148115 0.160495 0.172837 0.185197 0.197553 0.209884 0.2222 0.234576 0.246893 0.259249 0.271492 0.283896 0.296243 0.30862 0.320964 0.333305 0.345663 0.358051 0.370343 0.382675 0.39509 0.407407 0.419746 0.432135 0.444415 0.456775 0.469142 0.481473 0.493863 0.506168 0.518546 0.530865 0.543254 0.555491 0.567888 0.580195 0.592574 0.604905 0.617255 0.629593 0.641949 0.654349 0.66664 0.679011 0.691359 0.703701 0.716023 0.728376 0.74072 0.753058 0.765405 0.777756 0.790124 0.802501 0.81484 0.827144 0.839472 0.851867 0.864186 0.876562 0.888866 0.901187 0.913529 0.925965 0.938253 0.950586 0.962987 0.97528 0.987651 6.81393e-06 -7.84331e-06 -3.7822e-05 -5.41332e-05 -2.74105e-05 2.22547e-05 -1.52102e-06 1.73569e-05 -1.85032e-05 -5.78225e-06 -2.89985e-05 -6.47342e-06 -2.34974e-05 3.0581e-06 -2.31642e-05 -2.46133e-05 7.98637e-06 -1.507e-05 3.14807e-06 -4.54434e-05 -4.89745e-06 9.13428e-06 -3.10318e-05 2.48558e-06 -3.12538e-05 -2.82405e-05 -1.84889e-05 2.94191e-05 -1.21523e-05 2.47217e-06 -1.95983e-06 1.48357e-05 2.62512e-05 2.53736e-05 1.42687e-05 1.9629e-05 -3.5135e-05 -3.82457e-05 -1.45853e-05 1.38423e-05 -1.99076e-05 -1.01049e-05 -1.82514e-05 -2.87631e-05 1.03241e-05 3.45537e-05 -1.43413e-05 ]: ctxt_out Level: 34, LogPrecision: 15
+Result Level: 34
+
+Performance Analysis:
+Execution time: 1138004 ms
+
+Error Analysis:
+Maximum error: 0.000106009 (log2: -13.2035)
+Average error: 2.46023e-05 (log2: -15.3108)
+Number of errors >= 0.01: 0
+[       OK ] KWaySortTestFixture/2.SortTest (1158291 ms)
+[----------] 1 test from KWaySortTestFixture/2 (1158291 ms total)
+
+[----------] 1 test from KWaySortTestFixture/3, where TypeParam = std::integral_constant<unsigned long,243ul>
+[ RUN      ] KWaySortTestFixture/3.SortTest
+Sign Configuration: CompositeSign(3, k=3, M=5, d_f=2, d_g=4)

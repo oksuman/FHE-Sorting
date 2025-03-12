@@ -1,0 +1,168 @@
+Running main() from /home/user/shkim/FHE-Sorting/third_party/googletest/googletest/src/gtest_main.cc
+[==========] Running 9 tests from 9 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from HybridSort/HybridSortTestFixture/0, where TypeParam = std::integral_constant<unsigned long,4ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/0.SortHybridTest
+Input array size: 4
+Using Ring Dimension: 131072
+Multiplicative depth: 24
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+
+Performance Analysis:
+Execution time: 15852 ms
+
+Error Analysis:
+Maximum error: 5.44077e-07 (log2: -20.8097)
+Average error: 3.26408e-07 (log2: -21.5468)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/0.SortHybridTest (22296 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/0 (22296 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/1, where TypeParam = std::integral_constant<unsigned long,8ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/1.SortHybridTest
+Input array size: 8
+Using Ring Dimension: 131072
+Multiplicative depth: 25
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+
+Performance Analysis:
+Execution time: 17859 ms
+
+Error Analysis:
+Maximum error: 7.28183e-07 (log2: -20.3892)
+Average error: 4.66188e-07 (log2: -21.0326)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/1.SortHybridTest (23914 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/1 (23914 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/2, where TypeParam = std::integral_constant<unsigned long,16ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/2.SortHybridTest
+Input array size: 16
+Using Ring Dimension: 131072
+Multiplicative depth: 25
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+
+Performance Analysis:
+Execution time: 19678 ms
+
+Error Analysis:
+Maximum error: 1.21657e-06 (log2: -19.6487)
+Average error: 4.8351e-07 (log2: -20.98)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/2.SortHybridTest (25764 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/2 (25764 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/3, where TypeParam = std::integral_constant<unsigned long,32ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/3.SortHybridTest
+Input array size: 32
+Using Ring Dimension: 131072
+Multiplicative depth: 29
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+
+Performance Analysis:
+Execution time: 26439 ms
+
+Error Analysis:
+Maximum error: 2.27794e-06 (log2: -18.7438)
+Average error: 6.03081e-07 (log2: -20.6611)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/3.SortHybridTest (33786 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/3 (33786 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/4, where TypeParam = std::integral_constant<unsigned long,64ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/4.SortHybridTest
+Input array size: 64
+Using Ring Dimension: 131072
+Multiplicative depth: 30
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+
+Performance Analysis:
+Execution time: 33592 ms
+
+Error Analysis:
+Maximum error: 6.8367e-06 (log2: -17.1583)
+Average error: 1.73864e-06 (log2: -19.1336)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/4.SortHybridTest (41819 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/4 (41819 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/5, where TypeParam = std::integral_constant<unsigned long,128ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/5.SortHybridTest
+Input array size: 128
+Using Ring Dimension: 131072
+Multiplicative depth: 31
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+
+Performance Analysis:
+Execution time: 45969 ms
+
+Error Analysis:
+Maximum error: 1.63694e-05 (log2: -15.8986)
+Average error: 3.21475e-06 (log2: -18.2469)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/5.SortHybridTest (54842 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/5 (54843 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/6, where TypeParam = std::integral_constant<unsigned long,256ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/6.SortHybridTest
+Input array size: 256
+Using Ring Dimension: 131072
+Multiplicative depth: 44
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 4, 2)
+
+Performance Analysis:
+Execution time: 76533 ms
+
+Error Analysis:
+Maximum error: 1.37054e-06 (log2: -19.4768)
+Average error: 3.37086e-07 (log2: -21.5004)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/6.SortHybridTest (90524 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/6 (90524 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/7, where TypeParam = std::integral_constant<unsigned long,512ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/7.SortHybridTest
+Input array size: 512
+Using Ring Dimension: 131072
+Multiplicative depth: 47
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 4, 2)
+
+Performance Analysis:
+Execution time: 156734 ms
+
+Error Analysis:
+Maximum error: 1.93676e-06 (log2: -18.9779)
+Average error: 5.45077e-07 (log2: -20.807)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/7.SortHybridTest (173731 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/7 (173731 ms total)
+
+[----------] 1 test from HybridSort/HybridSortTestFixture/8, where TypeParam = std::integral_constant<unsigned long,1024ul>
+[ RUN      ] HybridSort/HybridSortTestFixture/8.SortHybridTest
+Input array size: 1024
+Using Ring Dimension: 131072
+Multiplicative depth: 50
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 5, 2)
+
+Performance Analysis:
+Execution time: 367032 ms
+
+Error Analysis:
+Maximum error: 2.98674e-06 (log2: -18.353)
+Average error: 1.09004e-06 (log2: -19.8072)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/8.SortHybridTest (389262 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/8 (389263 ms total)
+
+[----------] Global test environment tear-down
+[==========] 9 tests from 9 test suites ran. (855944 ms total)
+[  PASSED  ] 9 tests.

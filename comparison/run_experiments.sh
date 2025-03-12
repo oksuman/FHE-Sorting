@@ -3,16 +3,20 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
 TEST_DIR="$PROJECT_ROOT/build/tests"
-NUM_TRIALS=1
+NUM_TRIALS=10
 
 mkdir -p "$SCRIPT_DIR/experimental_results/mehp24"
 mkdir -p "$SCRIPT_DIR/experimental_results/ours"
 mkdir -p "$SCRIPT_DIR/experimental_results/ours_hybrid"
-mkdir -p "$SCRIPT_DIR/experimental_results/kway"
+mkdir -p "$SCRIPT_DIR/experimental_results/kway_k2"
+mkdir -p "$SCRIPT_DIR/experimental_results/kway_k3"
+mkdir -p "$SCRIPT_DIR/experimental_results/kway_k5"
 
 DIRECT_SIZES=(4 8 16 32 64 128 256 512 1024)
 MEHP24_SIZES=(4 8 16 32 64 128 256 512 1024)
-KWAY_SIZES=(9 16 25 27 32 64 81 125 128 243 256 512 625 729 1024 2048 2187 3125)
+KWAY_K2_SIZES=(4 8 16 32 64 128 256 512 1024)
+KWAY_K3_SIZES=(9 27 81 243 729)
+KWAY_K5_SIZES=(25 125 625)
 
 extract_test_results() {
     local input_file=$1
@@ -22,6 +26,8 @@ extract_test_results() {
     
     if [ ${#sizes[@]} -eq 0 ]; then
         echo "Warning: No 'Input array size:' patterns found in $input_file"
+        cat "$input_file" > "${output_dir}/debug_output.txt"
+        echo "Saved test output to ${output_dir}/debug_output.txt for debugging"
         return
     fi
     
@@ -70,8 +76,6 @@ get_kway_params() {
         625) echo "k=5, M=4, d_f=2, d_g=5" ;;
         729) echo "k=3, M=6, d_f=2, d_g=5" ;;
         1024) echo "k=2, M=10, d_f=2, d_g=5" ;;
-        2048) echo "k=2, M=11, d_f=2, d_g=5" ;;
-        2187) echo "k=3, M=7, d_f=2, d_g=5" ;;
         *) echo "unknown" ;;
     esac
 }
@@ -203,29 +207,49 @@ format_results() {
 }
 
 run_test() {
-    local algo=$1
-    local test_executable=$2
-    local sizes=("${@:3}")
-    
-    echo "Running $algo tests"
-    cd "$TEST_DIR" || exit 1
-    
-    for trial in $(seq 1 $NUM_TRIALS); do
-        echo "Trial $trial of $NUM_TRIALS"
-        local trial_output_dir="${SCRIPT_DIR}/experimental_results/${algo}/trials/trial_${trial}"
-        mkdir -p "$trial_output_dir"
-        
-        local executable_path="./$test_executable"
-        
-        echo "Executing: $executable_path"
-        $executable_path > "${trial_output_dir}/output.txt" 2>&1
-        extract_test_results "${trial_output_dir}/output.txt" "$trial_output_dir"
-    done
-    
-    local trial_dir="${SCRIPT_DIR}/experimental_results/${algo}/trials"
-    for size in "${sizes[@]}"; do
-        format_results "$algo" "$size" "$trial_dir"
-    done
+   local algo=$1
+   local test_executable=$2
+   local sizes=("${@:3}")
+   
+   echo "Running $algo tests"
+   cd "$TEST_DIR" || exit 1
+   
+   for trial in $(seq 1 $NUM_TRIALS); do
+       echo "Trial $trial of $NUM_TRIALS"
+       local trial_output_dir="${SCRIPT_DIR}/experimental_results/${algo}/trials/trial_${trial}"
+       mkdir -p "$trial_output_dir"
+       
+       local executable_path="./$test_executable"
+       
+       echo "Executing: $executable_path"
+       sync
+       
+       if [ "$algo" == "kway_k2" ]; then
+           $executable_path --gtest_filter="KWaySortTestFixture/*.SortTest" > "${trial_output_dir}/output.txt" 2>&1
+       elif [ "$algo" == "kway_k3" ]; then
+           $executable_path --gtest_filter="KWaySortTestFixture/*.SortTest" > "${trial_output_dir}/output.txt" 2>&1
+       elif [ "$algo" == "kway_k5" ]; then
+           $executable_path --gtest_filter="KWaySortTestFixture/*.SortTest" > "${trial_output_dir}/output.txt" 2>&1
+       else
+           $executable_path > "${trial_output_dir}/output.txt" 2>&1
+       fi
+       
+       if [ $? -ne 0 ]; then
+           echo "Warning: Process exited with error for $algo"
+           cat "${trial_output_dir}/output.txt" > "${trial_output_dir}/error_output.txt"
+           echo "Error output saved to ${trial_output_dir}/error_output.txt"
+       fi
+       
+       extract_test_results "${trial_output_dir}/output.txt" "$trial_output_dir"
+       
+       sync
+       sleep 10
+   done
+   
+   local trial_dir="${SCRIPT_DIR}/experimental_results/${algo}/trials"
+   for size in "${sizes[@]}"; do
+       format_results "$algo" "$size" "$trial_dir"
+   done
 }
 
 generate_final_summary() {
@@ -241,7 +265,7 @@ generate_final_summary() {
     echo "" >> "$final_summary_md"
     echo "## Performance Comparison" >> "$final_summary_md"
     
-    for algo in "ours" "ours_hybrid" "mehp24" "kway"; do
+    for algo in "ours" "ours_hybrid" "mehp24" "kway_k2" "kway_k3" "kway_k5"; do
         echo "" >> "$final_summary"
         echo "=== $algo Algorithm Summary ===" >> "$final_summary"
         echo "" >> "$final_summary"
@@ -256,8 +280,14 @@ generate_final_summary() {
             "ours"|"ours_hybrid"|"mehp24")
                 sizes=("${DIRECT_SIZES[@]}")
                 ;;
-            "kway")
-                sizes=("${KWAY_SIZES[@]}")
+            "kway_k2")
+                sizes=("${KWAY_K2_SIZES[@]}")
+                ;;
+            "kway_k3")
+                sizes=("${KWAY_K3_SIZES[@]}")
+                ;;
+            "kway_k5")
+                sizes=("${KWAY_K5_SIZES[@]}")
                 ;;
         esac
         
@@ -302,7 +332,7 @@ generate_final_summary() {
         echo "| Algorithm   | Ring Dim | Mult Depth | Scale Mod | Avg Time (s) | Max Error (log2) | Avg Error (log2) |" >> "$final_summary_md"
         echo "|-------------|----------|------------|-----------|--------------|------------------|------------------|" >> "$final_summary_md"
         
-        for algo in "ours" "ours_hybrid" "mehp24" "kway"; do
+        for algo in "ours" "ours_hybrid" "mehp24" "kway_k2"; do
             local summary_file="${SCRIPT_DIR}/experimental_results/${algo}/N${size}_summary.txt"
             
             if [[ -f "$summary_file" ]]; then
@@ -335,17 +365,38 @@ generate_final_summary() {
 mkdir -p "${SCRIPT_DIR}/experimental_results/ours_hybrid/trials"
 mkdir -p "${SCRIPT_DIR}/experimental_results/mehp24/trials"
 mkdir -p "${SCRIPT_DIR}/experimental_results/ours/trials"
-mkdir -p "${SCRIPT_DIR}/experimental_results/kway/trials"
+mkdir -p "${SCRIPT_DIR}/experimental_results/kway_k2/trials"
+mkdir -p "${SCRIPT_DIR}/experimental_results/kway_k3/trials"
+mkdir -p "${SCRIPT_DIR}/experimental_results/kway_k5/trials"
 
 > "${SCRIPT_DIR}/experimental_results/ours_hybrid/total_results.txt"
 > "${SCRIPT_DIR}/experimental_results/mehp24/total_results.txt"
 > "${SCRIPT_DIR}/experimental_results/ours/total_results.txt"
-> "${SCRIPT_DIR}/experimental_results/kway/total_results.txt"
+> "${SCRIPT_DIR}/experimental_results/kway_k2/total_results.txt"
+> "${SCRIPT_DIR}/experimental_results/kway_k3/total_results.txt"
+> "${SCRIPT_DIR}/experimental_results/kway_k5/total_results.txt"
 
-run_test "ours_hybrid" "DirectSortHTest" "${DIRECT_SIZES[@]}"
-run_test "mehp24" "mehp24/Mehp24SortTest" "${MEHP24_SIZES[@]}"
+run_test "kway_k2" "k-way/KWaySort2Test" "${KWAY_K2_SIZES[@]}"
+
+sync
+sleep 30
+run_test "kway_k3" "k-way/KWaySort3Test" "${KWAY_K3_SIZES[@]}"
+
+sync
+sleep 30
+run_test "kway_k5" "k-way/KWaySort5Test" "${KWAY_K5_SIZES[@]}"
+
+sync
+sleep 30
 run_test "ours" "DirectSortTest" "${DIRECT_SIZES[@]}"
-run_test "kway" "k-way/KWaySort235Test" "${KWAY_SIZES[@]}"
+
+sync
+sleep 30
+run_test "mehp24" "mehp24/Mehp24SortTest" "${MEHP24_SIZES[@]}"
+
+sync
+sleep 30
+run_test "ours_hybrid" "DirectSortHTest" "${DIRECT_SIZES[@]}"
 
 generate_final_summary
 

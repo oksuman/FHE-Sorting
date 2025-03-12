@@ -1,0 +1,29 @@
+Input array size: 1024
+Using Ring Dimension: 131072
+Multiplicative depth: 60
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 5, 2)
+, dg_i=5, df_i=2split start
+split end
+replR levels: 1
+replC levels: 2
+Ch levels: 24
+s levels: 24
+subSorted levels: 57
+result levels: 59
+sort end
+
+Performance Analysis:
+Execution time: 430173 ms
+
+Error Analysis:
+Maximum error: 3.94314e-06 (log2: -17.9522)
+Average error: 1.15729e-06 (log2: -19.7208)
+Number of errors larger than 0.01: 0
+Result Level: 59
+[       OK ] MEHPSort/MEHPSortTestFixture/8.SortFGTest (448625 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/8 (448625 ms total)
+
+[----------] Global test environment tear-down
+[==========] 9 tests from 9 test suites ran. (1317851 ms total)
+[  PASSED  ] 9 tests.

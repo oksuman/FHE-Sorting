@@ -1,0 +1,16 @@
+======================================
+     Results for N = 4
+======================================
+Crypto Parameters:
+  Ring Dimension      : 131072
+  Multiplicative Depth: 23
+  Scaling Mod Size    : 40
+  Sign Configuration  : CompositeSign(3, 2, 2)
+
+Performance Metrics:
+  Average Time     : 15.5706s
+
+Error Analysis:
+  Max Error (log2): -19.8276
+  Average Error (log2): -20.3183
+======================================

@@ -1,0 +1,216 @@
+Running main() from /home/user/shkim/FHE-Sorting/third_party/googletest/googletest/src/gtest_main.cc
+[==========] Running 9 tests from 9 test suites.
+[----------] Global test environment set-up.
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/0, where TypeParam = std::integral_constant<unsigned long,4ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/0.SortFGTest
+Input array size: 4
+Using Ring Dimension: 131072
+Multiplicative depth: 31
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+, dg_i=1, df_i=2C levels: 14
+M levels: 28
+S levels: 30
+
+Performance Analysis:
+Execution time: 27976 ms
+
+Error Analysis:
+Maximum error: 0.000339275 (log2: -11.5253)
+Average error: 0.000106053 (log2: -13.2029)
+Number of errors larger than 0.01: 0
+Result Level: 31
+[       OK ] MEHPSort/MEHPSortTestFixture/0.SortFGTest (35479 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/0 (35479 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/1, where TypeParam = std::integral_constant<unsigned long,8ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/1.SortFGTest
+Input array size: 8
+Using Ring Dimension: 131072
+Multiplicative depth: 35
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+, dg_i=2, df_i=2C levels: 14
+M levels: 32
+S levels: 34
+
+Performance Analysis:
+Execution time: 38469 ms
+
+Error Analysis:
+Maximum error: 1.88095e-08 (log2: -25.664)
+Average error: 7.72381e-09 (log2: -26.948)
+Number of errors larger than 0.01: 0
+Result Level: 35
+[       OK ] MEHPSort/MEHPSortTestFixture/1.SortFGTest (46469 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/1 (46469 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/2, where TypeParam = std::integral_constant<unsigned long,16ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/2.SortFGTest
+Input array size: 16
+Using Ring Dimension: 131072
+Multiplicative depth: 35
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 2, 2)
+, dg_i=2, df_i=2C levels: 14
+M levels: 32
+S levels: 34
+
+Performance Analysis:
+Execution time: 42327 ms
+
+Error Analysis:
+Maximum error: 7.03091e-05 (log2: -13.7959)
+Average error: 4.70386e-06 (log2: -17.6977)
+Number of errors larger than 0.01: 0
+Result Level: 35
+[       OK ] MEHPSort/MEHPSortTestFixture/2.SortFGTest (51388 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/2 (51388 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/3, where TypeParam = std::integral_constant<unsigned long,32ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/3.SortFGTest
+Input array size: 32
+Using Ring Dimension: 131072
+Multiplicative depth: 42
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+, dg_i=3, df_i=2C levels: 17
+M levels: 39
+S levels: 41
+
+Performance Analysis:
+Execution time: 60748 ms
+
+Error Analysis:
+Maximum error: 8.20705e-08 (log2: -23.5386)
+Average error: 4.45585e-08 (log2: -24.4197)
+Number of errors larger than 0.01: 0
+Result Level: 42
+[       OK ] MEHPSort/MEHPSortTestFixture/3.SortFGTest (71314 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/3 (71314 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/4, where TypeParam = std::integral_constant<unsigned long,64ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/4.SortFGTest
+Input array size: 64
+Using Ring Dimension: 131072
+Multiplicative depth: 42
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+, dg_i=3, df_i=2C levels: 17
+M levels: 39
+S levels: 41
+
+Performance Analysis:
+Execution time: 66101 ms
+
+Error Analysis:
+Maximum error: 9.15125e-06 (log2: -16.7376)
+Average error: 2.69e-07 (log2: -21.8259)
+Number of errors larger than 0.01: 0
+Result Level: 42
+[       OK ] MEHPSort/MEHPSortTestFixture/4.SortFGTest (76796 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/4 (76796 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/5, where TypeParam = std::integral_constant<unsigned long,128ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/5.SortFGTest
+Input array size: 128
+Using Ring Dimension: 131072
+Multiplicative depth: 46
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 3, 2)
+, dg_i=4, df_i=2C levels: 17
+M levels: 43
+S levels: 45
+
+Performance Analysis:
+Execution time: 80050 ms
+
+Error Analysis:
+Maximum error: 6.23954e-07 (log2: -20.6121)
+Average error: 1.91794e-07 (log2: -22.3139)
+Number of errors larger than 0.01: 0
+Result Level: 46
+[       OK ] MEHPSort/MEHPSortTestFixture/5.SortFGTest (92037 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/5 (92037 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/6, where TypeParam = std::integral_constant<unsigned long,256ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/6.SortFGTest
+Input array size: 256
+Using Ring Dimension: 131072
+Multiplicative depth: 49
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 4, 2)
+, dg_i=4, df_i=2C levels: 20
+M levels: 46
+S levels: 48
+
+Performance Analysis:
+Execution time: 94126 ms
+
+Error Analysis:
+Maximum error: 1.71735e-06 (log2: -19.1514)
+Average error: 4.49516e-07 (log2: -21.0851)
+Number of errors larger than 0.01: 0
+Result Level: 49
+[       OK ] MEHPSort/MEHPSortTestFixture/6.SortFGTest (107912 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/6 (107912 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/7, where TypeParam = std::integral_constant<unsigned long,512ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/7.SortFGTest
+Input array size: 512
+Using Ring Dimension: 131072
+Multiplicative depth: 57
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 4, 2)
+, dg_i=5, df_i=2split start
+split end
+replR levels: 1
+replC levels: 2
+Ch levels: 21
+s levels: 21
+subSorted levels: 54
+result levels: 56
+sort end
+
+Performance Analysis:
+Execution time: 368355 ms
+
+Error Analysis:
+Maximum error: 2.87272e-06 (log2: -18.4092)
+Average error: 6.95218e-07 (log2: -20.456)
+Number of errors larger than 0.01: 0
+Result Level: 56
+[       OK ] MEHPSort/MEHPSortTestFixture/7.SortFGTest (385121 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/7 (385121 ms total)
+
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/8, where TypeParam = std::integral_constant<unsigned long,1024ul>
+[ RUN      ] MEHPSort/MEHPSortTestFixture/8.SortFGTest
+Input array size: 1024
+Using Ring Dimension: 131072
+Multiplicative depth: 60
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 5, 2)
+, dg_i=5, df_i=2split start
+split end
+replR levels: 1
+replC levels: 2
+Ch levels: 24
+s levels: 24
+subSorted levels: 57
+result levels: 59
+sort end
+
+Performance Analysis:
+Execution time: 429266 ms
+
+Error Analysis:
+Maximum error: 4.71825e-06 (log2: -17.6933)
+Average error: 1.18144e-06 (log2: -19.691)
+Number of errors larger than 0.01: 0
+Result Level: 59
+[       OK ] MEHPSort/MEHPSortTestFixture/8.SortFGTest (448568 ms)
+[----------] 1 test from MEHPSort/MEHPSortTestFixture/8 (448568 ms total)
+
+[----------] Global test environment tear-down
+[==========] 9 tests from 9 test suites ran. (1315088 ms total)
+[  PASSED  ] 9 tests.

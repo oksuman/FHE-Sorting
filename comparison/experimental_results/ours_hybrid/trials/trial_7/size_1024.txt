@@ -1,0 +1,19 @@
+Input array size: 1024
+Using Ring Dimension: 131072
+Multiplicative depth: 50
+Scaling Mod: 40
+Sign Configuration: CompositeSign(3, 5, 2)
+
+Performance Analysis:
+Execution time: 370111 ms
+
+Error Analysis:
+Maximum error: 3.06469e-06 (log2: -18.3158)
+Average error: 1.07781e-06 (log2: -19.8235)
+Number of errors larger than 0.01: 0
+[       OK ] HybridSort/HybridSortTestFixture/8.SortHybridTest (392684 ms)
+[----------] 1 test from HybridSort/HybridSortTestFixture/8 (392684 ms total)
+
+[----------] Global test environment tear-down
+[==========] 9 tests from 9 test suites ran. (857188 ms total)
+[  PASSED  ] 9 tests.

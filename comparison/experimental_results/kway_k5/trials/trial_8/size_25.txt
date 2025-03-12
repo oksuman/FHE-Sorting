@@ -1,0 +1,41 @@
+Input array size: 25
+Using Ring Dimension: 131072
+Multiplicative depth: 40
+Scaling Mod: 59
+ == stage 0 == 
+5 2 0 0 0
+Level 7
+ == End stage 0 == 
+ == stage 1 == 
+5 2 0 1 0
+Level 7
+ == End stage 1 == 
+ == stage 2 == 
+5 2 1 0 1
+Level 7
+ == End stage 2 == 
+ == stage 3 == 
+5 2 1 0 2
+Level 7
+ == End stage 3 == 
+ == stage 4 == 
+5 2 1 0 3
+Level 7
+ == End stage 4 == 
+Level of output: 33
+[ 2.74005e-06 0.0400188 0.0800142 0.120002 0.160007 0.199991 0.240016 0.280001 0.320027 0.360017 0.399985 0.439999 0.479992 0.520018 0.560009 0.599994 0.639995 0.68001 0.719998 0.759997 0.79999 0.840005 0.879977 0.919998 0.959975 -2.31019e-06 -1.16722e-05 2.45242e-05 -1.22784e-06 1.208e-05 -6.62149e-06 9.48771e-06 ]: ctxt_out Level: 33, LogPrecision: 16
+Result Level: 33
+
+Performance Analysis:
+Execution time: 650470 ms
+
+Error Analysis:
+Maximum error: 4.26327e-05 (log2: -14.5177)
+Average error: 1.15633e-05 (log2: -16.4001)
+Number of errors >= 0.01: 0
+[       OK ] KWaySortTestFixture/0.SortTest (672335 ms)
+[----------] 1 test from KWaySortTestFixture/0 (672335 ms total)
+
+[----------] 1 test from KWaySortTestFixture/1, where TypeParam = std::integral_constant<unsigned long,125ul>
+[ RUN      ] KWaySortTestFixture/1.SortTest
+Sign Configuration: CompositeSign(3, k=5, M=3, d_f=2, d_g=3)

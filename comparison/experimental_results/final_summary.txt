@@ -1,0 +1,421 @@
+=========================================================
+               FINAL COMPARATIVE SUMMARY                  
+=========================================================
+
+
+=== ours Algorithm Summary ===
+
+N = 4:
+  Ring Dimension: 131072
+  Mult Depth: 23
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 15.5706s
+  Max Error (log2): -19.8276
+  Avg Error (log2): -20.3183
+
+N = 8:
+  Ring Dimension: 131072
+  Mult Depth: 24
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 18.6773s
+  Max Error (log2): -22.1330
+  Avg Error (log2): -23.0816
+
+N = 16:
+  Ring Dimension: 131072
+  Mult Depth: 25
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 21.2927s
+  Max Error (log2): -20.4735
+  Avg Error (log2): -21.8543
+
+N = 32:
+  Ring Dimension: 131072
+  Mult Depth: 28
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 29.3931s
+  Max Error (log2): -16.5494
+  Avg Error (log2): -18.3397
+
+N = 64:
+  Ring Dimension: 131072
+  Mult Depth: 29
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 35.7908s
+  Max Error (log2): -16.5744
+  Avg Error (log2): -18.4425
+
+N = 128:
+  Ring Dimension: 131072
+  Mult Depth: 30
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 51.6406s
+  Max Error (log2): -15.2374
+  Avg Error (log2): -17.2127
+
+N = 256:
+  Ring Dimension: 131072
+  Mult Depth: 34
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 4, 2)
+  Avg Time: 79.0029s
+  Max Error (log2): -10.5511
+  Avg Error (log2): -13.0770
+
+N = 512:
+  Ring Dimension: 131072
+  Mult Depth: 35
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 4, 2)
+  Avg Time: 164.9628s
+  Max Error (log2): -12.3476
+  Avg Error (log2): -14.5959
+
+N = 1024:
+  Ring Dimension: N/A
+  Mult Depth: 39
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 5, 2)
+  Avg Time: 856.0806s
+  Max Error (log2): -9.5411
+  Avg Error (log2): -12.1444
+
+
+=== ours_hybrid Algorithm Summary ===
+
+N = 4:
+  Ring Dimension: 131072
+  Mult Depth: 24
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 15.3758s
+  Max Error (log2): -20.8195
+  Avg Error (log2): -21.5785
+
+N = 8:
+  Ring Dimension: 131072
+  Mult Depth: 25
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 17.8752s
+  Max Error (log2): -20.3804
+  Avg Error (log2): -21.0606
+
+N = 16:
+  Ring Dimension: 131072
+  Mult Depth: 25
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 19.7350s
+  Max Error (log2): -19.2151
+  Avg Error (log2): -20.7177
+
+N = 32:
+  Ring Dimension: 131072
+  Mult Depth: 29
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 26.5028s
+  Max Error (log2): -18.6673
+  Avg Error (log2): -20.3388
+
+N = 64:
+  Ring Dimension: 131072
+  Mult Depth: 30
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 33.9087s
+  Max Error (log2): -17.2977
+  Avg Error (log2): -19.2116
+
+N = 128:
+  Ring Dimension: 131072
+  Mult Depth: 31
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 45.8280s
+  Max Error (log2): -16.0870
+  Avg Error (log2): -18.4119
+
+N = 256:
+  Ring Dimension: 131072
+  Mult Depth: 44
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 4, 2)
+  Avg Time: 78.5351s
+  Max Error (log2): -19.6651
+  Avg Error (log2): -21.5174
+
+N = 512:
+  Ring Dimension: 131072
+  Mult Depth: 47
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 4, 2)
+  Avg Time: 151.6674s
+  Max Error (log2): -18.9707
+  Avg Error (log2): -20.7765
+
+N = 1024:
+  Ring Dimension: 131072
+  Mult Depth: 50
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 5, 2)
+  Avg Time: 378.6424s
+  Max Error (log2): -18.2016
+  Avg Error (log2): -19.8233
+
+
+=== mehp24 Algorithm Summary ===
+
+N = 4:
+  Ring Dimension: 131072
+  Mult Depth: 31
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 28.1799s
+  Max Error (log2): -11.5252
+  Avg Error (log2): -13.2029
+
+N = 8:
+  Ring Dimension: 131072
+  Mult Depth: 35
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 38.8610s
+  Max Error (log2): -26.2666
+  Avg Error (log2): -27.2301
+
+N = 16:
+  Ring Dimension: 131072
+  Mult Depth: 35
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 2, 2)
+  Avg Time: 42.3252s
+  Max Error (log2): -13.7960
+  Avg Error (log2): -17.6980
+
+N = 32:
+  Ring Dimension: 131072
+  Mult Depth: 42
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 61.2603s
+  Max Error (log2): -23.4047
+  Avg Error (log2): -24.4164
+
+N = 64:
+  Ring Dimension: 131072
+  Mult Depth: 42
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 66.1814s
+  Max Error (log2): -16.7395
+  Avg Error (log2): -21.8411
+
+N = 128:
+  Ring Dimension: 131072
+  Mult Depth: 46
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 3, 2)
+  Avg Time: 80.9515s
+  Max Error (log2): -20.6510
+  Avg Error (log2): -22.3037
+
+N = 256:
+  Ring Dimension: 131072
+  Mult Depth: 49
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 4, 2)
+  Avg Time: 94.2318s
+  Max Error (log2): -19.3319
+  Avg Error (log2): -21.1738
+
+N = 512:
+  Ring Dimension: 131072
+  Mult Depth: 57
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 4, 2)
+  Avg Time: 368.0006s
+  Max Error (log2): -18.5233
+  Avg Error (log2): -20.5089
+
+N = 1024:
+  Ring Dimension: 131072
+  Mult Depth: 60
+  Scale Mod: 40
+  Sign Config: CompositeSign(3, 5, 2)
+  Avg Time: 427.3322s
+  Max Error (log2): -17.8523
+  Avg Error (log2): -19.7184
+
+
+=== kway_k2 Algorithm Summary ===
+
+N = 4:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=3, d_f=2, d_g=2)
+  Avg Time: 89.6675s
+  Max Error (log2): -46.5780
+  Avg Error (log2): -47.5534
+
+N = 8:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=4, d_f=2, d_g=2)
+  Avg Time: 248.2793s
+  Max Error (log2): -16.2644
+  Avg Error (log2): -17.2221
+
+N = 16:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=5, d_f=2, d_g=3)
+  Avg Time: 469.4765s
+  Max Error (log2): -14.2591
+  Avg Error (log2): -15.5082
+
+N = 32:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=6, d_f=2, d_g=3)
+  Avg Time: 892.2107s
+  Max Error (log2): -14.1171
+  Avg Error (log2): -15.5695
+
+N = 64:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=7, d_f=2, d_g=4)
+  Avg Time: 1269.2157s
+  Max Error (log2): -13.0472
+  Avg Error (log2): -14.8035
+
+N = 128:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=8, d_f=2, d_g=4)
+  Avg Time: 2412.8691s
+  Max Error (log2): -12.5776
+  Avg Error (log2): -13.7651
+
+N = 256:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=9, d_f=2, d_g=4)
+  Avg Time: 3706.5150s
+  Max Error (log2): -10.9333
+  Avg Error (log2): -12.8337
+
+N = 512:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=2, M=10, d_f=2, d_g=5)
+  Avg Time: 4467.5689s
+  Max Error (log2): -9.3189
+  Avg Error (log2): -11.4656
+
+N = 1024:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: Not Found
+  Avg Time: 5581.4779s
+  Max Error (log2): -8.8989
+  Avg Error (log2): -9.5887
+
+
+=== kway_k3 Algorithm Summary ===
+
+N = 9:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=3, M=3, d_f=2, d_g=3)
+  Avg Time: 156.7009s
+  Max Error (log2): -15.5003
+  Avg Error (log2): -16.8730
+
+N = 27:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=3, M=4, d_f=2, d_g=3)
+  Avg Time: 591.4168s
+  Max Error (log2): -14.5882
+  Avg Error (log2): -16.2067
+
+N = 81:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=3, M=5, d_f=2, d_g=4)
+  Avg Time: 1141.4889s
+  Max Error (log2): -13.7212
+  Avg Error (log2): -15.4218
+
+N = 243:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=3, M=6, d_f=2, d_g=5)
+  Avg Time: 2635.0965s
+  Max Error (log2): -11.4618
+  Avg Error (log2): -13.0496
+
+N = 729:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: Not Found
+  Avg Time: 3775.0111s
+  Max Error (log2): -9.7050
+  Avg Error (log2): -10.8089
+
+
+=== kway_k5 Algorithm Summary ===
+
+N = 25:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=5, M=3, d_f=2, d_g=3)
+  Avg Time: 651.4489s
+  Max Error (log2): -14.8771
+  Avg Error (log2): -16.3969
+
+N = 125:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: CompositeSign(3, k=5, M=4, d_f=2, d_g=5)
+  Avg Time: 1748.9437s
+  Max Error (log2): -10.4063
+  Avg Error (log2): -12.4671
+
+N = 625:
+  Ring Dimension: 131072
+  Mult Depth: 40
+  Scale Mod: 59
+  Sign Config: Not Found
+  Avg Time: 4509.5102s
+  Max Error (log2): -10.8079
+  Avg Error (log2): -12.6662
+
+
+Note: Results are averaged over 10 trials.
+=========================================================
