@@ -43,18 +43,18 @@ Level 3
 Level 3
  == End stage 9 == 
 Level of output: 38
-[ -2.36695e-05 0.0624971 0.124978 0.187488 0.249993 0.312537 0.375001 0.437465 0.499974 0.562499 0.624998 0.68749 0.749936 0.8125 0.875006 0.937483 ]: ctxt_out Level: 38, LogPrecision: 16
+[ -1.64846e-05 0.0624958 0.124988 0.187503 0.249969 0.312505 0.374971 0.437481 0.499994 0.562498 0.62499 0.687476 0.750007 0.812478 0.874998 0.937485 ]: ctxt_out Level: 38, LogPrecision: 16
 Result Level: 38
 
 Performance Analysis:
-Execution time: 465812 ms
+Execution time: 473494 ms
 
 Error Analysis:
-Maximum error: 3.94813e-05 (log2: -14.6285)
-Average error: 2.12978e-05 (log2: -15.5189)
+Maximum error: 4.36162e-05 (log2: -14.4848)
+Average error: 1.9096e-05 (log2: -15.6764)
 Number of errors >= 0.01: 0
-[       OK ] KWaySortTestFixture/2.SortTest (484969 ms)
-[----------] 1 test from KWaySortTestFixture/2 (484969 ms total)
+[       OK ] KWaySortTestFixture/2.SortTest (491880 ms)
+[----------] 1 test from KWaySortTestFixture/2 (491880 ms total)
 
 [----------] 1 test from KWaySortTestFixture/3, where TypeParam = std::integral_constant<unsigned long,32ul>
 [ RUN      ] KWaySortTestFixture/3.SortTest

@@ -8,9 +8,9 @@ Crypto Parameters:
   Sign Configuration  : CompositeSign(3, k=2, M=6, d_f=2, d_g=3)
 
 Performance Metrics:
-  Average Time     : 892.2107s
+  Average Time     : 911.7423s
 
 Error Analysis:
-  Max Error (log2): -14.1171
-  Average Error (log2): -15.5695
+  Max Error (log2): -13.9494
+  Average Error (log2): -15.5372
 ======================================

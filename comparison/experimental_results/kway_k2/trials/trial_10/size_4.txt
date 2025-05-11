@@ -19,14 +19,14 @@ Level of output: 34
 Result Level: 34
 
 Performance Analysis:
-Execution time: 89751 ms
+Execution time: 90101 ms
 
 Error Analysis:
 Maximum error: 9.15934e-16 (log2: -49.9556)
-Average error: 5.27356e-16 (log2: -50.7521)
+Average error: 6.45317e-16 (log2: -50.4608)
 Number of errors >= 0.01: 0
-[       OK ] KWaySortTestFixture/0.SortTest (107756 ms)
-[----------] 1 test from KWaySortTestFixture/0 (107756 ms total)
+[       OK ] KWaySortTestFixture/0.SortTest (107977 ms)
+[----------] 1 test from KWaySortTestFixture/0 (107978 ms total)
 
 [----------] 1 test from KWaySortTestFixture/1, where TypeParam = std::integral_constant<unsigned long,8ul>
 [ RUN      ] KWaySortTestFixture/1.SortTest

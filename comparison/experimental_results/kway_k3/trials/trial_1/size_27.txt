@@ -39,18 +39,18 @@ Level 5
 Level 5
  == End stage 8 == 
 Level of output: 37
-[ -1.36181e-05 0.0370274 0.0740787 0.111106 0.148128 0.185185 0.222203 0.259264 0.296311 0.333324 0.370377 0.407402 0.444433 0.481463 0.518498 0.555557 0.592603 0.629639 0.666685 0.703698 0.740724 0.777774 0.814807 0.851822 0.888861 0.925916 0.962954 -9.50324e-06 -5.2439e-06 1.47806e-05 -2.29581e-05 -3.97651e-06 ]: ctxt_out Level: 37, LogPrecision: 16
+[ -3.21133e-06 0.0370453 0.0740664 0.111154 0.148117 0.185186 0.222236 0.259224 0.296281 0.333338 0.370313 0.407392 0.444463 0.481489 0.518491 0.555507 0.592599 0.629634 0.666674 0.70373 0.740712 0.777757 0.814848 0.851901 0.888875 0.925913 0.962946 -3.15072e-05 -1.73476e-05 -1.21224e-05 -8.32359e-06 1.74832e-05 ]: ctxt_out Level: 37, LogPrecision: 15
 Result Level: 37
 
 Performance Analysis:
-Execution time: 596138 ms
+Execution time: 592413 ms
 
 Error Analysis:
-Maximum error: 2.65376e-05 (log2: -15.2016)
-Average error: 8.69548e-06 (log2: -16.8113)
+Maximum error: 5.71227e-05 (log2: -14.0956)
+Average error: 1.56854e-05 (log2: -15.9602)
 Number of errors >= 0.01: 0
-[       OK ] KWaySortTestFixture/1.SortTest (615980 ms)
-[----------] 1 test from KWaySortTestFixture/1 (615980 ms total)
+[       OK ] KWaySortTestFixture/1.SortTest (611944 ms)
+[----------] 1 test from KWaySortTestFixture/1 (611944 ms total)
 
 [----------] 1 test from KWaySortTestFixture/2, where TypeParam = std::integral_constant<unsigned long,81ul>
 [ RUN      ] KWaySortTestFixture/2.SortTest

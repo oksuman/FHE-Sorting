@@ -8,9 +8,9 @@ Crypto Parameters:
   Sign Configuration  : Not Found
 
 Performance Metrics:
-  Average Time     : 5581.4779s
+  Average Time     : 5732.3872s
 
 Error Analysis:
-  Max Error (log2): -8.8989
-  Average Error (log2): -9.5887
+  Max Error (log2): -8.9075
+  Average Error (log2): -9.5911
 ======================================

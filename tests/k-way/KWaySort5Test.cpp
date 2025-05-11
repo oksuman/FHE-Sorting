@@ -77,27 +77,28 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     switch (N) {
     case 25:
         M = 2;
-        d_f = 2;
         d_g = 3;
+        d_f = 2;
         break;
     case 125:
         M = 3;
-        d_f = 2;
         d_g = 3;
+        d_f = 2;
         break;
     case 625:
         M = 4;
+        d_g = 4;
         d_f = 2;
-        d_g = 5;
         break;
     default:
         FAIL() << "Unsupported array size for k=5: " << N;
         break;
     }
     std::cout << "Sign Configuration: CompositeSign(3, k=" << k 
-          << ", M=" << M
-          << ", d_f=" << d_f
-          << ", d_g=" << d_g << ")" << std::endl;
+        << ", M=" << M
+        << ", d_g=" << d_g
+        << ", d_f=" << d_f << ")" << std::endl;
+
 
     std::vector<double> inputArray =
         getVectorWithMinDiff(N, 0, 1, (1.0 - 1e-8) / N);
