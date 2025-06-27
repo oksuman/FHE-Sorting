@@ -10,6 +10,22 @@ using namespace lbcrypto;
 
 template <int N> struct Sinc {
 
+    static double simple_sinc(double x) {
+        if (std::abs(x) < 0.5) {
+            return 1.0;
+        } else {
+            return 0.0;
+        }
+    }
+
+    static double sinc(double x) {
+        if (std::abs(x) < 1e-10) {
+            return 1.0;
+        } else {
+            return std::sin(M_PI * x) / M_PI * x;
+        }
+    }
+
     static double scaled_sinc(double x) {
         if (std::abs(x) < 1e-10) {
             return 1.0;
@@ -18,6 +34,7 @@ template <int N> struct Sinc {
             return std::sin(M_PI * N * x) / (M_PI * N * x);
         }
     }
+
     static double scaled_sinc_j(double x, int j) {
         constexpr double epsilon = 1e-10;
         constexpr double factor = N * M_PI;
@@ -36,6 +53,29 @@ template <int N> struct Sinc {
 
         return result;
     }
+
+    static double doubled_sinc(double x) {
+        constexpr double epsilon = 1e-10;
+
+        // First term: Sinc(x)
+        double term1;
+        if (std::abs(x) < epsilon) {
+            term1 = 1.0;
+        } else {
+            term1 = std::sin(M_PI * N * x) / (M_PI * N * x);
+        }
+
+        // Second term: Sinc(x + n)
+        double x2 = x + 0.5;
+        double term2;
+        if (std::abs(x2) < epsilon) {
+            term2 = 1.0;
+        } else {
+            term2 = std::sin(M_PI * N * x2) / (M_PI * N * x2);
+        }
+
+        return term1 + term2;
+    }
 };
 
 class Comparison {
@@ -50,7 +90,12 @@ class Comparison {
                                  const Ciphertext<DCRTPoly> &a,
                                  const Ciphertext<DCRTPoly> &b,
                                  SignFunc SignFunc, SignConfig &Cfg);
-    Ciphertext<DCRTPoly> max(const CryptoContext<DCRTPoly> &cc,
-                             const Ciphertext<DCRTPoly> &a,
-                             const Ciphertext<DCRTPoly> &b);
+
+    // implementation from MEHP24
+    // outputs 1 if x == 0
+    // outputs 0 otherwise
+    Ciphertext<DCRTPoly> indicator(const CryptoContext<DCRTPoly> &cc,
+                                   const Ciphertext<DCRTPoly> &x,
+                                   const double c, SignFunc SignFunc,
+                                   SignConfig &Cfg);
 };

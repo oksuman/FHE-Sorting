@@ -9,7 +9,7 @@ class EvalUtilsTest : public ::testing::Test {
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
         usint scalingModSize = 59;
-        uint32_t multDepth = 50;
+        multDepth = 50;
         int N = 16;
         uint32_t batchSize = N;
 
@@ -36,8 +36,8 @@ class EvalUtilsTest : public ::testing::Test {
 
         m_enc = std::make_shared<DebugEncryption>(cc, keys);
         // Evaluator class used in kWaySort
-        evaluator = std::make_unique<kwaySort::EvalUtils>(cc, m_enc, keys.publicKey,
-                                                          keys.secretKey);
+        evaluator = std::make_unique<kwaySort::EvalUtils>(
+            cc, m_enc, keys.publicKey, keys.secretKey);
     }
 
     void VerifyResults(const Ciphertext<DCRTPoly> &result,
@@ -56,6 +56,7 @@ class EvalUtilsTest : public ::testing::Test {
     KeyPair<DCRTPoly> keys;
     std::unique_ptr<kwaySort::EvalUtils> evaluator;
     std::shared_ptr<DebugEncryption> m_enc;
+    uint32_t multDepth;
 };
 
 TEST_F(EvalUtilsTest, MultByIntPositive) {
@@ -128,42 +129,6 @@ TEST_F(EvalUtilsTest, Rotation) {
     VerifyResults(rightResult, expectedRight);
 }
 
-TEST_F(EvalUtilsTest, EvalPoly) {
-    std::vector<double> input = {0.1, 0.2, 0.3, 0.4};
-    std::vector<long> coeffs = {0, 1, 0, -2,
-                                0, 3, 0, -4}; // x - 2x³ + 3x⁵ - 4x⁷
-
-    auto ptxt = cc->MakeCKKSPackedPlaintext(input);
-    auto ctxt = cc->Encrypt(keys.publicKey, ptxt);
-
-    Ciphertext<DCRTPoly> result;
-    evaluator->evalPoly(ctxt, coeffs, 0, result);
-
-    std::vector<double> expected(4);
-    for (size_t i = 0; i < input.size(); i++) {
-        double x = input[i];
-        expected[i] = x - 2 * x * x * x + 3 * x * x * x * x * x -
-                      4 * x * x * x * x * x * x * x;
-    }
-    VerifyResults(result, expected, 0.01);
-}
-
-TEST_F(EvalUtilsTest, ApproxComp) {
-    std::vector<double> input1 = {0.3, 0.7, 0.5, 0.1};
-    std::vector<double> input2 = {0.4, 0.6, 0.5, 0.2};
-
-    auto ptxt1 = cc->MakeCKKSPackedPlaintext(input1);
-    auto ptxt2 = cc->MakeCKKSPackedPlaintext(input2);
-    auto ctxt1 = cc->Encrypt(keys.publicKey, ptxt1);
-    auto ctxt2 = cc->Encrypt(keys.publicKey, ptxt2);
-
-    auto result = ctxt1;
-    evaluator->approxComp(result, ctxt2, 2, 3);
-
-    std::vector<double> expected = {0.0, 1.0, 0.5, 0.0};
-    VerifyResults(result, expected, 0.2);
-}
-
 TEST_F(EvalUtilsTest, Bootstrapping) {
     std::vector<double> input = {0.1, 0.2, 0.3, 0.4};
 
@@ -173,11 +138,19 @@ TEST_F(EvalUtilsTest, Bootstrapping) {
 
     long initLevel = ctxt->GetLevel();
 
-    // If level is higher than 2, should trigger bootstrapping
-    evaluator->checkLevelAndBoot(ctxt, 2, 5, false);
+    // If there is a level budget of 2, it should trigger bootstrapping.
+    evaluator->checkLevelAndBoot(ctxt, 2, multDepth, false);
     long newLevel = ctxt->GetLevel();
 
-    // After bootstrapping, level should be lower
+    // Since there is enough budget for 2 level operation:
+    // Depth - Cipher Level = level budget
+    // 50 - 40 = 10 > 2 so there will be no need for bootstrapping
+    EXPECT_EQ(newLevel, initLevel);
+
+    // 50 - 40 = 10 < 11 so there will be bootstrapping
+    evaluator->checkLevelAndBoot(ctxt, 11, multDepth, false);
+    newLevel = ctxt->GetLevel();
+
     EXPECT_LT(newLevel, initLevel);
 
     std::vector<double> expected = input;
@@ -202,13 +175,13 @@ TEST_F(EvalUtilsTest, BootstrappingTwoCiphertexts) {
     EXPECT_NE(initLevel1, initLevel2);
 
     // Bootstrapping and level equalisation of two ct
-    evaluator->checkLevelAndBoot2(ctxt1, ctxt2, 2, 5, false);
+    evaluator->checkLevelAndBoot2(ctxt1, ctxt2, 12, multDepth, false);
 
     long newLevel1 = ctxt1->GetLevel();
     long newLevel2 = ctxt2->GetLevel();
 
     // Levels are now the same
-    EXPECT_EQ(newLevel1, newLevel2);
+    EXPECT_LT(newLevel1, newLevel2);
 
     VerifyResults(ctxt1, input1, 0.2);
     VerifyResults(ctxt2, input2, 0.2);

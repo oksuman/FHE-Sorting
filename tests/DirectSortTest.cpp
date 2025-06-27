@@ -1,213 +1,204 @@
 #include <algorithm>
+#include <chrono>
+#include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <gtest/gtest.h>
+#include <iomanip>
+#include <random>
 #include <vector>
 
+#include "openfhe.h"
+
+#include "comparison.h"
 #include "encryption.h"
 #include "sign.h"
 #include "sort_algo.h"
 #include "utils.h"
 
 using namespace lbcrypto;
+namespace fs = std::filesystem;
 
-class DirectSortTest : public ::testing::Test {
+template <size_t N> class DirectSortTest : public ::testing::Test {
   protected:
     void SetUp() override {
-        // Set up the CryptoContext
         CCParams<CryptoContextCKKSRNS> parameters;
-        // TODO: check optimal level
-        parameters.SetMultiplicativeDepth(MultDepth);
-        parameters.SetScalingModSize(40);
-        parameters.SetBatchSize(array_length);
-        parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr usint ringDim = 1 << 16;
-        parameters.SetRingDim(ringDim);
-        assert(ringDim / 2 > array_length * array_length &&
-               "Ring dimension should be higher than the square of array "
-               "length due to SIMD batching.");
+        DirectSort<N>::getSizeParameters(parameters, rotations);
+
+        // parameters.SetSecurityLevel(HEStd_NotSet);
+        parameters.SetSecurityLevel(HEStd_128_classic);
+        auto logRingDim = 17;
+        parameters.SetRingDim(1 << logRingDim);
+        // std::cout << "Ring Dimension 2^" << logRingDim << "\n";
 
         m_cc = GenCryptoContext(parameters);
+        std::cout << "Using Ring Dimension: " << m_cc->GetRingDimension()
+                  << std::endl;
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
         m_cc->Enable(ADVANCEDSHE);
 
-        // Generate keys
         auto keyPair = m_cc->KeyGen();
         m_publicKey = keyPair.publicKey;
         m_privateKey = keyPair.secretKey;
 
-        rotations = {-1, -2, -4,  -8,  -16, -32,  1,    2,    4,    8,    16,
-                     32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384};
-
-        // Generate the rotation keys
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
         m_cc->EvalMultKeyGen(m_privateKey);
-
-        // Create DirectSort object
-
         m_enc = std::make_shared<DebugEncryption>(m_cc, keyPair);
+        m_multDepth = parameters.GetMultiplicativeDepth();
+        m_scaleMod = parameters.GetScalingModSize();
     }
 
-    static constexpr int array_length = 128;
-    static constexpr int MultDepth = 44;
+    void SaveResults(const std::string &filename, size_t arraySize,
+                     int logRingDim, int multDepth, int scalingModSize,
+                     const SignConfig &cfg, double maxError, double avgError,
+                     double executionTimeMs) {
+        // Create directory if it doesn't exist
+        fs::create_directories("ours_results");
+
+        std::ofstream outFile("ours_results/" + filename, std::ios::app);
+        outFile << std::fixed << std::setprecision(6);
+        outFile << "Array Size (N): " << arraySize << "\n";
+        outFile << "Ring Dimension: 2^" << logRingDim << "\n";
+        outFile << "Multiplicative Depth: " << multDepth << "\n";
+        outFile << "Scaling Mod Size: " << scalingModSize << "\n";
+        outFile << "Sign Configuration (degree, dg, df): (" << cfg.compos.n
+                << ", " << cfg.compos.dg << ", " << cfg.compos.df << ")\n";
+        outFile << "Max Error: " << maxError
+                << " (log2: " << std::log2(maxError) << ")\n";
+        outFile << "Average Error: " << avgError
+                << " (log2: " << std::log2(avgError) << ")\n";
+        outFile << "Execution Time: " << executionTimeMs << " ms\n";
+        outFile << "----------------------------------------\n";
+    }
+
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
     PrivateKey<DCRTPoly> m_privateKey;
     std::shared_ptr<DebugEncryption> m_enc;
+    int m_multDepth;
+    int m_scaleMod;
 };
 
-TEST_F(DirectSortTest, ConstructRank) {
+template <typename T>
+class DirectSortTestFixture : public DirectSortTest<T::value> {};
 
-    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
+TYPED_TEST_SUITE_P(DirectSortTestFixture);
 
-    std::cout << inputArray << "\n";
+TYPED_TEST_P(DirectSortTestFixture, SortTest) {
+    constexpr size_t N = TypeParam::value;
+    std::vector<double> inputArray =
+        getVectorWithMinDiff(N, 0, 1, 1 / (double)N);
 
-    // Encrypt the input array
-    auto ctxt = m_enc->encryptInput(inputArray);
-    auto directSort = std::make_unique<DirectSort<array_length>>(
-        m_cc, m_publicKey, rotations, m_enc);
+    std::cout << "Input array size: " << N << std::endl;
+    std::cout << "Multiplicative depth: " << this->m_multDepth << std::endl;
+    std::cout << "Scaling Mod: " << this->m_scaleMod << std::endl;
 
-    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
-    // Construct rank using DirectSort
-    auto ctxtRank =
-        directSort->constructRank(ctxt, SignFunc::CompositeSign, Cfg);
+    auto ctxt = this->m_enc->encryptInput(inputArray);
 
-    // Decrypt the result
-    Plaintext result;
-    m_cc->Decrypt(m_privateKey, ctxtRank, &result);
-    std::vector<double> decryptedRanks = result->GetRealPackedValue();
+    auto directSort = std::make_unique<DirectSort<N>>(
+        this->m_cc, this->m_publicKey, this->rotations, this->m_enc);
 
-    // Calculate the expected ranks
-    std::vector<double> expectedRanks(array_length);
-    for (int i = 0; i < array_length; ++i) {
-        expectedRanks[i] =
-            std::count_if(inputArray.begin(), inputArray.end(),
-                          [&](double val) { return val < inputArray[i]; });
-    }
+    SignConfig Cfg;
+    if (N <= 16)
+        Cfg = SignConfig(CompositeSignConfig(3, 2, 2));
+    else if (N <= 128)
+        Cfg = SignConfig(CompositeSignConfig(3, 3, 2));
+    else if (N <= 512)
+        Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
+    else
+        Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
+    std::cout << "Sign Configuration: CompositeSign(" 
+            << Cfg.compos.n << ", " 
+            << Cfg.compos.dg << ", " 
+            << Cfg.compos.df << ")" << std::endl;
 
-    // Compare the results
-    for (int i = 0; i < array_length; ++i) {
-        ASSERT_NEAR(decryptedRanks[i], expectedRanks[i], 0.0001)
-            << "Mismatch at index " << i << ": expected " << expectedRanks[i]
-            << ", got " << decryptedRanks[i];
-    }
 
-    // Print the input array and the calculated ranks
-    std::cout << "Input array: ";
-    for (const auto &val : inputArray) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
+    // Start timing
+    auto start = std::chrono::high_resolution_clock::now();
 
-    std::cout << "Calculated ranks: ";
-    for (const auto &rank : decryptedRanks) {
-        std::cout << rank << " ";
-    }
-    std::cout << std::endl;
-}
-
-TEST_F(DirectSortTest, RotationIndexCheck) {
-    // Generate a random permutation for the input array
-
-    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
-
-    // Calculate the rank array
-    std::vector<double> rankArray(array_length);
-    for (size_t i = 0; i < array_length; ++i) {
-        rankArray[i] =
-            std::count_if(inputArray.begin(), inputArray.end(),
-                          [&](double val) { return val < inputArray[i]; });
-    }
-
-    // Encrypt input arrays
-    auto ctxtInput = m_enc->encryptInput(inputArray);
-    auto ctxRank = m_enc->encryptInput(rankArray);
-
-    // Create DirectSort object
-    auto directSort = std::make_unique<DirectSort<array_length>>(
-        m_cc, m_publicKey, rotations, m_enc);
-
-    // Call rotationIndexCheck
-    auto ctxtResult = directSort->rotationIndexCheck(ctxRank, ctxtInput);
-
-    // Decrypt the result
-    Plaintext result;
-    m_cc->Decrypt(m_privateKey, ctxtResult, &result);
-    std::vector<double> outputArray = result->GetRealPackedValue();
-
-    // Expected sorted array
-    std::vector<double> expectedArray = inputArray;
-    std::sort(expectedArray.begin(), expectedArray.end());
-
-    // Compare results
-    for (size_t i = 0; i < array_length; ++i) {
-        ASSERT_NEAR(outputArray[i], expectedArray[i], 0.01)
-            << "Mismatch at index " << i << ": expected " << expectedArray[i]
-            << ", got " << outputArray[i];
-    }
-
-    // Print arrays for visualization
-    std::cout << "Input array: " << inputArray << std::endl;
-    std::cout << "Rank array: " << rankArray << std::endl;
-    std::cout << "Output array: " << outputArray << std::endl;
-    std::cout << "Expected array: " << expectedArray << std::endl;
-
-    // Check the level of the result
-    std::cout << "Result level: " << ctxtResult->GetLevel() << std::endl;
-}
-
-TEST_F(DirectSortTest, DirectSort) {
-
-    std::vector<double> inputArray = getVectorWithMinDiff(array_length);
-    std::cout << inputArray << "\n";
-
-    // Encrypt the input array
-    auto ctxt = m_enc->encryptInput(inputArray);
-    auto directSort = std::make_unique<DirectSort<array_length>>(
-        m_cc, m_publicKey, rotations, m_enc);
-
-    auto Cfg = SignConfig(CompositeSignConfig(4, 3, 3));
+    // Perform the sort
     Ciphertext<DCRTPoly> ctxt_out =
         directSort->sort(ctxt, SignFunc::CompositeSign, Cfg);
 
-    EXPECT_EQ(ctxt_out->GetLevel(), MultDepth)
+    // End timing
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration =
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+    EXPECT_EQ(ctxt_out->GetLevel(), this->m_multDepth)
         << "Use the level returned by the result for best performance";
 
-    // Decrypt the result
     Plaintext result;
-    m_cc->Decrypt(m_privateKey, ctxt_out, &result);
+    this->m_cc->Decrypt(this->m_privateKey, ctxt_out, &result);
     std::vector<double> output_array = result->GetRealPackedValue();
+
+    std::cout << "input:" << std::endl;
+    std::cout << inputArray << std::endl;
+
+    std::cout << "output:" << std::endl;
+    std::cout << output_array << std::endl;
 
     auto expected = inputArray;
     std::sort(expected.begin(), expected.end());
+
+    // Calculate errors
     double maxError = 0.0;
+    double totalError = 0.0;
     int largeErrorCount = 0;
+
     for (size_t i = 0; i < output_array.size(); ++i) {
         double error = std::abs(output_array[i] - expected[i]);
         maxError = std::max(maxError, error);
+        totalError += error;
         if (error >= 0.01) {
             largeErrorCount++;
         }
     }
 
-    // Print statistics
-    std::cout << "Maximum error: " << maxError << std::endl;
-    std::cout << "Number of errors larger than 0.02: " << largeErrorCount
+    double avgError = totalError / output_array.size();
+    // const auto &usedRotations = directSort->getRotationCalls();
+    // std::cout << "\nRequested rotation indices for N=" << N << ": ";
+    // for (const auto &rot : usedRotations) {
+    //     std::cout << rot << " ";
+    // }
+    // std::cout << std::endl;
+
+    // Print results to console
+    std::cout << "\nPerformance Analysis:" << std::endl;
+    std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
+    std::cout << "\nError Analysis:" << std::endl;
+    std::cout << "Maximum error: " << maxError
+              << " (log2: " << std::log2(maxError) << ")" << std::endl;
+    std::cout << "Average error: " << avgError
+              << " (log2: " << std::log2(avgError) << ")" << std::endl;
+    std::cout << "Number of errors larger than 0.01: " << largeErrorCount
               << std::endl;
 
-    // Print the input array and the calculated ranks
-    std::cout << "Input array: ";
-    for (const auto &val : inputArray) {
-        std::cout << val << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Output: ";
-    for (const auto &rank : output_array) {
-        std::cout << rank << " ";
-    }
-    std::cout << std::endl;
+    // Save results to file
+    // std::string filename = "sort_results_N" + std::to_string(N) + ".txt";
+    // this->SaveResults(filename, N,
+    //                   17, // logRingDim
+    //                   this->m_multDepth, this->m_scaleMod, Cfg, maxError,
+    //                   avgError, duration.count());
 
     ASSERT_LT(maxError, 0.01);
 }
+
+REGISTER_TYPED_TEST_SUITE_P(DirectSortTestFixture, SortTest);
+
+using TestSizes = ::testing::Types<
+    std::integral_constant<size_t, 4>, 
+    std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 16>, 
+    std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>,
+    std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>, 
+    std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>
+>;
+
+INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);

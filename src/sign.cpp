@@ -4,167 +4,182 @@
 // Based on the paper "Efficient Homomorphic Comparison Methods with Optimal
 // Complexity" https://eprint.iacr.org/2019/1234
 
-template <int n>
-Ciphertext<DCRTPoly> g_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {
-    return Ciphertext<DCRTPoly>();
-}
+template <int n> struct CompositeSign;
 
-template <int n>
-Ciphertext<DCRTPoly> f_n(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc) {
-    return Ciphertext<DCRTPoly>();
-}
+template <> struct CompositeSign<3> {
+    static constexpr int g_depth =
+        3; // g_3 uses (4589x - 16577x^3 + 25614x^5 - 12860x^7)/2^10
+    static constexpr int f_depth =
+        3; // f_3 uses (35x - 35x^3 + 21x^5 - 5x^7)/2^4
 
-template <>
-Ciphertext<DCRTPoly> g_n<4>(Ciphertext<DCRTPoly> x,
-                            CryptoContext<DCRTPoly> cc) {
-    std::vector<double> coeffs = {
-        0.0, 1.077117252745569,    0.0, -0.36166113998402755,
-        0.0, 0.2137420717859748,   0.0, -0.15635204788780485,
-        0.0, 0.11749645501187332,  0.0, -0.10074154666447852,
-        0.0, 0.08002086947825496,  0.0, -0.07533558758484624,
-        0.0, 0.059514472116534836, 0.0, -0.06146663712787884,
-        0.0, 0.04570084927999001,  0.0, -0.05403683682999072,
-        0.0, 0.03364293851188723,  0.0, -0.054459493266273494};
-    return cc->EvalChebyshevSeriesPS(x, coeffs, -1, 1);
-}
+    static Ciphertext<DCRTPoly> g_n(Ciphertext<DCRTPoly> x,
+                                    CryptoContext<DCRTPoly> cc) {
+        // g_3(x) = (4589x - 16577x^3 + 25614x^5 - 12860x^7)/2^10
+        constexpr double c1 = 4589.0 / 1024.0;
+        constexpr double c3 = -16577.0 / 1024.0;
+        constexpr double c5 = 25614.0 / 1024.0;
+        constexpr double c7 = -12860.0 / 1024.0;
 
-template <>
-Ciphertext<DCRTPoly> f_n<4>(Ciphertext<DCRTPoly> x,
-                            CryptoContext<DCRTPoly> cc) {
-    constexpr double c1 = 3.14208984375;
-    constexpr double c3 = -7.33154296875;
-    constexpr double c5 = 13.19677734375;
-    constexpr double c7 = -15.71044921875;
-    constexpr double c9 = 12.21923828125;
-    constexpr double c11 = -5.99853515625;
-    constexpr double c13 = 1.69189453125;
-    constexpr double c15 = -0.20947265625;
+        auto x2 = cc->EvalSquare(x);
+        auto x4 = cc->EvalSquare(x2);
 
-    Ciphertext<DCRTPoly> x2, x4, c1x, c3x, c5x, c7x, c9x, c11x, c13x, c15x;
-    Ciphertext<DCRTPoly> c3x3, c7x3, c11x3, c15x3;
+        auto y = cc->EvalMult(x, c1);
+        cc->EvalAddInPlace(y,
+                           cc->EvalMultAndRelinearize(cc->EvalMult(x, c3), x2));
+        auto c5x = cc->EvalMult(x, c5);
+        auto c7x = cc->EvalMult(x, c7);
+        auto c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
+        cc->EvalAddInPlace(
+            y, cc->EvalMultAndRelinearize(cc->EvalAdd(c5x, c7x3), x4));
+
+        return y;
+    }
+
+    static Ciphertext<DCRTPoly> f_n(Ciphertext<DCRTPoly> x,
+                                    CryptoContext<DCRTPoly> cc) {
+        // f_3(x) = (35x - 35x^3 + 21x^5 - 5x^7)/2^4
+        constexpr double c1 = 35.0 / 16.0;
+        constexpr double c3 = -35.0 / 16.0;
+        constexpr double c5 = 21.0 / 16.0;
+        constexpr double c7 = -5.0 / 16.0;
+
+        auto x2 = cc->EvalSquare(x);
+        auto x4 = cc->EvalSquare(x2);
+
+        auto y = cc->EvalMult(x, c1);
+        cc->EvalAddInPlace(y,
+                           cc->EvalMultAndRelinearize(cc->EvalMult(x, c3), x2));
+        auto c5x = cc->EvalMult(x, c5);
+        auto c7x = cc->EvalMult(x, c7);
+        auto c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
+        cc->EvalAddInPlace(
+            y, cc->EvalMultAndRelinearize(cc->EvalAdd(c5x, c7x3), x4));
+
+        return y;
+    }
+};
+
+template <> struct CompositeSign<4> {
+    static constexpr int g_depth = 4; // g_4 has higher degree polynomial
+    static constexpr int f_depth = 4; // f_4 has higher degree polynomial
+
+    static Ciphertext<DCRTPoly> g_n(Ciphertext<DCRTPoly> x,
+                                    CryptoContext<DCRTPoly> cc) {
+        std::vector<double> coeffs = {
+            0.0, 1.077117252745569,    0.0, -0.36166113998402755,
+            0.0, 0.2137420717859748,   0.0, -0.15635204788780485,
+            0.0, 0.11749645501187332,  0.0, -0.10074154666447852,
+            0.0, 0.08002086947825496,  0.0, -0.07533558758484624,
+            0.0, 0.059514472116534836, 0.0, -0.06146663712787884,
+            0.0, 0.04570084927999001,  0.0, -0.05403683682999072,
+            0.0, 0.03364293851188723,  0.0, -0.054459493266273494};
+        return cc->EvalChebyshevSeriesPS(x, coeffs, -1, 1);
+    }
+
+    static Ciphertext<DCRTPoly> f_n(Ciphertext<DCRTPoly> x,
+                                    CryptoContext<DCRTPoly> cc) {
+        constexpr double c1 = 3.14208984375;
+        constexpr double c3 = -7.33154296875;
+        constexpr double c5 = 13.19677734375;
+        constexpr double c7 = -15.71044921875;
+        constexpr double c9 = 12.21923828125;
+        constexpr double c11 = -5.99853515625;
+        constexpr double c13 = 1.69189453125;
+        constexpr double c15 = -0.20947265625;
+
+        Ciphertext<DCRTPoly> x2, x4, c1x, c3x, c5x, c7x, c9x, c11x, c13x, c15x;
+        Ciphertext<DCRTPoly> c3x3, c7x3, c11x3, c15x3;
 
 // First parallel block: calculate x^2 and all cx terms
 #pragma omp parallel sections
-    {
+        {
 #pragma omp section
-        x2 = cc->EvalSquare(x);
+            x2 = cc->EvalSquare(x);
 
 #pragma omp section
-        c1x = cc->EvalMult(x, c1);
+            c1x = cc->EvalMult(x, c1);
 
 #pragma omp section
-        c3x = cc->EvalMult(x, c3);
+            c3x = cc->EvalMult(x, c3);
 
 #pragma omp section
-        c5x = cc->EvalMult(x, c5);
+            c5x = cc->EvalMult(x, c5);
 
 #pragma omp section
-        c7x = cc->EvalMult(x, c7);
+            c7x = cc->EvalMult(x, c7);
 
 #pragma omp section
-        c9x = cc->EvalMult(x, c9);
+            c9x = cc->EvalMult(x, c9);
 
 #pragma omp section
-        c11x = cc->EvalMult(x, c11);
+            c11x = cc->EvalMult(x, c11);
 
 #pragma omp section
-        c13x = cc->EvalMult(x, c13);
+            c13x = cc->EvalMult(x, c13);
 
 #pragma omp section
-        c15x = cc->EvalMult(x, c15);
-    }
+            c15x = cc->EvalMult(x, c15);
+        }
 
 // Second parallel block: calculate x^4 and terms involving x^2
 #pragma omp parallel sections
-    {
+        {
 #pragma omp section
-        x4 = cc->EvalSquare(x2);
+            x4 = cc->EvalSquare(x2);
 
 #pragma omp section
-        c3x3 = cc->EvalMultAndRelinearize(c3x, x2);
+            c3x3 = cc->EvalMultAndRelinearize(c3x, x2);
 
 #pragma omp section
-        c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
+            c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
 
 #pragma omp section
-        c11x3 = cc->EvalMultAndRelinearize(c11x, x2);
+            c11x3 = cc->EvalMultAndRelinearize(c11x, x2);
 
 #pragma omp section
-        c15x3 = cc->EvalMultAndRelinearize(c15x, x2);
+            c15x3 = cc->EvalMultAndRelinearize(c15x, x2);
+        }
+
+        auto x8 = cc->EvalSquare(x4);
+
+        auto y = c1x;
+        cc->EvalAddInPlace(y, c3x3);
+
+        auto c5x_plus_c7x3 = cc->EvalAdd(c5x, c7x3);
+        cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(c5x_plus_c7x3, x4));
+
+        auto tmp1 = cc->EvalAdd(c9x, c11x3);
+        auto tmp2 = cc->EvalAdd(c13x, c15x3);
+        cc->EvalAddInPlace(tmp1, cc->EvalMultAndRelinearize(tmp2, x4));
+        cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(tmp1, x8));
+
+        return y;
     }
-
-    auto x8 = cc->EvalSquare(x4);
-
-    auto y = c1x;
-    cc->EvalAddInPlace(y, c3x3);
-
-    auto c5x_plus_c7x3 = cc->EvalAdd(c5x, c7x3);
-    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(c5x_plus_c7x3, x4));
-
-    auto tmp1 = cc->EvalAdd(c9x, c11x3);
-    auto tmp2 = cc->EvalAdd(c13x, c15x3);
-    cc->EvalAddInPlace(tmp1, cc->EvalMultAndRelinearize(tmp2, x4));
-    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(tmp1, x8));
-
-    return y;
-}
-
-template <>
-Ciphertext<DCRTPoly> g_n<3>(Ciphertext<DCRTPoly> x,
-                            CryptoContext<DCRTPoly> cc) {
-    // g_3(x) = (4589x - 16577x^3 + 25614x^5 - 12860x^7)/2^10
-    constexpr double c1 = 4589.0 / 1024.0;
-    constexpr double c3 = -16577.0 / 1024.0;
-    constexpr double c5 = 25614.0 / 1024.0;
-    constexpr double c7 = -12860.0 / 1024.0;
-
-    auto x2 = cc->EvalSquare(x);
-    auto x4 = cc->EvalSquare(x2);
-
-    auto y = cc->EvalMult(x, c1);
-    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(cc->EvalMult(x, c3), x2));
-    auto c5x = cc->EvalMult(x, c5);
-    auto c7x = cc->EvalMult(x, c7);
-    auto c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
-    cc->EvalAddInPlace(y,
-                       cc->EvalMultAndRelinearize(cc->EvalAdd(c5x, c7x3), x4));
-
-    return y;
-}
-
-template <>
-Ciphertext<DCRTPoly> f_n<3>(Ciphertext<DCRTPoly> x,
-                            CryptoContext<DCRTPoly> cc) {
-    // f_3(x) = (35x - 35x^3 + 21x^5 - 5x^7)/2^4
-    constexpr double c1 = 35.0 / 16.0;
-    constexpr double c3 = -35.0 / 16.0;
-    constexpr double c5 = 21.0 / 16.0;
-    constexpr double c7 = -5.0 / 16.0;
-
-    auto x2 = cc->EvalSquare(x);
-    auto x4 = cc->EvalSquare(x2);
-
-    auto y = cc->EvalMult(x, c1);
-    cc->EvalAddInPlace(y, cc->EvalMultAndRelinearize(cc->EvalMult(x, c3), x2));
-    auto c5x = cc->EvalMult(x, c5);
-    auto c7x = cc->EvalMult(x, c7);
-    auto c7x3 = cc->EvalMultAndRelinearize(c7x, x2);
-    cc->EvalAddInPlace(y,
-                       cc->EvalMultAndRelinearize(cc->EvalAdd(c5x, c7x3), x4));
-
-    return y;
-}
+};
 
 template <int n>
 Ciphertext<DCRTPoly> compositeSign(Ciphertext<DCRTPoly> x,
-                                   CryptoContext<DCRTPoly> cc, int dg, int df) {
+                                   CryptoContext<DCRTPoly> cc,
+                                   const SignConfig &Cfg) {
+    auto lazyBootstrap = [&cc, &Cfg](Ciphertext<DCRTPoly> &cipher,
+                                     int requiredDepth) {
+        if (Cfg.multDepth - static_cast<int>(cipher->GetLevel()) <
+            requiredDepth + 2) {
+            cipher = cc->EvalBootstrap(cipher);
+        }
+        return cipher;
+    };
 
-    auto y = g_n<n>(x, cc);
-    for (int i = 1; i < dg; i++) {
-        y = g_n<n>(y, cc);
+    lazyBootstrap(x, CompositeSign<n>::g_depth);
+    auto y = CompositeSign<n>::g_n(x, cc);
+
+    for (int i = 1; i < Cfg.compos.dg; i++) {
+        lazyBootstrap(y, CompositeSign<n>::g_depth);
+        y = CompositeSign<n>::g_n(y, cc);
     }
-    for (int i = 0; i < df; i++) {
-        y = f_n<n>(y, cc);
+    for (int i = 0; i < Cfg.compos.df; i++) {
+        lazyBootstrap(y, CompositeSign<n>::f_depth);
+        y = CompositeSign<n>::f_n(y, cc);
     }
     return y;
 }
@@ -623,9 +638,9 @@ Ciphertext<DCRTPoly> sign(Ciphertext<DCRTPoly> x, CryptoContext<DCRTPoly> cc,
     case SignFunc::CompositeSign:
     default:
         if (Cfg.compos.n == 3)
-            return compositeSign<3>(x, cc, Cfg.compos.dg, Cfg.compos.df);
+            return compositeSign<3>(x, cc, Cfg);
         else if (Cfg.compos.n == 4)
-            return compositeSign<4>(x, cc, Cfg.compos.dg, Cfg.compos.df);
+            return compositeSign<4>(x, cc, Cfg);
     case SignFunc::SignumPolycircuit:
         return signum_polycircuit(x, cc);
     case SignFunc::Tanh:

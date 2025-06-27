@@ -2,8 +2,9 @@
 #define EVALUTILS_H_
 
 #include "ciphertext-fwd.h"
-#include "openfhe.h"
 #include "encryption.h"
+#include "openfhe.h"
+#include "sign.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -18,9 +19,11 @@ class EvalUtils {
   public:
     EvalUtils() = default;
     EvalUtils(CryptoContext<DCRTPoly> cc) : m_cc(cc) {}
-    EvalUtils(CryptoContext<DCRTPoly> cc, std::shared_ptr<Encryption> enc, const PublicKey<DCRTPoly> &publicKey,
+    EvalUtils(CryptoContext<DCRTPoly> cc, std::shared_ptr<Encryption> enc,
+              const PublicKey<DCRTPoly> &publicKey,
               const PrivateKey<DCRTPoly> &privateKey)
-        : m_cc(cc), m_publicKey(publicKey), m_privateKey(privateKey), m_enc(enc) {}
+        : m_cc(cc), m_publicKey(publicKey), m_privateKey(privateKey),
+          m_enc(enc) {}
 
     // Continuously adds cipher to reach the target multiplication
     void multByInt(Ciphertext<DCRTPoly> &ctxt, long coeff,
@@ -36,12 +39,12 @@ class EvalUtils {
                             Ciphertext<DCRTPoly> &ctxt_out);
 
     // Level management and bootstrapping
-    void checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, long depth, long po2bit,
-                           bool verbose = false);
+    void checkLevelAndBoot(Ciphertext<DCRTPoly> &ctxt, int level, int multDepth,
+                           bool verbose = true);
 
     void checkLevelAndBoot2(Ciphertext<DCRTPoly> &ctxt,
                             Ciphertext<DCRTPoly> &ctxt2, long depth,
-                            long po2bit, bool verbose = false);
+                            long po2bit, bool verbose = true);
 
     // Wrappers for ciphertext negation and masking
     void flipCtxt(Ciphertext<DCRTPoly> &ctxt);
@@ -56,12 +59,12 @@ class EvalUtils {
 
     void evalG(Ciphertext<DCRTPoly> &ctxt, Ciphertext<DCRTPoly> &ctxt_out);
 
-    void approxComp(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b, long d_f,
-                    long d_g);
+    void approxComp(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
+                    int multDepth, long d_f, long d_g);
 
     void approxComp2(Ciphertext<DCRTPoly> &a, Ciphertext<DCRTPoly> &b,
-                     Ciphertext<DCRTPoly> &c, Ciphertext<DCRTPoly> &d, long d_f,
-                     long d_g);
+                     Ciphertext<DCRTPoly> &c, Ciphertext<DCRTPoly> &d,
+                     int multDepth, long d_f, long d_g);
 
     void leftRotate(Ciphertext<DCRTPoly> &ctxt, long r,
                     Ciphertext<DCRTPoly> &ctxt_out);

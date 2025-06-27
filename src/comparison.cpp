@@ -21,19 +21,20 @@ Ciphertext<DCRTPoly> Comparison::compare(const CryptoContext<DCRTPoly> &cc,
     return comp;
 }
 
-// TODO add unittest if used
-Ciphertext<DCRTPoly> Comparison::max(const CryptoContext<DCRTPoly> &cc,
-                                     const Ciphertext<DCRTPoly> &a,
-                                     const Ciphertext<DCRTPoly> &b) {
-    // max(a,b) = (a+b)/2 + (a-b)/2 * sign(a-b)
-    auto diff = cc->EvalSub(a, b);
-    auto sum = cc->EvalAdd(a, b);
-    auto sign = compositeSign<4>(diff, cc, 3, 3);
+Ciphertext<DCRTPoly> Comparison::indicator(const CryptoContext<DCRTPoly> &cc,
+                                           const Ciphertext<DCRTPoly> &x,
+                                           const double c, SignFunc SignFunc,
+                                           SignConfig &Cfg) {
 
-    auto halfDiff = cc->EvalMult(diff, 0.5);
-    auto halfSum = cc->EvalMult(sum, 0.5);
+    auto diff1 = cc->EvalAdd(x, c);
+    auto diff2 = cc->EvalSub(x, c);
 
-    auto scale = cc->EvalMult(halfDiff, sign);
+    auto sign1 = sign(diff1, cc, SignFunc, Cfg);
+    auto sign2 = sign(diff2, cc, SignFunc, Cfg);
 
-    return cc->EvalAdd(halfSum, scale);
+    auto comp1 = cc->EvalMult(cc->EvalAdd(sign1, 1.0), 0.5);
+    auto comp2 = cc->EvalMult(cc->EvalAdd(sign2, 1.0), 0.5);
+
+    auto result = cc->EvalMultAndRelinearize(comp1, cc->EvalSub(1.0, comp2));
+    return result;
 }

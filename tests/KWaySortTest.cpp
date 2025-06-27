@@ -16,10 +16,12 @@ class KWaySortTest : public ::testing::Test {
     void SetUp() override {
         // Set up the CryptoContext
         CCParams<CryptoContextCKKSRNS> parameters;
-        KWayAdapter<array_length>::getSizeParameters(parameters, rotations);
+        std::vector<uint32_t> levelBudget;
+        KWayAdapter<array_length>::getSizeParameters(parameters, rotations,
+                                                     levelBudget);
 
         parameters.SetSecurityLevel(HEStd_NotSet);
-        constexpr usint ringDim = 1 << 12;
+        constexpr usint ringDim = 1 << 10;
         parameters.SetRingDim(ringDim);
 
         m_cc = GenCryptoContext(parameters);
@@ -38,8 +40,6 @@ class KWaySortTest : public ::testing::Test {
         m_cc->EvalRotateKeyGen(m_privateKey, rotations);
         m_cc->EvalMultKeyGen(m_privateKey);
 
-        // Setup bootstrapping
-        std::vector<uint32_t> levelBudget = {5, 5};
         std::vector<uint32_t> bsgsDim = {0, 0};
         m_cc->EvalBootstrapSetup(levelBudget, bsgsDim, array_length);
         m_cc->EvalBootstrapKeyGen(m_privateKey, array_length);
@@ -48,7 +48,7 @@ class KWaySortTest : public ::testing::Test {
         m_multDepth = parameters.GetMultiplicativeDepth();
     }
 
-    static constexpr int array_length = 128;
+    static constexpr int array_length = 512;
     std::vector<int> rotations;
     CryptoContext<DCRTPoly> m_cc;
     PublicKey<DCRTPoly> m_publicKey;
@@ -69,15 +69,11 @@ TEST_F(KWaySortTest, Sort128Elements) {
 
     // Create KWayAdapter with k=2 (binary sorting)
     auto kwaySorter = std::make_unique<KWayAdapter<array_length>>(
-        m_cc, m_publicKey, m_privateKey, m_enc,
-        2, // k-way factor
-        7, // M parameter
-        2, // d_f parameter
-        5  // d_g parameter
+        m_cc, m_publicKey, m_privateKey, m_enc, 2 /*k-way number*/, 9 /*M*/
     );
 
     // Sort using k-way algorithm
-    auto Cfg = SignConfig(CompositeSignConfig(3, 3, 6));
+    auto Cfg = SignConfig(CompositeSignConfig(3, 2, 5), m_multDepth);
     Ciphertext<DCRTPoly> ctxt_out =
         kwaySorter->sort(ctxt, SignFunc::CompositeSign, Cfg);
 

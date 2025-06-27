@@ -49,7 +49,7 @@ std::tuple<int, int, int> sortType(int k, int M, int stage) {
 std::vector<std::vector<int>> genIndices(long numSlots, long k, long M, long m,
                                          long logDist, long slope) {
     std::vector<std::vector<int>> res(2);
-    for (int i = 0; i < res.size(); i++) {
+    for (size_t i = 0; i < res.size(); i++) {
         res[i].resize(numSlots, 0);
     }
 
