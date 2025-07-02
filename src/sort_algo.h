@@ -88,23 +88,6 @@ template <int N> class DirectSort : public SortBase<N> {
                                   std::vector<int> &rotations) {
         parameters.SetBatchSize(N);
 
-        // for (int i = 1; i < N / 2; i *= 2) {
-        //     rotations.push_back(-i);
-        //     rotations.push_back(i);
-        // }
-        // rotations.push_back(N / 2);
-
-        // // Pattern for output_array rotations
-        // if (2 * N * N > 1 << 16) {
-        //     for (int i = 1; i < log2((1 << 16) / N) + 1; i++) {
-        //         rotations.push_back((1 << 16) / (1 << i));
-        //     }
-        // } else {
-        //     for (int i = 1; i < log2(2 * N) + 1; i++) {
-        //         rotations.push_back((2 * N * N) / (1 << i));
-        //     }
-        // }
-
         int multDepth;
         int modSize = 40;
 
@@ -119,7 +102,6 @@ template <int N> class DirectSort : public SortBase<N> {
             break;
         case 16:
             rotations = {1, 2, 3, 4, 8, 12, 16, 32, 64, 128, 256};
-            // multDepth = 24;
             multDepth = 25;
             break;
         case 32:
@@ -147,7 +129,6 @@ template <int N> class DirectSort : public SortBase<N> {
                          135, 144,  160,  176,  192,  208,   224,  240, 256,
                          512, 1024, 2048, 4096, 8192, 16384, 32768};
             multDepth = 34;
-            // multDepth = 46;
             break;
         case 512:
             multDepth = 35;
@@ -530,7 +511,6 @@ template <int N> class DirectSort : public SortBase<N> {
        we use to perform the rotation.
 
         ib : Index of current batch
-
     */
     Ciphertext<DCRTPoly> blindRotation(const Ciphertext<DCRTPoly> &masked_input,
                                        int num_slots, int ib) {
@@ -573,7 +553,6 @@ template <int N> class DirectSort : public SortBase<N> {
                 { m_cc->EvalAddInPlace(tmp, rotated); }
             }
             tmp = rot.rotate(tmp, i * np);
-            // tmp = m_cc->EvalRotate(tmp, i * np);
             m_cc->EvalAddInPlace(result, tmp);
         }
         return result;
@@ -772,8 +751,8 @@ template <int N> class DirectSort : public SortBase<N> {
 
     Ciphertext<DCRTPoly> sort(const Ciphertext<DCRTPoly> &input_array,
                               SignFunc SignFunc, SignConfig &Cfg) override {
-        // std::cout << "\n===== Direct Sort Input Array: \n";
-        // PRINT_PT(m_enc, input_array);
+        std::cout << "\n===== Direct Sort Input Array: \n";
+        PRINT_PT(m_enc, input_array);
 
         omp_set_nested(1);
         omp_set_max_active_levels(2);
@@ -781,14 +760,14 @@ template <int N> class DirectSort : public SortBase<N> {
         Ciphertext<DCRTPoly> ctx_Rank;
         ctx_Rank = constructRank(input_array, SignFunc, Cfg);
 
-        // std::cout << "\n===== Constructed Rank: \n";
-        // PRINT_PT(m_enc, ctx_Rank);
+        std::cout << "\n===== Constructed Rank: \n";
+        PRINT_PT(m_enc, ctx_Rank);
 
         Ciphertext<DCRTPoly> output_array;
         output_array = rotationIndexCheckN(ctx_Rank, input_array);
 
-        // std::cout << "\n===== Final Output: \n";
-        // PRINT_PT(m_enc, output_array);
+        std::cout << "\n===== Final Output: \n";
+        PRINT_PT(m_enc, output_array);
 
         std::cout << "Final Level: " << output_array->GetLevel() << std::endl;
         return output_array;
@@ -1081,8 +1060,6 @@ template <int N> class DirectSort : public SortBase<N> {
         Ciphertext<DCRTPoly> output_array =
             rotationIndexCheckHybrid(ctx_Rank, input_array, sk);
 
-        // std::cout << "Final Level: " << output_array->GetLevel() <<
-        // std::endl;
         return output_array;
     }
 };

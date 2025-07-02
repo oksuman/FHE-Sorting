@@ -24,7 +24,6 @@ template <int N> class MEHPSortTest : public ::testing::Test {
     void SetUp() override {
         CCParams<CryptoContextCKKSRNS> parameters;
 
-        // parameters.SetSecurityLevel(HEStd_NotSet);
         parameters.SetSecurityLevel(HEStd_128_classic);
         auto logRingDim = 17;
         parameters.SetRingDim(1 << logRingDim);
@@ -127,13 +126,10 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 
     uint32_t dg_i = (log2(N) + 1) / 2; // N = vectorLength
     uint32_t df_i = 2;
-    
-    std::cout << "Sign Configuration: CompositeSign(" 
-          << Cfg.compos.n << ", " 
-          << Cfg.compos.dg << ", " 
-          << Cfg.compos.df << ")" << std::endl;    
-    std::cout << ", dg_i=" << dg_i << ", df_i=" << df_i;
 
+    std::cout << "Sign Configuration: CompositeSign(" << Cfg.compos.n << ", "
+              << Cfg.compos.dg << ", " << Cfg.compos.df << ")" << std::endl;
+    std::cout << ", dg_i=" << dg_i << ", df_i=" << df_i;
 
     Ciphertext<DCRTPoly> ctxt_out;
     auto start = high_resolution_clock::now();
@@ -191,15 +187,10 @@ TYPED_TEST_P(MEHPSortTestFixture, SortFGTest) {
 REGISTER_TYPED_TEST_SUITE_P(MEHPSortTestFixture, SortFGTest);
 
 using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>, 
-    std::integral_constant<size_t, 8>,
-    std::integral_constant<size_t, 16>, 
-    std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>,
-    std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>, 
-    std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>
->;
+    std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(MEHPSort, MEHPSortTestFixture, TestSizes);

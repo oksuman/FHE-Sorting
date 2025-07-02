@@ -60,17 +60,17 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
 template <typename T>
 class KWaySortTestFixture : public KWaySortTest<T::value> {};
 
-using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>,    // For k=2, M=2
-    std::integral_constant<size_t, 8>,    // For k=2, M=3
-    std::integral_constant<size_t, 16>,   // For k=2, M=4
-    std::integral_constant<size_t, 32>,   // For k=2, M=5
-    std::integral_constant<size_t, 64>,   // For k=2, M=6
-    std::integral_constant<size_t, 128>,  // For k=2, M=7
-    std::integral_constant<size_t, 256>,  // For k=2, M=8
-    std::integral_constant<size_t, 512>,  // For k=2, M=9
-    std::integral_constant<size_t, 1024>  // For k=2, M=10
->;
+using TestSizes =
+    ::testing::Types<std::integral_constant<size_t, 4>,   // For k=2, M=2
+                     std::integral_constant<size_t, 8>,   // For k=2, M=3
+                     std::integral_constant<size_t, 16>,  // For k=2, M=4
+                     std::integral_constant<size_t, 32>,  // For k=2, M=5
+                     std::integral_constant<size_t, 64>,  // For k=2, M=6
+                     std::integral_constant<size_t, 128>, // For k=2, M=7
+                     std::integral_constant<size_t, 256>, // For k=2, M=8
+                     std::integral_constant<size_t, 512>, // For k=2, M=9
+                     std::integral_constant<size_t, 1024> // For k=2, M=10
+                     >;
 
 TYPED_TEST_SUITE(KWaySortTestFixture, TestSizes);
 
@@ -79,7 +79,7 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
 
     int k = 2;
     int M, d_f, d_g;
-    
+
     switch (N) {
     case 4:
         M = 2;
@@ -130,11 +130,8 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
         FAIL() << "Unsupported array size for k=2: " << N;
         break;
     }
-    std::cout << "Sign Configuration: CompositeSign(3, k=" << k 
-        << ", M=" << M
-        << ", d_g=" << d_g
-        << ", d_f=" << d_f << ")" << std::endl;
-
+    std::cout << "Sign Configuration: CompositeSign(3, k=" << k << ", M=" << M
+              << ", d_g=" << d_g << ", d_f=" << d_f << ")" << std::endl;
 
     std::vector<double> inputArray =
         getVectorWithMinDiff(N, 0, 1, (1.0 - 1e-8) / N);
@@ -147,9 +144,7 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     auto ctxt = this->m_enc->encryptInput(inputArray);
 
     auto kwaySorter = std::make_unique<KWayAdapter<N>>(
-        this->m_cc, this->m_publicKey, this->m_privateKey, this->m_enc,
-        k, M
-    );
+        this->m_cc, this->m_publicKey, this->m_privateKey, this->m_enc, k, M);
 
     auto Cfg = SignConfig(CompositeSignConfig(3, d_f, d_g), this->m_multDepth);
     auto start = std::chrono::high_resolution_clock::now();

@@ -110,11 +110,8 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
         Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
     else
         Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
-    std::cout << "Sign Configuration: CompositeSign(" 
-            << Cfg.compos.n << ", " 
-            << Cfg.compos.dg << ", " 
-            << Cfg.compos.df << ")" << std::endl;
-
+    std::cout << "Sign Configuration: CompositeSign(" << Cfg.compos.n << ", "
+              << Cfg.compos.dg << ", " << Cfg.compos.df << ")" << std::endl;
 
     // Start timing
     auto start = std::chrono::high_resolution_clock::now();
@@ -159,14 +156,6 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     }
 
     double avgError = totalError / output_array.size();
-    // const auto &usedRotations = directSort->getRotationCalls();
-    // std::cout << "\nRequested rotation indices for N=" << N << ": ";
-    // for (const auto &rot : usedRotations) {
-    //     std::cout << rot << " ";
-    // }
-    // std::cout << std::endl;
-
-    // Print results to console
     std::cout << "\nPerformance Analysis:" << std::endl;
     std::cout << "Execution time: " << duration.count() << " ms" << std::endl;
     std::cout << "\nError Analysis:" << std::endl;
@@ -177,28 +166,16 @@ TYPED_TEST_P(DirectSortTestFixture, SortTest) {
     std::cout << "Number of errors larger than 0.01: " << largeErrorCount
               << std::endl;
 
-    // Save results to file
-    // std::string filename = "sort_results_N" + std::to_string(N) + ".txt";
-    // this->SaveResults(filename, N,
-    //                   17, // logRingDim
-    //                   this->m_multDepth, this->m_scaleMod, Cfg, maxError,
-    //                   avgError, duration.count());
-
     ASSERT_LT(maxError, 0.01);
 }
 
 REGISTER_TYPED_TEST_SUITE_P(DirectSortTestFixture, SortTest);
 
 using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>, 
-    std::integral_constant<size_t, 8>,
-    std::integral_constant<size_t, 16>, 
-    std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>,
-    std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>, 
-    std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>
->;
+    std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(DirectSort, DirectSortTestFixture, TestSizes);

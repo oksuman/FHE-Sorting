@@ -107,10 +107,6 @@ template <size_t N> class HybridSortTest : public ::testing::Test {
         parameters.SetMultiplicativeDepth(m_multDepth);
 
         m_cc = GenCryptoContext(parameters);
-
-        // std::cout << "key switching technique: " <<
-        // parameters.GetKeySwitchTechnique() << std::endl;
-
         m_cc->Enable(PKE);
         m_cc->Enable(KEYSWITCH);
         m_cc->Enable(LEVELEDSHE);
@@ -169,10 +165,8 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
         Cfg = SignConfig(CompositeSignConfig(3, 4, 2));
     else
         Cfg = SignConfig(CompositeSignConfig(3, 5, 2));
-    std::cout << "Sign Configuration: CompositeSign(" 
-          << Cfg.compos.n << ", " 
-          << Cfg.compos.dg << ", " 
-          << Cfg.compos.df << ")" << std::endl;
+    std::cout << "Sign Configuration: CompositeSign(" << Cfg.compos.n << ", "
+              << Cfg.compos.dg << ", " << Cfg.compos.df << ")" << std::endl;
 
     // Start timing
     auto start = std::chrono::high_resolution_clock::now();
@@ -185,13 +179,6 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
     auto end = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-    // const auto &usedRotations = directSort->getRotationCalls();
-    // std::cout << "\nRequested rotation indices for N=" << N << ": ";
-    // for (const auto &rot : usedRotations) {
-    //     std::cout << rot << " ";
-    // }
-    // std::cout << std::endl;
 
     EXPECT_EQ(ctxt_out->GetLevel(), this->m_multDepth)
         << "Use the level returned by the result for best performance";
@@ -237,15 +224,10 @@ TYPED_TEST_P(HybridSortTestFixture, SortHybridTest) {
 REGISTER_TYPED_TEST_SUITE_P(HybridSortTestFixture, SortHybridTest);
 
 using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 4>, 
-    std::integral_constant<size_t, 8>,
-    std::integral_constant<size_t, 16>, 
-    std::integral_constant<size_t, 32>,
-    std::integral_constant<size_t, 64>,
-    std::integral_constant<size_t, 128>,
-    std::integral_constant<size_t, 256>, 
-    std::integral_constant<size_t, 512>,
-    std::integral_constant<size_t, 1024>
->;
+    std::integral_constant<size_t, 4>, std::integral_constant<size_t, 8>,
+    std::integral_constant<size_t, 16>, std::integral_constant<size_t, 32>,
+    std::integral_constant<size_t, 64>, std::integral_constant<size_t, 128>,
+    std::integral_constant<size_t, 256>, std::integral_constant<size_t, 512>,
+    std::integral_constant<size_t, 1024>>;
 
 INSTANTIATE_TYPED_TEST_SUITE_P(HybridSort, HybridSortTestFixture, TestSizes);

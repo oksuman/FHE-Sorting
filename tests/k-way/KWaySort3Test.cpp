@@ -60,13 +60,13 @@ template <size_t N> class KWaySortTest : public ::testing::Test {
 template <typename T>
 class KWaySortTestFixture : public KWaySortTest<T::value> {};
 
-using TestSizes = ::testing::Types<
-    std::integral_constant<size_t, 9>,    // For k=3, M=2
-    std::integral_constant<size_t, 27>,   // For k=3, M=3
-    std::integral_constant<size_t, 81>,   // For k=3, M=4
-    std::integral_constant<size_t, 243>,  // For k=3, M=5
-    std::integral_constant<size_t, 729>   // For k=3, M=6
->;
+using TestSizes =
+    ::testing::Types<std::integral_constant<size_t, 9>,   // For k=3, M=2
+                     std::integral_constant<size_t, 27>,  // For k=3, M=3
+                     std::integral_constant<size_t, 81>,  // For k=3, M=4
+                     std::integral_constant<size_t, 243>, // For k=3, M=5
+                     std::integral_constant<size_t, 729>  // For k=3, M=6
+                     >;
 
 TYPED_TEST_SUITE(KWaySortTestFixture, TestSizes);
 
@@ -75,7 +75,7 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
 
     int k = 3;
     int M, d_f, d_g;
-    
+
     switch (N) {
     case 9:
         M = 2;
@@ -106,11 +106,8 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
         FAIL() << "Unsupported array size for k=3: " << N;
         break;
     }
-    std::cout << "Sign Configuration: CompositeSign(3, k=" << k 
-        << ", M=" << M
-        << ", d_g=" << d_g
-        << ", d_f=" << d_f << ")" << std::endl;
-
+    std::cout << "Sign Configuration: CompositeSign(3, k=" << k << ", M=" << M
+              << ", d_g=" << d_g << ", d_f=" << d_f << ")" << std::endl;
 
     std::vector<double> inputArray =
         getVectorWithMinDiff(N, 0, 1, (1.0 - 1e-8) / N);
@@ -123,9 +120,7 @@ TYPED_TEST(KWaySortTestFixture, SortTest) {
     auto ctxt = this->m_enc->encryptInput(inputArray);
 
     auto kwaySorter = std::make_unique<KWayAdapter<N>>(
-        this->m_cc, this->m_publicKey, this->m_privateKey, this->m_enc,
-        k, M
-    );
+        this->m_cc, this->m_publicKey, this->m_privateKey, this->m_enc, k, M);
 
     auto Cfg = SignConfig(CompositeSignConfig(3, d_f, d_g), this->m_multDepth);
     auto start = std::chrono::high_resolution_clock::now();
